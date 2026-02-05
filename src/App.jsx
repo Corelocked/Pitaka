@@ -8,9 +8,11 @@ import ExpenseForm from './components/ExpenseForm'
 import CategoryForm from './components/CategoryForm'
 import SavingsForm from './components/SavingsForm'
 import AddToSavingsForm from './components/AddToSavingsForm'
+import WalletForm from './components/WalletForm'
 import TablesCompact from './pages/TablesCompact'
 import ExpenseBreakdown from './components/ExpenseBreakdown'
 import YearlySummary from './components/YearlySummary'
+import WalletSummary from './components/WalletSummary'
 import { useBudget } from './hooks/useBudget'
 
 function App() {
@@ -59,7 +61,12 @@ function App() {
     updateSavings,
     editCategory,
     updateCategory,
-    exportToCSV
+    wallets,
+    walletBalances,
+    exportToCSV,
+    addWallet,
+    deleteWallet,
+    updateWallet,
   } = useBudget()
 
   const [activeTab, setActiveTab] = useState('incomes')
@@ -246,20 +253,26 @@ function App() {
         <div className="summary">
           <div className="summary-item">
             <h3>Total Income</h3>
-            <p className="amount income">${totalIncome.toFixed(2)}</p>
+            <p className="amount income">₱{totalIncome.toFixed(2)}</p>
           </div>
           <div className="summary-item">
             <h3>Total Expenses</h3>
-            <p className="amount expense">${totalExpenses.toFixed(2)}</p>
+            <p className="amount expense">₱{totalExpenses.toFixed(2)}</p>
           </div>
           <div className="summary-item">
             <h3>Total Savings</h3>
-            <p className="amount savings">${totalSavings.toFixed(2)}</p>
+            <p className="amount savings">₱{totalSavings.toFixed(2)}</p>
           </div>
           <div className="summary-item">
             <h3>Net Income</h3>
-            <p className="amount net">${netIncome.toFixed(2)}</p>
+            <p className="amount net">₱{netIncome.toFixed(2)}</p>
           </div>
+        </div>
+
+        {/* Per-wallet summaries */}
+        <div style={{ marginTop: 20 }}>
+          <h3>Wallets</h3>
+          <WalletSummary wallets={wallets} incomes={incomes} expenses={expenses} />
         </div>
 
         {/* Income and Expense Breakdown (only visible on Dashboard) */}
@@ -269,10 +282,10 @@ function App() {
               <div className="income-breakdown">
                 <h4>Recent Income</h4>
                 <div className="breakdown-list">
-                  {filteredIncomes.slice(0, 8).map((income, index) => (
+                  {filteredIncomes.slice(0, 1).map((income, index) => (
                     <div key={income.id || index} className="breakdown-row income-row">
                       <span className="breakdown-label">{income.source}</span>
-                      <span className="breakdown-value">${parseFloat(income.amount).toFixed(2)}</span>
+                      <span className="breakdown-value">₱{parseFloat(income.amount).toFixed(2)}</span>
                     </div>
                   ))}
                   {filteredIncomes.length === 0 && (
@@ -285,6 +298,7 @@ function App() {
                     editingIncome={editingIncome}
                     onUpdateIncome={updateIncome}
                     onCancelEdit={() => setEditingIncome(null)}
+                    wallets={wallets}
                   />
                 </div>
               </div>
@@ -292,10 +306,10 @@ function App() {
               <div className="expense-breakdown">
                 <h4>Recent Expenses</h4>
                 <div className="breakdown-list">
-                  {filteredExpenses.slice(0, 8).map((expense, index) => (
+                  {filteredExpenses.slice(0, 1).map((expense, index) => (
                     <div key={expense.id || index} className="breakdown-row expense-row">
                       <span className="breakdown-label">{expense.description}</span>
-                      <span className="breakdown-value">${parseFloat(expense.amount).toFixed(2)}</span>
+                      <span className="breakdown-value">₱{parseFloat(expense.amount).toFixed(2)}</span>
                     </div>
                   ))}
                   {filteredExpenses.length === 0 && (
@@ -309,6 +323,7 @@ function App() {
                     onUpdateExpense={updateExpense}
                     onCancelEdit={() => setEditingExpense(null)}
                     categories={categories}
+                    wallets={wallets}
                   />
                 </div>
               </div>
@@ -359,6 +374,21 @@ function App() {
             onAddToSavings={handleAddToSavings}
           />
           <CategoryForm onAddCategory={addCategory} />
+
+          <hr />
+
+          <h4 style={{margin:0}}>Wallets</h4>
+          <p style={{ marginTop: 8, marginBottom: 8, color: 'var(--text-secondary)' }}>Quick add a wallet to track balances</p>
+          <div className="form">
+            <WalletForm onSubmit={async (payload) => {
+              try {
+                await addWallet(payload)
+                setShowQuickPanel(false)
+              } catch (err) {
+                console.error('Add wallet failed', err)
+              }
+            }} onCancel={() => { /* noop for now */ }} />
+          </div>
         </div>
       </aside>
     </div>

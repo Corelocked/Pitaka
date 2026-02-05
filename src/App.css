@@ -755,3 +755,84 @@ button:focus-visible, .view-toggle button:focus-visible, .form input:focus-visib
 }
 
 /* --- END UI/UX POLISH --- */
+
+/* Wallet summary styles */
+.wallet-summary-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.wallet-summary-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,250,0.9));
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.wallet-summary-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.wallet-header strong {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.wallet-balance {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.wallet-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.wallet-summary.empty {
+  color: var(--text-muted);
+  padding: 12px;
+}
+
+/* Compact variant to match summary-item look */
+.wallet-summary-list .summary-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: var(--shadow);
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wallet-summary-list .summary-item h3 {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.wallet-summary-list .summary-item .amount {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+}

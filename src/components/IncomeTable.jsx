@@ -1,15 +1,17 @@
 import React from 'react'
 import DataTable from './DataTable'
 
-export default function IncomeTable({ incomes = [], onDeleteIncome, onEditIncome, onUpdateIncome, selectable = false, onBulkDelete }) {
+export default function IncomeTable({ incomes = [], wallets = [], onDeleteIncome, onEditIncome, onUpdateIncome, selectable = false, onBulkDelete }) {
+  const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
   const columns = [
     { key: 'source', header: 'Source', className: 'col-source', width: '1fr', render: r => r.source, sortable: true, editable: true },
+    { key: 'wallet', header: 'Wallet', className: 'col-wallet', width: '160px', render: r => walletName(r.walletId) },
     { key: 'amount', header: 'Amount', className: 'col-amount amount', width: '120px', render: r => `₱${Number(r.amount || 0).toFixed(2)}`, sortable: true, sortValue: r => parseFloat(r.amount || 0), editable: true, exportValue: r => Number(r.amount || 0) },
     { key: 'date', header: 'Date', className: 'col-date date', width: '140px', render: r => (r.date ? new Date(r.date).toLocaleDateString() : ''), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '120px', render: r => (
       <>
-        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => onEditIncome && onEditIncome(r)}>✎</button>
-        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={() => onDeleteIncome && onDeleteIncome(r.id)}>🗑️</button>
+        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => onEditIncome && onEditIncome(r)}>Edit</button>
+        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={() => onDeleteIncome && onDeleteIncome(r.id)}>Delete</button>
       </>
     ) }
   ]

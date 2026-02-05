@@ -15,7 +15,8 @@ const COLLECTION_NAMES = {
   INCOMES: 'incomes',
   EXPENSES: 'expenses',
   SAVINGS: 'savings',
-  CATEGORIES: 'categories'
+  CATEGORIES: 'categories',
+  WALLETS: 'wallets'
 }
 
 // Income operations
@@ -191,5 +192,63 @@ export const categoryService = {
   // Delete category
   deleteCategory: async (categoryId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.CATEGORIES, categoryId))
+  }
+}
+
+// Wallet operations
+export const walletService = {
+  // Get all wallets for a user
+  subscribeToWallets: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.WALLETS),
+      where('userId', '==', userId),
+      orderBy('name', 'asc')
+    )
+
+    // Provide an error handler to avoid uncaught errors when Firestore
+    // requires a composite index or permissions block the query.
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        try {
+          const wallets = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+          callback(wallets || [])
+        } catch (err) {
+          console.error('Error processing wallets snapshot:', err)
+          callback([])
+        }
+      },
+      (err) => {
+        console.error('Wallets snapshot listener error:', err)
+        // report empty list to allow UI to render a fallback
+        try { callback([]) } catch (e) { /* swallow */ }
+      }
+    )
+
+    return unsubscribe
+  },
+
+  // Add new wallet
+  addWallet: async (wallet, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.WALLETS), {
+      ...wallet,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  // Update wallet
+  updateWallet: async (walletId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.WALLETS, walletId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  // Delete wallet
+  deleteWallet: async (walletId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.WALLETS, walletId))
   }
 }

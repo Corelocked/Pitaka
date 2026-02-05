@@ -1,10 +1,12 @@
 import React from 'react'
 import DataTable from './DataTable'
 
-export default function ExpenseTable({ expenses = [], onDeleteExpense, onEditExpense, onUpdateExpense, selectable = false, onBulkDelete }) {
+export default function ExpenseTable({ expenses = [], wallets = [], onDeleteExpense, onEditExpense, onUpdateExpense, selectable = false, onBulkDelete }) {
+  const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
   const columns = [
     { key: 'description', header: 'Description', className: 'col-desc', width: '1fr', render: r => r.description, sortable: true, editable: true },
     { key: 'category', header: 'Category', className: 'col-category', width: '140px', render: r => r.category, sortable: true },
+    { key: 'wallet', header: 'Wallet', className: 'col-wallet', width: '160px', render: r => walletName(r.walletId) },
     { key: 'amount', header: 'Amount', className: 'col-amount amount', width: '120px', render: r => `₱${Number(r.amount || 0).toFixed(2)}`, sortable: true, sortValue: r => parseFloat(r.amount || 0), editable: true, exportValue: r => Number(r.amount || 0) },
     { key: 'date', header: 'Date', className: 'col-date date', width: '140px', render: r => (r.date ? new Date(r.date).toLocaleDateString() : ''), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '100px', render: r => (

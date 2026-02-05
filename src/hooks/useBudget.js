@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useFirebase } from './useFirebase'
-import { incomeService, expenseService, savingsService, categoryService } from '../services/firebaseService'
+import { incomeService, expenseService, savingsService, categoryService, walletService } from '../services/firebaseService'
 
 export function useBudget() {
   const { user, loading: authLoading } = useFirebase()
@@ -8,12 +8,14 @@ export function useBudget() {
   const [expenses, setExpenses] = useState([])
   const [savings, setSavings] = useState([])
   const [categories, setCategories] = useState([])
+  const [wallets, setWallets] = useState([])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [editingIncome, setEditingIncome] = useState(null)
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingSavings, setEditingSavings] = useState(null)
   const [editingCategory, setEditingCategory] = useState(null)
+  const [editingWallet, setEditingWallet] = useState(null)
   const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' or 'breakdown'
   const [timePeriod, setTimePeriod] = useState('monthly') // 'monthly' or 'yearly'
   const [loading, setLoading] = useState(true)
@@ -86,6 +88,25 @@ export function useBudget() {
           }
         }
 
+        // Subscribe to wallets
+        let unsubscribeWallets
+        try {
+          unsubscribeWallets = walletService.subscribeToWallets(
+            user.uid,
+            (walletsData) => {
+              if (isMounted) {
+                setWallets(walletsData || [])
+              }
+            }
+          )
+        } catch (err) {
+          console.log('Error setting up wallets subscription:', err)
+          unsubscribeWallets = () => {}
+          if (isMounted) {
+            setWallets([])
+          }
+        }
+
         // Set loading to false after subscriptions are set up
         // Add a small delay to ensure subscriptions have time to connect
         const loadingTimeout = setTimeout(() => {
@@ -101,6 +122,7 @@ export function useBudget() {
           unsubscribeExpenses()
           unsubscribeSavings()
           unsubscribeCategories()
+          unsubscribeWallets()
         }
       } catch (err) {
         if (isMounted) {
@@ -268,6 +290,63 @@ export function useBudget() {
     }
   }, [user])
 
+  const addWallet = useCallback(async (wallet) => {
+    if (!user) return
+
+    // Optimistic UI: add a temporary wallet locally so the dropdown updates immediately
+    const tempId = `temp-${Date.now()}`
+    const tempWallet = {
+      id: tempId,
+      name: wallet.name,
+      description: wallet.description || '',
+      startingBalance: wallet.startingBalance || 0,
+      userId: user.uid,
+      createdAt: new Date()
+    }
+
+    setWallets(prev => [tempWallet, ...prev])
+
+    try {
+      setError(null)
+      const id = await walletService.addWallet(wallet, user.uid)
+      // backend subscription will replace the list; as a safeguard, remove temp if still present
+      setWallets(prev => prev.filter(w => w.id !== tempId))
+      return id
+    } catch (err) {
+      // rollback optimistic update
+      setWallets(prev => prev.filter(w => w.id !== tempId))
+      setError(err.message)
+      throw err
+    }
+  }, [user])
+
+  const deleteWallet = useCallback(async (id) => {
+    try {
+      setError(null)
+      await walletService.deleteWallet(id)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const editWallet = useCallback((wallet) => {
+    setEditingWallet(wallet)
+  }, [])
+
+  const updateWallet = useCallback(async (updatedWallet) => {
+    try {
+      setError(null)
+      const { id, ...updates } = updatedWallet
+      await walletService.updateWallet(id, updates)
+      // clear editing state
+      setEditingWallet(null)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
   const deleteCategory = useCallback(async (id) => {
     try {
       setError(null)
@@ -318,11 +397,28 @@ export function useBudget() {
     return { category, total, percentage }
   })
 
+  // Wallet balances calculated from linked incomes/expenses plus startingBalance
+  const walletBalances = useMemo(() => {
+    const map = {}
+    wallets.forEach(w => { map[w.id] = parseFloat(w.startingBalance || 0) })
+    incomes.forEach(i => {
+      if (!i.walletId) return
+      map[i.walletId] = (map[i.walletId] || 0) + parseFloat(i.amount || 0)
+    })
+    expenses.forEach(e => {
+      if (!e.walletId) return
+      map[e.walletId] = (map[e.walletId] || 0) - parseFloat(e.amount || 0)
+    })
+    return wallets.map(w => ({ ...w, balance: map[w.id] || 0 }))
+  }, [wallets, incomes, expenses])
+
   const exportToCSV = () => {
+    const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
+
     const csvContent = [
-      ['Type', 'Description/Source', 'Category', 'Amount', 'Date'].join(','),
-      ...filteredIncomes.map(inc => ['Income', inc.source, '', inc.amount, inc.date].join(',')),
-      ...filteredExpenses.map(exp => ['Expense', exp.description, exp.category, exp.amount, exp.date].join(','))
+      ['Type', 'Description/Source', 'Category', 'Wallet', 'Amount', 'Date'].join(','),
+      ...filteredIncomes.map(inc => ['Income', inc.source, '', walletName(inc.walletId), inc.amount, inc.date].join(',')),
+      ...filteredExpenses.map(exp => ['Expense', exp.description, exp.category, walletName(exp.walletId), exp.amount, exp.date].join(','))
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -342,6 +438,8 @@ export function useBudget() {
       user: user?.uid,
       incomesCount: incomes.length,
       expensesCount: expenses.length,
+      walletsCount: wallets.length,
+      walletIds: wallets.map(w => w.id),
       selectedMonth,
       selectedYear,
       timePeriod,
@@ -350,7 +448,7 @@ export function useBudget() {
       totalIncome,
       totalExpenses
     })
-  }, [user, incomes, expenses, selectedMonth, selectedYear, timePeriod, totalIncome, totalExpenses])
+  }, [user, incomes, expenses, wallets, selectedMonth, selectedYear, timePeriod, totalIncome, totalExpenses])
 
   return {
     // State
@@ -358,12 +456,15 @@ export function useBudget() {
     expenses,
     savings,
     categories,
+    wallets,
+    walletBalances,
     selectedMonth,
     selectedYear,
     editingIncome,
     editingExpense,
     editingSavings,
     editingCategory,
+    editingWallet,
     viewMode,
     timePeriod,
     filteredIncomes,
@@ -385,10 +486,12 @@ export function useBudget() {
     addExpense,
     addSavings,
     addCategory,
+    addWallet,
     deleteIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
+    deleteWallet,
     editIncome,
     updateIncome,
     editExpense,
@@ -397,6 +500,8 @@ export function useBudget() {
     updateSavings,
     editCategory,
     updateCategory,
+    editWallet,
+    updateWallet,
     exportToCSV
   }
 }

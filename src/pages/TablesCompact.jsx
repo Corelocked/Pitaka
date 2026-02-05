@@ -4,6 +4,9 @@ import IncomeTable from '../components/IncomeTable'
 import ExpenseTable from '../components/ExpenseTable'
 import SavingsTable from '../components/SavingsTable'
 import TransactionsTable from '../components/TransactionsTable'
+import WalletsTable from '../components/WalletsTable'
+import WalletForm from '../components/WalletForm'
+import Modal from '../components/Modal'
 import './Tables.css' 
 
 export default function TablesCompact() {
@@ -11,10 +14,15 @@ export default function TablesCompact() {
     filteredIncomes,
     filteredExpenses,
     savings,
+    wallets,
+    walletBalances,
     exportToCSV,
     deleteIncome,
     deleteExpense,
     deleteSavings,
+    addWallet,
+    deleteWallet,
+    updateWallet,
     updateIncome,
     updateExpense,
     updateSavings
@@ -26,6 +34,12 @@ export default function TablesCompact() {
   const [minAmount, setMinAmount] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+
+  // quick-add wallet state
+  const [walletName, setWalletName] = useState('')
+  const [walletDesc, setWalletDesc] = useState('')
+  const [walletStart, setWalletStart] = useState('')
+  const [walletMsg, setWalletMsg] = useState('')
 
   const visibleIncomes = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -67,6 +81,7 @@ export default function TablesCompact() {
       category: '',
       amount: parseFloat(i.amount || 0),
       date: i.date || i.createdAt || null,
+      walletId: i.walletId || null,
       raw: i
     }))
 
@@ -77,6 +92,7 @@ export default function TablesCompact() {
       category: e.category || '',
       amount: -parseFloat(e.amount || 0),
       date: e.date || e.createdAt || null,
+      walletId: e.walletId || null,
       raw: e
     }))
 
@@ -97,10 +113,11 @@ export default function TablesCompact() {
 
   // Tabs with icons and counts (ARIA + keyboard navigation + persistence)
   const tabs = [
-    { key: 'transactions', label: 'Transactions', icon: '🔁', count: visibleTransactions.length },
-    { key: 'incomes', label: 'Incomes', icon: '💰', count: visibleIncomes.length },
-    { key: 'expenses', label: 'Expenses', icon: '🧾', count: visibleExpenses.length },
-    { key: 'savings', label: 'Savings', icon: '🎯', count: visibleSavings.length }
+    { key: 'transactions', label: 'Transactions', count: visibleTransactions.length },
+    { key: 'incomes', label: 'Incomes', count: visibleIncomes.length },
+    { key: 'expenses', label: 'Expenses', count: visibleExpenses.length },
+    { key: 'savings', label: 'Savings', count: visibleSavings.length },
+    { key: 'wallets', label: 'Wallets', count: savings.length > 0 ? savings.length : wallets.length }
   ]
 
   const handleTabKeyDown = (e, idx) => {
@@ -205,8 +222,12 @@ export default function TablesCompact() {
 
         <div className="compact-controls">
           <input type="search" aria-label="Search" placeholder="Search..." value={query} onChange={e => setQuery(e.target.value)} />
-          <button className="filter-toggle" aria-expanded={showFilters} onClick={() => setShowFilters(s => !s)} title="Show filters">⚙ Filters</button>
+          <button className="filter-toggle" aria-expanded={showFilters} onClick={() => setShowFilters(s => !s)} title="Show filters">Filters</button>
           <button className="export-btn" onClick={exportAll} title="Export CSV">Export All</button>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Wallet quick-add moved to the side quick-panel */}
+          </div>
         </div>
       </div>
 
@@ -222,10 +243,14 @@ export default function TablesCompact() {
         </div>
       )}
 
+      {/* Wallet Add Modal */}
+
+
       <div className="compact-content">
         <div role="tabpanel" id="panel-transactions" aria-labelledby="tab-transactions" hidden={activeTab !== 'transactions'}>
           <TransactionsTable
             transactions={visibleTransactions}
+            wallets={wallets}
             onDeleteTransaction={(row) => {
               const [kind, id] = row.id.split(':')
               if (kind === 'income') deleteIncome(id)
@@ -241,10 +266,10 @@ export default function TablesCompact() {
             onUpdateTransaction={(row) => {
               const [kind, id] = row.id.split(':')
               if (kind === 'income') {
-                return updateIncome({ id, source: row.description, amount: parseFloat(row.amount) || 0, date: row.date })
+                return updateIncome({ id, source: row.description, amount: parseFloat(row.amount) || 0, date: row.date, walletId: row.walletId })
               }
               if (kind === 'expense') {
-                return updateExpense({ id, description: row.description, category: row.category, amount: Math.abs(parseFloat(row.amount)) || 0, date: row.date })
+                return updateExpense({ id, description: row.description, category: row.category, amount: Math.abs(parseFloat(row.amount)) || 0, date: row.date, walletId: row.walletId })
               }
               if (kind === 'saving') {
                 return updateSavings({ id, goal: row.description, currentAmount: parseFloat(row.amount) || 0, targetDate: row.date })
@@ -256,6 +281,7 @@ export default function TablesCompact() {
         <div role="tabpanel" id="panel-incomes" aria-labelledby="tab-incomes" hidden={activeTab !== 'incomes'}>
           <IncomeTable
             incomes={visibleIncomes}
+            wallets={wallets}
             selectable
             onDeleteIncome={(row) => deleteIncome(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteIncome(r.id))}
@@ -266,6 +292,7 @@ export default function TablesCompact() {
         <div role="tabpanel" id="panel-expenses" aria-labelledby="tab-expenses" hidden={activeTab !== 'expenses'}>
           <ExpenseTable
             expenses={visibleExpenses}
+            wallets={wallets}
             selectable
             onDeleteExpense={(row) => deleteExpense(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteExpense(r.id))}
@@ -280,6 +307,15 @@ export default function TablesCompact() {
             onDeleteSavings={(row) => deleteSavings(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteSavings(r.id))}
             onUpdateSavings={(row) => updateSavings(row)}
+          />
+        </div>
+
+        <div role="tabpanel" id="panel-wallets" aria-labelledby="tab-wallets" hidden={activeTab !== 'wallets'}>
+          <WalletsTable
+            wallets={wallets}
+            balances={walletBalances}
+            onEditWallet={(w) => updateWallet(w)}
+            onDeleteWallet={(id) => deleteWallet(id)}
           />
         </div>
       </div>

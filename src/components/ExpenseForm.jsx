@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
 
-function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [] }) {
+function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [], wallets = [] }) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [walletId, setWalletId] = useState('')
 
   useEffect(() => {
     if (editingExpense) {
@@ -17,6 +18,8 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
       setAmount(editingExpense.amount.toString())
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDate(editingExpense.date)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWalletId(editingExpense.walletId || '')
     }
   }, [editingExpense])
 
@@ -24,12 +27,13 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
     e.preventDefault()
     if (description && category && amount) {
       if (editingExpense) {
-        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date })
+        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date, walletId: walletId || null })
       } else {
-        onAddExpense({ description, category, amount: parseFloat(amount), date })
+        onAddExpense({ description, category, amount: parseFloat(amount), date, walletId: walletId || null })
         setDescription('')
         setCategory('')
         setAmount('')
+        setWalletId('')
       }
     }
   }
@@ -94,6 +98,19 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
           required
         />
       </div>
+
+      <div className="form-group">
+        <label htmlFor="expense-wallet">Wallet</label>
+        <select id="expense-wallet" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
+          <option value="">Select a wallet</option>
+          {wallets && wallets.length > 0 ? wallets.map(w => (
+            <option key={w.id} value={w.id}>{w.name}{w.startingBalance ? ` (${Number(w.startingBalance).toFixed(2)})` : ''}</option>
+          )) : (
+            <option value="" disabled>No wallets available</option>
+          )}
+        </select>
+      </div>
+
       <div className="form-buttons">
         <button type="submit">{editingExpense ? 'Update' : 'Add'} Expense</button>
         {editingExpense && <button type="button" onClick={handleCancel}>Cancel</button>}

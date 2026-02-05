@@ -2,13 +2,15 @@ import React from 'react'
 import DataTable from './DataTable'
 import './Table.css'
 
-export default function TransactionsTable({ transactions = [], onDeleteTransaction, onUpdateTransaction, onBulkDelete }) {
+export default function TransactionsTable({ transactions = [], wallets = [], onDeleteTransaction, onUpdateTransaction, onBulkDelete }) {
+  const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
   const columns = [
     { key: 'type', header: 'Type', className: 'col-type', width: '120px', render: r => (
       <span className={`badge badge-${r.kind}`}>{r.kind}</span>
     ), sortable: true },
     { key: 'description', header: 'Description', className: 'col-desc', width: '1fr', render: r => r.description, sortable: true, editable: true },
     { key: 'category', header: 'Category', className: 'col-category', width: '160px', render: r => r.category || '—', sortable: true },
+    { key: 'wallet', header: 'Wallet', className: 'col-wallet', width: '160px', render: r => walletName(r.walletId) },
     { key: 'amount', header: 'Amount', className: 'col-amount amount', width: '140px', render: r => (
       <span style={{ color: r.kind === 'expense' ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 800 }}>{r.kind === 'expense' ? '- ' : ''}₱{Number(Math.abs(r.amount) || 0).toFixed(2)}</span>
     ), sortable: true, sortValue: r => Number(r.amount || 0), editable: true, exportValue: r => Number(r.amount || 0) },
