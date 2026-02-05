@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Auth.css'
 
 function Signup({ onSignup, onSwitchToLogin, error }) {
@@ -6,26 +6,36 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email || !password || !confirmPassword) return
 
     if (password !== confirmPassword) {
-      return // Error will be handled by parent
+      setFormError('Passwords do not match')
+      return
     }
+
+    setFormError(null)
 
     setLoading(true)
     try {
       await onSignup(email, password)
     } catch (err) {
-      // Error is handled by parent component
+      // If parent/context provided an error message, prefer that, otherwise use the thrown error
+      if (!error) setFormError(err?.message || 'Failed to create account')
     } finally {
       setLoading(false)
     }
   }
 
   const passwordsMatch = password === confirmPassword && password.length > 0
+
+  useEffect(() => {
+    // Clear local form error when global error from context changes
+    if (error) setFormError(null)
+  }, [error])
 
   return (
     <div className="auth-container">
@@ -36,7 +46,7 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">{error}</div>}
+          {(formError || error) && <div className="auth-error">{formError || error}</div>}
 
           <div className="form-group">
             <label htmlFor="email">Email</label>

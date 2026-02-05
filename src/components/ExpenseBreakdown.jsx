@@ -7,7 +7,7 @@ function ExpenseBreakdown({ expensesByCategory }) {
         <div key={item.category} className="breakdown-item">
           <div className="breakdown-header">
             <span className="breakdown-category">{item.category}</span>
-            <span className="breakdown-amount">${item.total.toFixed(2)}</span>
+            <span className="breakdown-amount">₱{item.total.toFixed(2)}</span>
           </div>
           <div className="breakdown-progress">
             <div

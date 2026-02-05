@@ -232,7 +232,7 @@ export default function DataTable({
   }
 
   if (!data || data.length === 0) return (
-    <div className="table-wrapper">
+    <div className={`table-wrapper ${tableClassName || ''}`}>
       {emptyState || (
         <div className="empty-state">
           <div className="icon empty-icon" aria-hidden></div>
@@ -243,7 +243,7 @@ export default function DataTable({
   )
 
   return (
-    <div className="table-wrapper">
+    <div className={`table-wrapper ${tableClassName || ''}`}>
       {selectable && selected.size > 0 && (
         <div className="table-bulk-toolbar">
           <div>{selected.size} selected</div>

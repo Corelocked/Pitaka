@@ -1,9 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Form.css'
 
 function AddToSavingsForm({ savings, onAddToSavings }) {
   const [selectedId, setSelectedId] = useState(savings?.[0]?.id || '')
   const [amount, setAmount] = useState('')
+
+  useEffect(() => {
+    // Ensure a valid selectedId is chosen when `savings` loads or changes
+    if (savings && savings.length > 0) {
+      const exists = selectedId && savings.some(s => s.id === selectedId)
+      if (!exists) setSelectedId(savings[0].id)
+    } else {
+      if (selectedId) setSelectedId('')
+    }
+  }, [savings, selectedId])
 
   const handleSubmit = (e) => {
     e.preventDefault()

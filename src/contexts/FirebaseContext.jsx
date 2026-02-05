@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from '../firebase'
+import { getAuthErrorMessage } from '../utils/authErrors'
 
 const FirebaseContext = createContext()
 
@@ -43,9 +44,11 @@ export function FirebaseProvider({ children }) {
       setError(null)
       setLoading(true)
       await signInWithEmailAndPassword(auth, email, password)
-    } catch (error) {
-      setError(error.message)
-      throw error
+    } catch (err) {
+      console.error('Auth login error:', err)
+      const msg = getAuthErrorMessage(err)
+      setError(msg)
+      throw err
     } finally {
       setLoading(false)
     }
@@ -56,9 +59,11 @@ export function FirebaseProvider({ children }) {
       setError(null)
       setLoading(true)
       await createUserWithEmailAndPassword(auth, email, password)
-    } catch (error) {
-      setError(error.message)
-      throw error
+    } catch (err) {
+      console.error('Auth signup error:', err)
+      const msg = getAuthErrorMessage(err)
+      setError(msg)
+      throw err
     } finally {
       setLoading(false)
     }
@@ -68,9 +73,11 @@ export function FirebaseProvider({ children }) {
     try {
       setError(null)
       await signOut(auth)
-    } catch (error) {
-      setError(error.message)
-      throw error
+    } catch (err) {
+      console.error('Auth logout error:', err)
+      const msg = getAuthErrorMessage(err)
+      setError(msg)
+      throw err
     }
   }
 
@@ -80,9 +87,11 @@ export function FirebaseProvider({ children }) {
       setLoading(true)
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
-    } catch (error) {
-      setError(error.message)
-      throw error
+    } catch (err) {
+      console.error('Auth googleSignIn error:', err)
+      const msg = getAuthErrorMessage(err)
+      setError(msg)
+      throw err
     } finally {
       setLoading(false)
     }

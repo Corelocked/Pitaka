@@ -8,12 +8,12 @@ function formatDate(d) {
 }
 
 export default function Lendings() {
-  const { lendings = [], wallets = [], addLending, updateLending, deleteLending } = useBudget()
+  const { lendings = [], wallets = [], walletBalances = [], addLending, updateLending, deleteLending } = useBudget()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [q, setQ] = useState('')
 
-  const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
+  const walletName = (id) => walletBalances.find(w => w.id === id)?.name || wallets.find(w => w.id === id)?.name || ''
 
   const totalLent = lendings.filter(l => l.direction === 'lent').reduce((s, l) => s + parseFloat(l.amount || 0), 0)
   const totalBorrowed = lendings.filter(l => l.direction === 'borrowed').reduce((s, l) => s + parseFloat(l.amount || 0), 0)
@@ -70,7 +70,7 @@ export default function Lendings() {
       {showForm && (
         <div style={{marginBottom:16}}>
           <MoneyLendingForm
-            wallets={wallets}
+            wallets={walletBalances}
             onSubmit={async (payload) => {
               try {
                 if (editing) {

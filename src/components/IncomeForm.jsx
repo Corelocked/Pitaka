@@ -90,9 +90,12 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
         <select id="income-wallet" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
           <option value="">Select a wallet</option>
           {wallets && wallets.length > 0 ? (
-            wallets.map(w => (
-              <option key={w.id} value={w.id}>{w.name}{w.startingBalance ? ` (${Number(w.startingBalance).toFixed(2)})` : ''}</option>
-            ))
+            wallets.map(w => {
+              const bal = (w.balance !== undefined && w.balance !== null) ? w.balance : w.startingBalance
+              return (
+                <option key={w.id} value={w.id}>{w.name}{(bal !== undefined && bal !== null) ? ` (${Number(bal).toFixed(2)})` : ''}</option>
+              )
+            })
           ) : (
             <option value="" disabled>No wallets available</option>
           )}

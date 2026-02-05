@@ -11,6 +11,9 @@ import AddToSavingsForm from './components/AddToSavingsForm'
 import WalletForm from './components/WalletForm'
 import Lendings from './pages/Lendings'
 import TablesCompact from './pages/TablesCompact'
+import SavingsPage from './pages/SavingsPage'
+// WalletsPage removed; wallet management moved to Categories page
+import CategoriesPage from './pages/CategoriesPage'
 import ExpenseBreakdown from './components/ExpenseBreakdown'
 import YearlySummary from './components/YearlySummary'
 import WalletSummary from './components/WalletSummary'
@@ -72,7 +75,6 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('incomes')
   const [route, setRoute] = useState(window.location.hash || '#/')
-  const [showQuickPanel, setShowQuickPanel] = useState(false)
 
   // compute available years from dataset (incomes, expenses, savings)
   const availableYears = useMemo(() => {
@@ -98,14 +100,7 @@ function App() {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  // close quick panel on Escape
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') setShowQuickPanel(false)
-    }
-    if (showQuickPanel) window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [showQuickPanel])
+  // quick panel removed
 
   // handlers
   const handleAddToSavings = async (id, amount) => {
@@ -177,15 +172,7 @@ function App() {
       <div className="app-header">
         <h1>Budget Book</h1>
         <div style={{display:'flex', gap: '12px', alignItems: 'center'}}>
-          <button
-            className="quick-toggle"
-            onClick={() => setShowQuickPanel(s => !s)}
-            aria-expanded={showQuickPanel}
-            aria-controls="quick-panel"
-            title="Quick actions"
-          >
-            Quick Add
-          </button>
+          
           <button onClick={logout} className="logout-btn">Logout</button>
         </div>
       </div>
@@ -229,6 +216,19 @@ function App() {
             className={viewMode === 'lendings' ? 'active' : ''}
           >
             Lendings
+          </button>
+          <button
+            onClick={() => { setViewMode('savings') }}
+            className={viewMode === 'savings' ? 'active' : ''}
+          >
+            Savings
+          </button>
+          {/* Wallets page removed; manage wallets from Categories */}
+          <button
+            onClick={() => { setViewMode('categories') }}
+            className={viewMode === 'categories' ? 'active' : ''}
+          >
+            Categories
           </button>
         </div>
         
@@ -275,10 +275,7 @@ function App() {
             <p className="amount net">₱{netIncome.toFixed(2)}</p>
           </div>
         </div>
-
-        {/* Per-wallet summaries */}
-        <div style={{ marginTop: 20 }}>
-          <h3>Wallets</h3>
+        <div>
           <WalletSummary wallets={wallets} incomes={incomes} expenses={expenses} />
         </div>
 
@@ -305,7 +302,7 @@ function App() {
                     editingIncome={editingIncome}
                     onUpdateIncome={updateIncome}
                     onCancelEdit={() => setEditingIncome(null)}
-                    wallets={wallets}
+                    wallets={walletBalances}
                   />
                 </div>
               </div>
@@ -330,7 +327,7 @@ function App() {
                     onUpdateExpense={updateExpense}
                     onCancelEdit={() => setEditingExpense(null)}
                     categories={categories}
-                    wallets={wallets}
+                    wallets={walletBalances}
                   />
                 </div>
               </div>
@@ -342,71 +339,36 @@ function App() {
 
 
 
-        {viewMode === 'tables-compact' && (
-          <div className="main-content">
-            <div className="tables-full">
-              <h2>Tables</h2>
-              <TablesCompact />
-            </div>
-          </div>
-        )}
-        {viewMode === 'lendings' && (
-          <div className="main-content">
-            <div className="section">
-              <h2>Lendings</h2>
+        <div className="main-content">
+          <div className="section">
+            {viewMode === 'tables-compact' && (
+              <div className="tables-full">
+                <h2>Tables</h2>
+                <TablesCompact />
+              </div>
+            )}
+
+            {viewMode === 'lendings' && (
               <Lendings />
-            </div>
-          </div>
-        )}
-        
+            )}
 
-        {viewMode === 'breakdown' && (
-          <div className="main-content">
-            <div className="section">
-              <h2>Expense Breakdown by Category</h2>
+            {viewMode === 'savings' && (
+              <SavingsPage />
+            )}
+
+            {/* wallets view removed - managed within Categories */}
+
+            {viewMode === 'categories' && (
+              <CategoriesPage />
+            )}
+
+            {viewMode === 'breakdown' && (
               <ExpenseBreakdown expensesByCategory={expensesByCategory} />
-            </div>
+            )}
           </div>
-        )}
-
-      {/* Quick actions panel (replaces previous side panel) */}
-      <div className={'quick-backdrop ' + (showQuickPanel ? 'open' : '')} onClick={() => setShowQuickPanel(false)} aria-hidden={!showQuickPanel}></div>
-
-      <aside id="quick-panel" className={'quick-panel ' + (showQuickPanel ? 'open' : '')} aria-hidden={!showQuickPanel}>
-        <div className="quick-panel-header">
-          <h3>Quick Actions</h3>
-          <button className="close-quick" onClick={() => setShowQuickPanel(false)} aria-label="Close quick actions">✕</button>
         </div>
-        <div className="quick-panel-body">
-          <SavingsForm 
-            onAddSavings={addSavings} 
-            editingSavings={editingSavings}
-            onUpdateSavings={updateSavings}
-            onCancelEdit={() => setEditingSavings(null)}
-          />
-          <AddToSavingsForm
-            savings={savings}
-            onAddToSavings={handleAddToSavings}
-          />
-          <CategoryForm onAddCategory={addCategory} />
 
-          <hr />
-
-          <h4 style={{margin:0}}>Wallets</h4>
-          <p style={{ marginTop: 8, marginBottom: 8, color: 'var(--text-secondary)' }}>Quick add a wallet to track balances</p>
-          <div className="form">
-            <WalletForm onSubmit={async (payload) => {
-              try {
-                await addWallet(payload)
-                setShowQuickPanel(false)
-              } catch (err) {
-                console.error('Add wallet failed', err)
-              }
-            }} onCancel={() => { /* noop for now */ }} />
-          </div>
-          {/* Money Lending moved to its own view */}
-        </div>
-      </aside>
+      {/* Quick actions removed */}
     </div>
     </div>
   )

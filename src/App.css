@@ -212,7 +212,7 @@ button:focus-visible, .view-toggle button:focus-visible, .form input:focus-visib
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 10px;
 }
 
 .export-btn {
