@@ -34,5 +34,12 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
+
+    // Lendings collection — track money lent/borrowed per user
+    match /lendings/{lendingId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
   }
 }

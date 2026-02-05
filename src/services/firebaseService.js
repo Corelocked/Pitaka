@@ -7,7 +7,8 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot
+  onSnapshot,
+  getDoc
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -17,6 +18,7 @@ const COLLECTION_NAMES = {
   SAVINGS: 'savings',
   CATEGORIES: 'categories',
   WALLETS: 'wallets'
+  ,LENDINGS: 'lendings'
 }
 
 // Income operations
@@ -250,5 +252,55 @@ export const walletService = {
   // Delete wallet
   deleteWallet: async (walletId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.WALLETS, walletId))
+  }
+
+  ,
+  // Get single wallet by id
+  getWallet: async (walletId) => {
+    const docRef = doc(db, COLLECTION_NAMES.WALLETS, walletId)
+    const snap = await getDoc(docRef)
+    if (!snap.exists()) return null
+    return { id: snap.id, ...snap.data() }
+  }
+}
+
+// Lending operations (money lent or borrowed)
+export const lendingService = {
+  // Get all lendings for a user
+  subscribeToLendings: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.LENDINGS),
+      where('userId', '==', userId),
+      orderBy('date', 'desc')
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const lendings = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      callback(lendings)
+    }, (err) => {
+      console.error('Lendings snapshot error:', err)
+      try { callback([]) } catch (e) { /* swallow */ }
+    })
+  },
+
+  addLending: async (lending, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.LENDINGS), {
+      ...lending,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  updateLending: async (lendingId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.LENDINGS, lendingId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  deleteLending: async (lendingId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.LENDINGS, lendingId))
   }
 }

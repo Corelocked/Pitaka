@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useFirebase } from './useFirebase'
 import { incomeService, expenseService, savingsService, categoryService, walletService } from '../services/firebaseService'
+import { lendingService } from '../services/firebaseService'
 
 export function useBudget() {
   const { user, loading: authLoading } = useFirebase()
@@ -20,6 +21,7 @@ export function useBudget() {
   const [timePeriod, setTimePeriod] = useState('monthly') // 'monthly' or 'yearly'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [lendings, setLendings] = useState([])
 
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
@@ -107,6 +109,20 @@ export function useBudget() {
           }
         }
 
+        // Subscribe to lendings
+        let unsubscribeLendings
+        try {
+          unsubscribeLendings = lendingService.subscribeToLendings(
+            user.uid,
+            (lendingsData) => {
+              if (isMounted) setLendings(lendingsData || [])
+            }
+          )
+        } catch (err) {
+          console.log('Error setting up lendings subscription:', err)
+          unsubscribeLendings = () => {}
+          if (isMounted) setLendings([])
+        }
         // Set loading to false after subscriptions are set up
         // Add a small delay to ensure subscriptions have time to connect
         const loadingTimeout = setTimeout(() => {
@@ -124,6 +140,7 @@ export function useBudget() {
           unsubscribeCategories()
           unsubscribeWallets()
         }
+          unsubscribeLendings && typeof unsubscribeLendings === 'function' && unsubscribeLendings()
       } catch (err) {
         if (isMounted) {
           setError(err.message)
@@ -174,7 +191,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [user])
+  }, [user, wallets])
 
   const addExpense = useCallback(async (expense) => {
     if (!user) return
@@ -196,7 +213,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [lendings, wallets])
 
   const deleteExpense = useCallback(async (id) => {
     try {
@@ -206,7 +223,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [lendings, wallets])
 
   const editIncome = useCallback((income) => {
     setEditingIncome(income)
@@ -289,6 +306,126 @@ export function useBudget() {
       throw err
     }
   }, [user])
+
+  const addLending = useCallback(async (lending) => {
+    if (!user) return
+    try {
+      setError(null)
+      // Persist lending
+      const id = await lendingService.addLending(lending, user.uid)
+
+      // If lending references a wallet, adjust that wallet's startingBalance accordingly
+      if (lending.walletId) {
+        let w = wallets.find(w => w.id === lending.walletId)
+        if (!w) {
+          // try fetching directly from Firestore if not present in local state
+          try {
+            w = await walletService.getWallet(lending.walletId)
+          } catch (err) {
+            console.error('addLending: failed to fetch wallet from firestore', lending.walletId, err)
+            w = null
+          }
+        }
+
+        if (w) {
+          const current = parseFloat(w.startingBalance || 0)
+          const delta = (lending.direction === 'lent' ? -1 : 1) * parseFloat(lending.amount || 0)
+          const newStarting = current + delta
+          console.log('addLending: wallet', w.id, 'current', current, 'delta', delta, 'newStarting', newStarting)
+          // optimistic UI update
+          setWallets(prev => prev.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
+          try {
+            await walletService.updateWallet(w.id, { startingBalance: newStarting })
+            console.log('addLending: persisted wallet update', w.id)
+          } catch (err) {
+            console.error('Failed to persist wallet balance change from lending add:', err)
+          }
+        } else {
+          console.warn('addLending: referenced wallet not found after fetch', lending.walletId)
+        }
+      }
+
+      return id
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [user])
+
+  const updateLending = useCallback(async (updatedLending) => {
+    try {
+      setError(null)
+      const { id, ...updates } = updatedLending
+
+      // find previous lending to compute delta
+      const prev = lendings.find(l => l.id === id)
+      await lendingService.updateLending(id, updates)
+
+      if (prev && (prev.walletId || updates.walletId)) {
+        const oldWalletId = prev.walletId
+        const newWalletId = updates.walletId !== undefined ? updates.walletId : prev.walletId
+
+        const oldAmount = parseFloat(prev.amount || 0)
+        const oldDir = prev.direction
+        const newAmount = parseFloat((updates.amount !== undefined) ? updates.amount : prev.amount || 0)
+        const newDir = updates.direction || prev.direction
+
+        // revert old effect
+        if (oldWalletId) {
+          const w = wallets.find(w => w.id === oldWalletId)
+          if (w) {
+            const current = parseFloat(w.startingBalance || 0)
+            const revertDelta = (oldDir === 'lent' ? 1 : -1) * oldAmount
+            const newStarting = current + revertDelta
+            console.log('updateLending: revert on old wallet', w.id, 'current', current, 'revertDelta', revertDelta, 'newStarting', newStarting)
+            setWallets(prevs => prevs.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
+            try { await walletService.updateWallet(w.id, { startingBalance: newStarting }); console.log('updateLending: persisted revert for', w.id) } catch (e) { console.error(e) }
+          }
+        }
+
+        // apply new effect
+        if (newWalletId) {
+          const w2 = wallets.find(w => w.id === newWalletId)
+          if (w2) {
+            const current2 = parseFloat(w2.startingBalance || 0)
+            const applyDelta = (newDir === 'lent' ? -1 : 1) * newAmount
+            const newStarting2 = current2 + applyDelta
+            console.log('updateLending: apply on new wallet', w2.id, 'current', current2, 'applyDelta', applyDelta, 'newStarting', newStarting2)
+            setWallets(prevs => prevs.map(p => p.id === w2.id ? { ...p, startingBalance: newStarting2 } : p))
+            try { await walletService.updateWallet(w2.id, { startingBalance: newStarting2 }); console.log('updateLending: persisted apply for', w2.id) } catch (e) { console.error(e) }
+          }
+        }
+      }
+
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const deleteLending = useCallback(async (id) => {
+    try {
+      setError(null)
+      // find lending to revert its effect on wallet
+      const existing = lendings.find(l => l.id === id)
+      await lendingService.deleteLending(id)
+      if (existing && existing.walletId) {
+        const w = wallets.find(w => w.id === existing.walletId)
+        if (w) {
+          const current = parseFloat(w.startingBalance || 0)
+          // revert: if previously lent (decreased), add back; if borrowed (increased), subtract
+          const delta = (existing.direction === 'lent' ? 1 : -1) * parseFloat(existing.amount || 0)
+          const newStarting = current + delta
+          console.log('deleteLending: revert wallet', w.id, 'current', current, 'delta', delta, 'newStarting', newStarting)
+          setWallets(prev => prev.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
+          try { await walletService.updateWallet(w.id, { startingBalance: newStarting }); console.log('deleteLending: persisted revert for', w.id) } catch (e) { console.error(e) }
+        }
+      }
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
 
   const addWallet = useCallback(async (wallet) => {
     if (!user) return
@@ -457,6 +594,7 @@ export function useBudget() {
     savings,
     categories,
     wallets,
+    lendings,
     walletBalances,
     selectedMonth,
     selectedYear,
@@ -485,6 +623,7 @@ export function useBudget() {
     addIncome,
     addExpense,
     addSavings,
+    addLending,
     addCategory,
     addWallet,
     deleteIncome,
@@ -502,6 +641,8 @@ export function useBudget() {
     updateCategory,
     editWallet,
     updateWallet,
+    updateLending,
+    deleteLending,
     exportToCSV
   }
 }

@@ -9,6 +9,7 @@ import CategoryForm from './components/CategoryForm'
 import SavingsForm from './components/SavingsForm'
 import AddToSavingsForm from './components/AddToSavingsForm'
 import WalletForm from './components/WalletForm'
+import Lendings from './pages/Lendings'
 import TablesCompact from './pages/TablesCompact'
 import ExpenseBreakdown from './components/ExpenseBreakdown'
 import YearlySummary from './components/YearlySummary'
@@ -223,6 +224,12 @@ function App() {
           >
             Tables
           </button>
+          <button
+            onClick={() => { setViewMode('lendings') }}
+            className={viewMode === 'lendings' ? 'active' : ''}
+          >
+            Lendings
+          </button>
         </div>
         
         <div className="month-year-selector">
@@ -343,6 +350,14 @@ function App() {
             </div>
           </div>
         )}
+        {viewMode === 'lendings' && (
+          <div className="main-content">
+            <div className="section">
+              <h2>Lendings</h2>
+              <Lendings />
+            </div>
+          </div>
+        )}
         
 
         {viewMode === 'breakdown' && (
@@ -389,6 +404,7 @@ function App() {
               }
             }} onCancel={() => { /* noop for now */ }} />
           </div>
+          {/* Money Lending moved to its own view */}
         </div>
       </aside>
     </div>

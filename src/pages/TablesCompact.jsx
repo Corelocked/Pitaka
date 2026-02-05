@@ -5,6 +5,7 @@ import ExpenseTable from '../components/ExpenseTable'
 import SavingsTable from '../components/SavingsTable'
 import TransactionsTable from '../components/TransactionsTable'
 import WalletsTable from '../components/WalletsTable'
+import LendingsTable from '../components/LendingsTable'
 import WalletForm from '../components/WalletForm'
 import Modal from '../components/Modal'
 import './Tables.css' 
@@ -15,6 +16,7 @@ export default function TablesCompact() {
     filteredExpenses,
     savings,
     wallets,
+    lendings,
     walletBalances,
     exportToCSV,
     deleteIncome,
@@ -26,6 +28,7 @@ export default function TablesCompact() {
     updateIncome,
     updateExpense,
     updateSavings
+    , deleteLending
   } = useBudget()
 
   const [activeTab, setActiveTab] = useState('incomes')
@@ -117,7 +120,8 @@ export default function TablesCompact() {
     { key: 'incomes', label: 'Incomes', count: visibleIncomes.length },
     { key: 'expenses', label: 'Expenses', count: visibleExpenses.length },
     { key: 'savings', label: 'Savings', count: visibleSavings.length },
-    { key: 'wallets', label: 'Wallets', count: savings.length > 0 ? savings.length : wallets.length }
+    { key: 'wallets', label: 'Wallets', count: savings.length > 0 ? savings.length : wallets.length },
+    { key: 'lendings', label: 'Lendings', count: lendings.length }
   ]
 
   const handleTabKeyDown = (e, idx) => {
@@ -316,6 +320,18 @@ export default function TablesCompact() {
             balances={walletBalances}
             onEditWallet={(w) => updateWallet(w)}
             onDeleteWallet={(id) => deleteWallet(id)}
+          />
+        </div>
+        <div role="tabpanel" id="panel-lendings" aria-labelledby="tab-lendings" hidden={activeTab !== 'lendings'}>
+          <LendingsTable
+            lendings={lendings}
+            wallets={wallets}
+            onEdit={(row) => {
+              // placeholder: UI edit flow handled elsewhere
+            }}
+            onDelete={(id) => {
+              if (typeof deleteLending === 'function') deleteLending(id)
+            }}
           />
         </div>
       </div>
