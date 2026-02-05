@@ -12,7 +12,7 @@ function ExpenseBreakdown({ expensesByCategory }) {
           <div className="breakdown-progress">
             <div
               className="breakdown-bar"
-              style={{ width: `${item.percentage}%` }}
+              style={{ width: item.percentage + '%' }}
             ></div>
           </div>
           <div className="breakdown-percentage">{item.percentage}% of total expenses</div>

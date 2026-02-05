@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
 
-function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit }) {
+function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [] }) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
@@ -57,17 +57,22 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
       </div>
       <div className="form-group">
         <label htmlFor="expense-category">Category</label>
-        <input
+        <select
           id="expense-category"
-          type="text"
-          placeholder="e.g., Food, Housing, Transportation"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           required
-        />
+        >
+          <option value="">Select a category</option>
+          {categories && categories.length > 0 ? categories.map(cat => (
+            <option key={cat.id} value={cat.name}>{cat.name}</option>
+          )) : (
+            <option value="" disabled>No categories available</option>
+          )}
+        </select>
       </div>
       <div className="form-group">
-        <label htmlFor="expense-amount">Amount ($)</label>
+        <label htmlFor="expense-amount">Amount (₱)</label>
         <input
           id="expense-amount"
           type="number"

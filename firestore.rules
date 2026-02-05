@@ -1,9 +1,31 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    match /incomes/{incomeId} {
+      // Allow reads only to the owner
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow create when the incoming document's userId matches the authenticated user
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      // Allow update/delete only if existing resource belongs to the user
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /expenses/{expenseId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /savings/{savingsId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /categories/{categoryId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }

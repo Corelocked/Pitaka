@@ -1,0 +1,23 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "asia-southeast1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "site": "budgetbook-5b9c3-de3bd",
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

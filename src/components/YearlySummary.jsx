@@ -37,10 +37,10 @@ function YearlySummary({ incomes, expenses, year }) {
         {monthlyData.map(data => (
           <tr key={data.month}>
             <td>{data.month}</td>
-            <td className="amount">${data.income.toFixed(2)}</td>
-            <td className="amount">${data.expenses.toFixed(2)}</td>
-            <td className={`amount ${data.net >= 0 ? 'positive' : 'negative'}`}>
-              ${data.net.toFixed(2)}
+            <td className="amount">₱{data.income.toFixed(2)}</td>
+            <td className="amount">₱{data.expenses.toFixed(2)}</td>
+            <td className={'amount ' + (data.net >= 0 ? 'positive' : 'negative')}>
+              ₱{data.net.toFixed(2)}
             </td>
           </tr>
         ))}

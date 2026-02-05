@@ -13,7 +13,9 @@ import { db } from '../firebase'
 
 const COLLECTION_NAMES = {
   INCOMES: 'incomes',
-  EXPENSES: 'expenses'
+  EXPENSES: 'expenses',
+  SAVINGS: 'savings',
+  CATEGORIES: 'categories'
 }
 
 // Income operations
@@ -37,39 +39,26 @@ export const incomeService = {
 
   // Add new income
   addIncome: async (income, userId) => {
-    try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAMES.INCOMES), {
-        ...income,
-        userId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      return docRef.id
-    } catch (error) {
-      throw new Error(`Failed to add income: ${error.message}`)
-    }
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.INCOMES), {
+      ...income,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
   },
 
   // Update income
   updateIncome: async (incomeId, updates) => {
-    try {
-      const docRef = doc(db, COLLECTION_NAMES.INCOMES, incomeId)
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: new Date()
-      })
-    } catch (error) {
-      throw new Error(`Failed to update income: ${error.message}`)
-    }
+    const docRef = doc(db, COLLECTION_NAMES.INCOMES, incomeId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
   },
 
   // Delete income
   deleteIncome: async (incomeId) => {
-    try {
-      await deleteDoc(doc(db, COLLECTION_NAMES.INCOMES, incomeId))
-    } catch (error) {
-      throw new Error(`Failed to delete income: ${error.message}`)
-    }
+    await deleteDoc(doc(db, COLLECTION_NAMES.INCOMES, incomeId))
   }
 }
 
@@ -94,38 +83,113 @@ export const expenseService = {
 
   // Add new expense
   addExpense: async (expense, userId) => {
-    try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAMES.EXPENSES), {
-        ...expense,
-        userId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      return docRef.id
-    } catch (error) {
-      throw new Error(`Failed to add expense: ${error.message}`)
-    }
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.EXPENSES), {
+      ...expense,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
   },
 
   // Update expense
   updateExpense: async (expenseId, updates) => {
-    try {
-      const docRef = doc(db, COLLECTION_NAMES.EXPENSES, expenseId)
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: new Date()
-      })
-    } catch (error) {
-      throw new Error(`Failed to update expense: ${error.message}`)
-    }
+    const docRef = doc(db, COLLECTION_NAMES.EXPENSES, expenseId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
   },
 
   // Delete expense
   deleteExpense: async (expenseId) => {
-    try {
-      await deleteDoc(doc(db, COLLECTION_NAMES.EXPENSES, expenseId))
-    } catch (error) {
-      throw new Error(`Failed to delete expense: ${error.message}`)
-    }
+    await deleteDoc(doc(db, COLLECTION_NAMES.EXPENSES, expenseId))
+  }
+}
+
+// Savings operations
+export const savingsService = {
+  // Get all savings for a user
+  subscribeToSavings: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.SAVINGS),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const savings = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      callback(savings)
+    })
+  },
+
+  // Add new savings goal
+  addSavings: async (savings, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.SAVINGS), {
+      ...savings,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  // Update savings goal
+  updateSavings: async (savingsId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.SAVINGS, savingsId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  // Delete savings goal
+  deleteSavings: async (savingsId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.SAVINGS, savingsId))
+  }
+}
+
+// Category operations
+export const categoryService = {
+  // Get all categories for a user
+  subscribeToCategories: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.CATEGORIES),
+      where('userId', '==', userId),
+      orderBy('name', 'asc')
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const categories = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      callback(categories)
+    })
+  },
+
+  // Add new category
+  addCategory: async (category, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.CATEGORIES), {
+      ...category,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  // Update category
+  updateCategory: async (categoryId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.CATEGORIES, categoryId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  // Delete category
+  deleteCategory: async (categoryId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.CATEGORIES, categoryId))
   }
 }

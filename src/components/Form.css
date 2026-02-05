@@ -1,93 +1,221 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-xl);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light), var(--success-color));
+  border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.form:hover::before {
+  transform: scaleX(1);
+}
+
+.form:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  position: relative;
 }
 
 .form-group label {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   font-size: 14px;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  transition: color 0.2s ease;
 }
 
-.form input {
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
+.form input:focus + label,
+.form select:focus + label,
+.form textarea:focus + label {
+  color: var(--primary-color);
+}
+
+.form input, .form select, .form textarea {
+  padding: 16px 20px;
+  border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
   font-size: 16px;
-  background-color: var(--card-background);
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  color: var(--text-primary);
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.form input:focus {
+.form input::placeholder,
+.form select::placeholder,
+.form textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.form input:focus, .form select:focus, .form textarea:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 4px 16px rgba(99, 102, 241, 0.1);
+  background-color: rgba(255, 255, 255, 0.95);
   outline: none;
+  transform: translateY(-2px);
 }
 
-.form input::placeholder {
-  color: var(--text-secondary);
+.form input:hover, .form select:hover, .form textarea:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.form input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.form input[type="number"]::-webkit-outer-spin-button,
+.form input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
 }
 
 .form button {
-  padding: 12px 24px;
+  padding: 16px 32px;
   background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   color: white;
   border: none;
   border-radius: var(--border-radius);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.025em;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  margin-top: 8px;
+}
+
+.form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.form button:hover::before {
+  left: 100%;
 }
 
 .form button:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-  background: linear-gradient(135deg, var(--primary-hover), #1e40af);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, var(--primary-hover), #1d4ed8);
 }
 
 .form button:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+}
+
+.form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form button:disabled:hover {
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.form input::placeholder, .form textarea::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.7;
 }
 
 .form-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 16px;
 }
 
 .form-buttons button {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px 20px;
   font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-buttons button:first-child {
   background: linear-gradient(135deg, var(--success-color), #059669);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .form-buttons button:first-child:hover {
   background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
 .form-buttons button:last-child {
-  background-color: var(--secondary-color);
   background: linear-gradient(135deg, var(--secondary-color), #475569);
+  color: white;
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3);
 }
 
 .form-buttons button:last-child:hover {
   background: linear-gradient(135deg, #475569, #334155);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(71, 85, 105, 0.4);
 }

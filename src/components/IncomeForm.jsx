@@ -5,6 +5,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit }
   const [source, setSource] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     if (editingIncome) {
@@ -20,13 +21,25 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit }
   const handleSubmit = (e) => {
     e.preventDefault()
     if (source && amount) {
-      if (editingIncome) {
-        onUpdateIncome({ ...editingIncome, source, amount: parseFloat(amount), date })
-      } else {
-        onAddIncome({ source, amount: parseFloat(amount), date })
-        setSource('')
-        setAmount('')
+      try {
+        if (editingIncome) {
+          onUpdateIncome({ ...editingIncome, source, amount: parseFloat(amount), date })
+          setMessage('Income updated successfully!')
+        } else {
+          onAddIncome({ source, amount: parseFloat(amount), date })
+          setMessage('Income added successfully!')
+          setSource('')
+          setAmount('')
+        }
+        setTimeout(() => setMessage(''), 3000)
+      } catch (error) {
+        console.error('Error submitting form:', error)
+        setMessage('Error: ' + error.message)
+        setTimeout(() => setMessage(''), 5000)
       }
+    } else {
+      setMessage('Please fill in all required fields')
+      setTimeout(() => setMessage(''), 3000)
     }
   }
 
@@ -51,7 +64,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit }
         />
       </div>
       <div className="form-group">
-        <label htmlFor="income-amount">Amount ($)</label>
+        <label htmlFor="income-amount">Amount (₱)</label>
         <input
           id="income-amount"
           type="number"
@@ -70,9 +83,22 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit }
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          required
         />
       </div>
+      {message && (
+        <div style={{
+          padding: '8px 12px',
+          borderRadius: '4px',
+          fontSize: '14px',
+          fontWeight: '500',
+          marginBottom: '16px',
+          backgroundColor: message.includes('Error') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+          color: message.includes('Error') ? '#ef4444' : '#10b981',
+          border: '1px solid ' + (message.includes('Error') ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)')
+        }}>
+          {message}
+        </div>
+      )}
       <div className="form-buttons">
         <button type="submit">{editingIncome ? 'Update' : 'Add'} Income</button>
         {editingIncome && <button type="button" onClick={handleCancel}>Cancel</button>}

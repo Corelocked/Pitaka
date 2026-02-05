@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth'
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from '../firebase'
 
 const FirebaseContext = createContext()
@@ -9,28 +9,93 @@ export function FirebaseProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Firebase authentication
   useEffect(() => {
+    // Add a timeout to force loading to false after 10 seconds
+    const authTimeout = setTimeout(() => {
+      setLoading(false)
+      setError('Authentication required. Please sign in to add income and expenses.')
+      setUser(null) // Clear user to force re-authentication
+    }, 10000)
+
     // Listen for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      clearTimeout(authTimeout) // Clear the timeout since we got a response
+      
       if (user) {
         setUser(user)
+        setError(null)
       } else {
-        // Sign in anonymously for demo purposes
-        // In a real app, you'd want proper authentication
-        signInAnonymously(auth).catch((error) => {
-          setError(error.message)
-        })
+        // User is not authenticated, stay in loading state until they authenticate
+        setUser(null)
       }
       setLoading(false)
     })
 
-    return () => unsubscribe()
+    return () => {
+      clearTimeout(authTimeout)
+      unsubscribe()
+    }
   }, [])
+
+  const login = async (email, password) => {
+    try {
+      setError(null)
+      setLoading(true)
+      await signInWithEmailAndPassword(auth, email, password)
+    } catch (error) {
+      setError(error.message)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signup = async (email, password) => {
+    try {
+      setError(null)
+      setLoading(true)
+      await createUserWithEmailAndPassword(auth, email, password)
+    } catch (error) {
+      setError(error.message)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const logout = async () => {
+    try {
+      setError(null)
+      await signOut(auth)
+    } catch (error) {
+      setError(error.message)
+      throw error
+    }
+  }
+
+  const googleSignIn = async () => {
+    try {
+      setError(null)
+      setLoading(true)
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+    } catch (error) {
+      setError(error.message)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const value = {
     user,
     loading,
     error,
+    login,
+    signup,
+    logout,
+    googleSignIn,
     isAuthenticated: !!user
   }
 
