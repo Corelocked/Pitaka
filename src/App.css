@@ -1,0 +1,237 @@
+/* Global Styles */
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.app > * {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 24px;
+}
+
+/* Header */
+.app h1 {
+  background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0;
+  padding: 32px 24px;
+}
+
+/* Month Selector */
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  padding: 4px;
+  box-shadow: var(--shadow);
+}
+
+.view-toggle button {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.view-toggle button.active {
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.month-selector select,
+.month-selector input[type="number"] {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--card-background);
+  font-size: 14px;
+  min-width: 120px;
+}
+
+.export-btn {
+  background-color: var(--success-color);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Summary Cards */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.summary-item {
+  background-color: var(--card-background);
+  padding: 24px;
+  border-radius: var(--border-radius);
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.summary-item h3 {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.summary-item p {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.summary-item:nth-child(1) p { color: var(--success-color); }
+.summary-item:nth-child(2) p { color: var(--danger-color); }
+.summary-item:nth-child(3) p {
+  color: var(--success-color);
+}
+
+/* Main Content Layout */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.section {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;
+}
+
+.section:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.section h2 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--primary-color);
+  display: inline-block;
+}
+
+.yearly-summary {
+  grid-column: 1 / -1;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .app h1 {
+    font-size: 2rem;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 16px;
+  }
+
+  .month-selector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .view-toggle {
+    justify-content: center;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .summary-item {
+    padding: 20px;
+  }
+
+  .summary-item p {
+    font-size: 1.5rem;
+  }
+
+  .section {
+    padding: 20px;
+  }
+
+  .section h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app h1 {
+    font-size: 1.75rem;
+    padding: 20px 16px;
+  }
+
+  .month-selector {
+    padding: 20px 16px;
+  }
+
+  .summary-item {
+    padding: 16px;
+  }
+
+  .summary-item p {
+    font-size: 1.25rem;
+  }
+}

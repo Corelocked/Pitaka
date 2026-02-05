@@ -1,0 +1,108 @@
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  transition: all 0.2s ease;
+}
+
+.breakdown-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.breakdown-category {
+  font-size: 16px;
+}
+
+.breakdown-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--danger-color);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.breakdown-progress {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.breakdown-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--danger-color), #f87171);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.breakdown-percentage {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* Color variations for different categories */
+.breakdown-item:nth-child(1) {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.breakdown-item:nth-child(2) {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #ef4444;
+}
+
+.breakdown-item:nth-child(3) {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-color: #6366f1;
+}
+
+.breakdown-item:nth-child(4) {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #22c55e;
+}
+
+.breakdown-item:nth-child(5) {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .breakdown-item {
+    padding: 12px;
+  }
+
+  .breakdown-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .breakdown-category,
+  .breakdown-amount {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,93 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.form input {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  background-color: var(--card-background);
+  transition: all 0.2s ease;
+}
+
+.form input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+.form input::placeholder {
+  color: var(--text-secondary);
+}
+
+.form button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.form button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--primary-hover), #1e40af);
+}
+
+.form button:active {
+  transform: translateY(0);
+}
+
+.form-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.form-buttons button {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.form-buttons button:first-child {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+}
+
+.form-buttons button:first-child:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.form-buttons button:last-child {
+  background-color: var(--secondary-color);
+  background: linear-gradient(135deg, var(--secondary-color), #475569);
+}
+
+.form-buttons button:last-child:hover {
+  background: linear-gradient(135deg, #475569, #334155);
+}
