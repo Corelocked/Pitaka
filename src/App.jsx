@@ -1,4 +1,5 @@
 import './App.css'
+import PerlinBackground from './components/PerlinBackground'
 import HamburgerMenu from './components/HamburgerMenu'
 import { useContext, useState, useEffect, useMemo } from 'react'
 import { FirebaseContext } from './contexts/FirebaseContext'
@@ -18,9 +19,11 @@ import ExpenseBreakdown from './components/ExpenseBreakdown'
 import YearlySummary from './components/YearlySummary'
 import WalletSummary from './components/WalletSummary'
 import { useBudget } from './hooks/useBudget'
+import { useConfirm } from './contexts/ConfirmContext'
 
 function App() {
   const { isAuthenticated, loading: authLoading, logout } = useContext(FirebaseContext)
+  const confirm = useConfirm()
   const {
     selectedMonth,
     selectedYear,
@@ -45,10 +48,6 @@ function App() {
     setSelectedMonth,
     setSelectedYear,
     setViewMode,
-    setEditingIncome,
-    setEditingExpense,
-    setEditingSavings,
-    setEditingCategory,
     addIncome,
     addExpense,
     addSavings,
@@ -144,6 +143,7 @@ function App() {
 
   return (
     <div className="app">
+      <PerlinBackground />
       <HamburgerMenu>
         <div style={{paddingTop: 32}}>
           <div className="side-forms">
@@ -151,7 +151,7 @@ function App() {
               onAddSavings={addSavings} 
               editingSavings={editingSavings}
               onUpdateSavings={updateSavings}
-              onCancelEdit={() => setEditingSavings(null)}
+              onCancelEdit={() => editSavings && editSavings(null)}
             />
             <AddToSavingsForm
               savings={savings}
@@ -171,9 +171,15 @@ function App() {
       </HamburgerMenu>
       <div className="app-header">
         <h1>Budget Book</h1>
-        <div style={{display:'flex', gap: '12px', alignItems: 'center'}}>
+          <div style={{display:'flex', gap: '12px', alignItems: 'center'}}>
           
-          <button onClick={logout} className="logout-btn">Logout</button>
+          <button
+            className="logout-btn"
+            onClick={async () => {
+              const ok = await confirm({ title: 'Logout', description: 'Are you sure you want to logout?', confirmText: 'Logout', cancelText: 'Cancel' })
+              if (ok) logout()
+            }}
+          >Logout</button>
         </div>
       </div>
 
@@ -301,7 +307,7 @@ function App() {
                     onAddIncome={addIncome}
                     editingIncome={editingIncome}
                     onUpdateIncome={updateIncome}
-                    onCancelEdit={() => setEditingIncome(null)}
+                    onCancelEdit={() => editIncome && editIncome(null)}
                     wallets={walletBalances}
                   />
                 </div>
@@ -325,7 +331,7 @@ function App() {
                     onAddExpense={addExpense}
                     editingExpense={editingExpense}
                     onUpdateExpense={updateExpense}
-                    onCancelEdit={() => setEditingExpense(null)}
+                    onCancelEdit={() => editExpense && editExpense(null)}
                     categories={categories}
                     wallets={walletBalances}
                   />

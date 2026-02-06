@@ -1,7 +1,9 @@
 import React from 'react'
 import DataTable from './DataTable'
+import { useConfirm } from '../contexts/ConfirmContext'
 
 export default function SavingsTable({ savings = [], onDeleteSavings, onEditSavings, onUpdateSavings, selectable = false, onBulkDelete }) {
+  const confirm = useConfirm()
   const calcProgress = (c, t) => (t === 0 ? 0 : Math.min((c / t) * 100, 100))
 
   const columns = [
@@ -15,8 +17,8 @@ export default function SavingsTable({ savings = [], onDeleteSavings, onEditSavi
     { key: 'targetDate', header: 'Target Date', className: 'col-date date', width: '120px', render: r => (r.targetDate ? new Date(r.targetDate).toLocaleDateString() : '—'), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '100px', render: r => (
       <>
-        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => onEditSavings && onEditSavings(r)}>Edit</button>
-        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={() => onDeleteSavings && onDeleteSavings(r.id)}>Delete</button>
+        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => { onEditSavings && onEditSavings(r) }}>Edit</button>
+        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={async () => { const ok = await confirm({ title: 'Delete saving', description: `Delete saving "${r.name || ''}"? This cannot be undone.`, confirmText: 'Delete', cancelText: 'Cancel' }); if (ok) onDeleteSavings && onDeleteSavings(r.id) }}>Delete</button>
       </>
     ) }
   ]

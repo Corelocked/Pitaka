@@ -3,11 +3,15 @@ import { useBudget } from '../hooks/useBudget'
 import IncomeTable from '../components/IncomeTable'
 import ExpenseTable from '../components/ExpenseTable'
 import SavingsTable from '../components/SavingsTable'
+import IncomeForm from '../components/IncomeForm'
+import ExpenseForm from '../components/ExpenseForm'
+import SavingsForm from '../components/SavingsForm'
 import TransactionsTable from '../components/TransactionsTable'
 import WalletsTable from '../components/WalletsTable'
 import LendingsTable from '../components/LendingsTable'
 import WalletForm from '../components/WalletForm'
 import Modal from '../components/Modal'
+import MoneyLendingForm from '../components/MoneyLendingForm'
 import './Tables.css' 
 
 export default function TablesCompact() {
@@ -27,8 +31,16 @@ export default function TablesCompact() {
     updateWallet,
     updateIncome,
     updateExpense,
-    updateSavings
-    , deleteLending
+    updateSavings,
+    categories,
+    editIncome,
+    editExpense,
+    editSavings,
+    editingIncome,
+    editingExpense,
+    editingSavings,
+    updateLending,
+    deleteLending
   } = useBudget()
 
   const [activeTab, setActiveTab] = useState('incomes')
@@ -43,6 +55,8 @@ export default function TablesCompact() {
   const [walletDesc, setWalletDesc] = useState('')
   const [walletStart, setWalletStart] = useState('')
   const [walletMsg, setWalletMsg] = useState('')
+  const [editingLending, setEditingLending] = useState(null)
+  const [showLendingForm, setShowLendingForm] = useState(false)
 
   const visibleIncomes = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -290,6 +304,7 @@ export default function TablesCompact() {
             onDeleteIncome={(row) => deleteIncome(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteIncome(r.id))}
             onUpdateIncome={(row) => updateIncome(row)}
+            onEditIncome={(row) => editIncome(row)}
           />
         </div>
 
@@ -301,6 +316,7 @@ export default function TablesCompact() {
             onDeleteExpense={(row) => deleteExpense(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteExpense(r.id))}
             onUpdateExpense={(row) => updateExpense(row)}
+            onEditExpense={(row) => editExpense(row)}
           />
         </div>
 
@@ -311,6 +327,7 @@ export default function TablesCompact() {
             onDeleteSavings={(row) => deleteSavings(row.id)}
             onBulkDelete={(rows) => rows.forEach(r => deleteSavings(r.id))}
             onUpdateSavings={(row) => updateSavings(row)}
+            onEditSavings={(row) => editSavings(row)}
           />
         </div>
 
@@ -326,15 +343,66 @@ export default function TablesCompact() {
           <LendingsTable
             lendings={lendings}
             wallets={wallets}
-            onEdit={(row) => {
-              // placeholder: UI edit flow handled elsewhere
-            }}
+            onEdit={(row) => { setEditingLending(row); setShowLendingForm(true) }}
             onDelete={(id) => {
               if (typeof deleteLending === 'function') deleteLending(id)
             }}
           />
         </div>
       </div>
+      {showLendingForm && (
+        <Modal open={true} title={editingLending ? 'Edit Lending' : 'Add Lending'} description={''} onConfirm={() => {}} onCancel={() => { setShowLendingForm(false); setEditingLending(null) }} confirmText="Save" cancelText="Cancel">
+          <MoneyLendingForm
+            wallets={wallets}
+            initialValues={editingLending}
+            onSubmit={async (payload) => {
+              try {
+                if (editingLending) {
+                  await updateLending({ id: editingLending.id, ...payload })
+                }
+                setShowLendingForm(false)
+                setEditingLending(null)
+              } catch (err) {
+                console.error(err)
+              }
+            }}
+            onCancel={() => { setShowLendingForm(false); setEditingLending(null) }}
+          />
+        </Modal>
+      )}
+      {/* Edit modals for tables (use the local useBudget instance) */}
+      {editingIncome && (
+        <Modal open={true} title="Edit Income" onCancel={() => editIncome(null)} confirmText="Save" cancelText="Cancel">
+          <IncomeForm
+            editingIncome={editingIncome}
+            onUpdateIncome={updateIncome}
+            onCancelEdit={() => editIncome(null)}
+            wallets={walletBalances}
+          />
+        </Modal>
+      )}
+
+      {editingExpense && (
+        <Modal open={true} title="Edit Expense" onCancel={() => editExpense(null)} confirmText="Save" cancelText="Cancel">
+          <ExpenseForm
+            editingExpense={editingExpense}
+            onUpdateExpense={updateExpense}
+            onCancelEdit={() => editExpense(null)}
+            categories={categories}
+            wallets={walletBalances}
+          />
+        </Modal>
+      )}
+
+      {editingSavings && (
+        <Modal open={true} title="Edit Savings" onCancel={() => editSavings(null)} confirmText="Save" cancelText="Cancel">
+          <SavingsForm
+            editingSavings={editingSavings}
+            onUpdateSavings={updateSavings}
+            onCancelEdit={() => editSavings(null)}
+          />
+        </Modal>
+      )}
     </div>
   )
 }

@@ -1,7 +1,9 @@
 import React from 'react'
 import DataTable from './DataTable'
+import { useConfirm } from '../contexts/ConfirmContext'
 
 export default function LendingsTable({ lendings = [], wallets = [], onEdit, onDelete, selectable = false, onBulkDelete }) {
+  const confirm = useConfirm()
   const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
 
   const columns = [
@@ -13,12 +15,12 @@ export default function LendingsTable({ lendings = [], wallets = [], onEdit, onD
     ), sortable: true, sortValue: r => Number(r.amount || 0), exportValue: r => Number(r.amount || 0) },
     { key: 'status', header: 'Status', className: 'col-status', width: '120px', render: r => r.status || 'pending', sortable: true },
     { key: 'description', header: 'Description', className: 'col-desc', width: '1fr', render: r => r.description || '' },
-    { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '140px', render: r => (
-      <>
-        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => onEdit && onEdit(r)}>Edit</button>
-        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={() => onDelete && onDelete(r.id)}>Delete</button>
-      </>
-    ) }
+        { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '140px', render: r => (
+          <>
+            <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => { onEdit && onEdit(r) }}>Edit</button>
+            <button className="delete-btn" title="Delete" aria-label="Delete" onClick={async () => { const ok = await confirm({ title: 'Delete lending', description: `Delete lending record "${r.description || ''}"? This cannot be undone.`, confirmText: 'Delete', cancelText: 'Cancel' }); if (ok) onDelete && onDelete(r.id) }}>Delete</button>
+          </>
+        ) }
   ]
 
   return (

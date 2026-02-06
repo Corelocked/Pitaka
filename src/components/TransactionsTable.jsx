@@ -1,8 +1,10 @@
 import React from 'react'
 import DataTable from './DataTable'
 import './Table.css'
+import { useConfirm } from '../contexts/ConfirmContext'
 
 export default function TransactionsTable({ transactions = [], wallets = [], onDeleteTransaction, onUpdateTransaction, onBulkDelete }) {
+  const confirm = useConfirm()
   const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
   const columns = [
     { key: 'type', header: 'Type', className: 'col-type', width: '120px', render: r => (
@@ -17,8 +19,8 @@ export default function TransactionsTable({ transactions = [], wallets = [], onD
     { key: 'date', header: 'Date', className: 'col-date date', width: '160px', render: r => (r.date ? new Date(r.date).toLocaleDateString() : '—'), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '120px', render: r => (
       <>
-        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => onUpdateTransaction && onUpdateTransaction({ ...r, _edit: true })}>Edit</button>
-        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={() => onDeleteTransaction && onDeleteTransaction(r)}>Delete</button>
+        <button className="edit-btn" title="Edit" aria-label="Edit" onClick={async () => { const ok = await confirm({ title: 'Edit transaction', description: `Edit transaction "${r.description || ''}"?`, confirmText: 'Edit', cancelText: 'Cancel' }); if (ok) onUpdateTransaction && onUpdateTransaction({ ...r, _edit: true }) }}>Edit</button>
+        <button className="delete-btn" title="Delete" aria-label="Delete" onClick={async () => { const ok = await confirm({ title: 'Delete transaction', description: `Delete transaction "${r.description || ''}"? This cannot be undone.`, confirmText: 'Delete', cancelText: 'Cancel' }); if (ok) onDeleteTransaction && onDeleteTransaction(r) }}>Delete</button>
       </>
     ) }
   ]

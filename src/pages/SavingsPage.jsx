@@ -13,15 +13,15 @@ export default function SavingsPage() {
       <div className="table-wrapper">
         <h3 style={{ marginTop: 0 }}>Savings</h3>
         {savings.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>No savings goals yet</div>}
-        {savings.map(s => {
+          {savings.map(s => {
           const current = parseFloat(s.currentAmount || 0)
           const target = parseFloat(s.targetAmount || 0) || 1
           const pct = Math.min(100, Math.round((current / target) * 1000) / 10)
           return (
-            <div key={s.id} style={{ marginBottom: 12, padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>
+            <div key={s.id} style={{ marginBottom: 12, padding: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <strong>{s.goal}</strong>
-                <span>₱{current.toFixed(2)}</span>
+                <strong style={{ color: 'rgba(255,255,255,0.95)', fontSize: 15 }}>{s.goal}</strong>
+                <span style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 700 }}>₱{current.toFixed(2)}</span>
               </div>
               <div
                 role="progressbar"
@@ -30,7 +30,7 @@ export default function SavingsPage() {
                 aria-valuenow={pct}
                 style={{
                   height: 16,
-                  background: 'rgba(255,255,255,0.03)',
+                  background: 'rgba(255,255,255,0.04)',
                   borderRadius: 8,
                   overflow: 'hidden',
                   border: '1px solid rgba(255,255,255,0.04)'
@@ -53,7 +53,7 @@ export default function SavingsPage() {
                   <span style={{ fontSize: 12, color: '#ffffff', fontWeight: 800, textShadow: '0 1px 0 rgba(0,0,0,0.4)' }}>{pct}%</span>
                 </div>
               </div>
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
                 {pct}% of ₱{target.toFixed(2)}
               </div>
             </div>

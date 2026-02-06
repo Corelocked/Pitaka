@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { FirebaseProvider } from './contexts/FirebaseContext.jsx'
+import { ConfirmProvider } from './contexts/ConfirmContext'
 
 // Prevent mouse wheel from changing focused number inputs by blurring them.
 if (typeof window !== 'undefined') {
@@ -18,7 +19,9 @@ if (typeof window !== 'undefined') {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <FirebaseProvider>
-      <App />
+      <ConfirmProvider>
+        <App />
+      </ConfirmProvider>
     </FirebaseProvider>
   </StrictMode>,
 )
