@@ -175,7 +175,7 @@ function Dashboard({
       {recentTransactions.length === 0 && walletBalances.length === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon"><WalletIcon size={56} /></div>
-          <div className="empty-state-title">Welcome to Budget Book!</div>
+          <div className="empty-state-title">Welcome to Pitaka!</div>
           <div className="empty-state-description">
             Get started by adding a wallet and recording your first transaction
           </div>

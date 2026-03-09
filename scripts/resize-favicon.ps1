@@ -1,5 +1,5 @@
 Add-Type -AssemblyName System.Drawing
-$in = 'public\budgetbook-logo.png'
+$in = 'public\pitaka-logo.png'
 $out = 'public\favicon-32.png'
 $img = [System.Drawing.Image]::FromFile($in)
 $thumb = New-Object System.Drawing.Bitmap 32,32

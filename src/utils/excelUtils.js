@@ -132,7 +132,7 @@ export function exportToExcel(data) {
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  link.setAttribute('download', `budget-book-export-${selectedYear}-${selectedMonth + 1}.csv`)
+  link.setAttribute('download', `pitaka-export-${selectedYear}-${selectedMonth + 1}.csv`)
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
   link.click()
@@ -354,7 +354,7 @@ Bitcoin,crypto,BTC,0.1,40000.00,45000.00,2024-02-01,Crypto investment`
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  link.setAttribute('download', 'budget-book-import-template.csv')
+  link.setAttribute('download', 'pitaka-import-template.csv')
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
   link.click()

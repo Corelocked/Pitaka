@@ -2,7 +2,7 @@ const Jimp = require('jimp');
 
 (async () => {
   try {
-    const input = 'public/budgetbook-logo.png';
+    const input = 'public/pitaka-logo.png';
     const output = 'public/favicon-32.png';
 
     const image = await Jimp.read(input);

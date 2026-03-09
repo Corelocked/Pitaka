@@ -42,7 +42,7 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
       <div className="auth-card">
         <div className="auth-header">
           <h1>Create Account</h1>
-          <p>Join Budget Book to manage your finances</p>
+          <p>Join Pitaka to manage your finances</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">

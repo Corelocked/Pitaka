@@ -5,28 +5,28 @@
    ============================================ */
 :root {
   /* Primary Colors */
-  --primary-600: #0f766e;
-  --primary-700: #115e59;
-  --primary-800: #134e4a;
-  --primary-rgb: 15, 118, 110;
+  --primary-600: #4ea763;
+  --primary-700: #3e8f54;
+  --primary-800: #2f7946;
+  --primary-rgb: 78, 167, 99;
   
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0f766e 0%, #155e75 100%);
-  --gradient-success: linear-gradient(135deg, #0f9f6e 0%, #10b981 100%);
+  --gradient-primary: linear-gradient(135deg, #4ea763 0%, #87d27a 100%);
+  --gradient-success: linear-gradient(135deg, #4ea763 0%, #87d27a 100%);
   --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  --gradient-info: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
-  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --gradient-info: linear-gradient(135deg, #2d67ae 0%, #4f86c4 100%);
+  --gradient-warning: linear-gradient(135deg, #edc545 0%, #cc7a1f 100%);
   
   /* Neutral Colors */
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
+  --gray-50: #fbfaf4;
+  --gray-100: #f5f2e8;
+  --gray-200: #e8e2d2;
   --gray-300: #cbd5e1;
   --gray-400: #94a3b8;
   --gray-500: #64748b;
   --gray-600: #475569;
   --gray-700: #334155;
-  --gray-800: #1e293b;
+  --gray-800: #2e2b20;
   --gray-900: #0f172a;
   
   /* Shadows */
@@ -1031,7 +1031,7 @@
     flex-direction: column;
     min-width: 0;
     overflow-x: hidden;
-    background: #f2f8f7;
+    background: #f8f8f2;
   }
 }
 
@@ -1387,7 +1387,7 @@
 }
 
 /* Small phones: tighten action buttons and activity cards */
-@media (max-width: 430px) {
+@media (max-width: 520px) {
   .mobile-content {
     padding: 12px;
   }

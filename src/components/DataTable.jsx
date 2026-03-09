@@ -296,7 +296,7 @@ export default function DataTable({
                 const cellKey = `${rowKey(row)}:${col.key}`
                 const isEditing = editing && editing.id === rowKey(row) && editing.key === col.key
                 return (
-                  <td key={col.key} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowKey(row), col.key)}>
+                  <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowKey(row), col.key)}>
                     {isEditing ? (
                       <input autoFocus defaultValue={row[col.key]} onBlur={(e) => finishEdit(rowKey(row), col.key, e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur() } }} />
                     ) : (

@@ -382,3 +382,96 @@
     width: 100%;
   }
 }
+
+@media (max-width: 520px) {
+  .data-table,
+  .table {
+    min-width: 0;
+  }
+
+  .data-table thead,
+  .table thead {
+    display: none;
+  }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td,
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table tr,
+  .table tr {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .data-table td,
+  .table td {
+    border-bottom: 1px dashed #dbe3e1;
+    padding: 8px 6px;
+  }
+
+  .data-table td:last-child,
+  .table td:last-child {
+    border-bottom: none;
+  }
+
+  .data-table td.col-select,
+  .table td.col-select {
+    display: none;
+  }
+
+  .data-table td::before,
+  .table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #4d6664;
+    margin-bottom: 4px;
+  }
+
+  .data-table td.col-actions::before,
+  .table td.col-actions::before,
+  .data-table td.actions::before,
+  .table td.actions::before {
+    margin-bottom: 6px;
+  }
+
+  .data-table th.col-actions,
+  .data-table td.col-actions,
+  .table th.col-actions,
+  .table td.col-actions {
+    position: static;
+    right: auto;
+    border-left: none;
+    background: transparent;
+  }
+
+  .data-table td.actions,
+  .data-table td.col-actions,
+  .table td.actions,
+  .table td.col-actions {
+    white-space: normal;
+  }
+
+  .edit-btn,
+  .delete-btn,
+  .btn {
+    min-width: 36px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}

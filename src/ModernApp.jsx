@@ -106,7 +106,7 @@ function ModernApp() {
   const renderDesktopSidebar = () => (
     <div className="desktop-sidebar">
       <div className="sidebar-header">
-        <h1>Budget Book</h1>
+        <h1>Pitaka</h1>
         <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '8px' }}>
           {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -199,7 +199,7 @@ function ModernApp() {
         gap: '20px'
       }}>
         <div className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }}></div>
-        <div style={{ fontSize: '18px', fontWeight: 600 }}>Loading Budget Book...</div>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>Loading Pitaka...</div>
       </div>
     )
   }
@@ -747,7 +747,7 @@ function ModernApp() {
         <div className="mobile-header">
           <div className="mobile-header-content">
             <div>
-              <h1>Budget Book</h1>
+              <h1>Pitaka</h1>
               <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
                 {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
                   month: 'long', 
