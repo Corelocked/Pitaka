@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import './MobileApp.css'
+import ModernApp from './ModernApp.jsx'
 import { FirebaseProvider } from './contexts/FirebaseContext.jsx'
 import { ConfirmProvider } from './contexts/ConfirmContext'
 
@@ -20,7 +21,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <FirebaseProvider>
       <ConfirmProvider>
-        <App />
+        <ModernApp />
       </ConfirmProvider>
     </FirebaseProvider>
   </StrictMode>,

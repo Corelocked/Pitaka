@@ -1,6 +1,7 @@
 import React from 'react'
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { TrendUpIcon } from './Icons'
 
 export default function SavingsTable({ savings = [], onDeleteSavings, onEditSavings, onUpdateSavings, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
@@ -12,7 +13,7 @@ export default function SavingsTable({ savings = [], onDeleteSavings, onEditSavi
     { key: 'targetAmount', header: 'Target', className: 'col-amount amount', width: '120px', render: r => `₱${Number(r.targetAmount || 0).toFixed(2)}`, sortable: true, sortValue: r => parseFloat(r.targetAmount || 0), editable: true, exportValue: r => Number(r.targetAmount || 0) },
     { key: 'progress', header: 'Progress', className: 'col-progress', width: '160px', render: r => {
       const p = calcProgress(Number(r.currentAmount || 0), Number(r.targetAmount || 0))
-      return <div style={{ display:'flex', alignItems:'center', gap:8 }}><div style={{ background:'#e6eefb', width: '100%', height:8, borderRadius:6, overflow:'hidden' }}><div style={{ width: p + '%', height:'100%', background:'#2563eb' }} /></div><span style={{ fontSize:12 }}>{p.toFixed(1)}%</span></div>
+      return <div style={{ display:'flex', alignItems:'center', gap:8 }}><div style={{ background:'#def0ec', width: '100%', height:8, borderRadius:6, overflow:'hidden' }}><div style={{ width: p + '%', height:'100%', background:'var(--primary-600)' }} /></div><span style={{ fontSize:12 }}>{p.toFixed(1)}%</span></div>
     }},
     { key: 'targetDate', header: 'Target Date', className: 'col-date date', width: '120px', render: r => (r.targetDate ? new Date(r.targetDate).toLocaleDateString() : '—'), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '100px', render: r => (
@@ -31,7 +32,7 @@ export default function SavingsTable({ savings = [], onDeleteSavings, onEditSavi
       rowKey={r => r.id}
       emptyState={(
         <div className="empty-state">
-          <div className="icon">🎯</div>
+          <div className="icon"><TrendUpIcon size={22} /></div>
           <p>No savings entries yet</p>
         </div>
       )}

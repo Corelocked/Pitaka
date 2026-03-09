@@ -1,6 +1,7 @@
 import React from 'react'
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { IncomeIcon } from './Icons'
 
 export default function IncomeTable({ incomes = [], wallets = [], onDeleteIncome, onEditIncome, onUpdateIncome, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
@@ -26,7 +27,7 @@ export default function IncomeTable({ incomes = [], wallets = [], onDeleteIncome
       rowKey={r => r.id}
       emptyState={(
         <div className="empty-state">
-          <div className="icon">💰</div>
+          <div className="icon"><IncomeIcon size={22} /></div>
           <p>No income entries yet</p>
         </div>
       )}

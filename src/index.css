@@ -1,67 +1,47 @@
 :root {
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: #93c5fd;
-  --secondary-color: #64748b;
+  --primary-color: #0f766e;
+  --primary-hover: #115e59;
+  --primary-light: #5eead4;
+  --secondary-color: #475569;
   --secondary-light: #cbd5e1;
-  --success-color: #10b981;
+  --success-color: #0f9f6e;
   --success-light: #6ee7b7;
-  --warning-color: #f59e0b;
-  --warning-light: #fcd34d;
-  --danger-color: #ef4444;
+  --warning-color: #d97706;
+  --warning-light: #fbbf24;
+  --danger-color: #dc2626;
   --danger-light: #fca5a5;
-  --background-color: #f8fafc;
-  --background-gradient: linear-gradient(135deg, #dbeafe 0%, #1e40af 100%);
+  --background-color: #f2f8f7;
   --card-background: #ffffff;
-  --card-hover: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-accent: #3b82f6;
-  --border-color: #e2e8f0;
-  --border-light: #f1f5f9;
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --border-radius: 12px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 20px;
+  --text-primary: #102a2a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #d9e5e3;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background: linear-gradient(-45deg, #dbeafe, #bfdbfe, #93c5fd, #60a5fa, #3b82f6, #2563eb, #1d4ed8, #1e40af);
-  /* larger background-size increases apparent travel distance */
-  background-size: 800% 800%;
-  /* faster, more noticeable continuous motion for the app background */
-  animation: gradientShift 8s linear infinite;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+  background: var(--background-color);
   color: var(--text-primary);
   line-height: 1.6;
   font-size: 16px;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* extra subtle overlay layer to add depth and slow drifting motion */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  /* stronger subtle hotspots to make motion pop against cards */
-  background: radial-gradient(circle at 10% 20%, rgba(99,102,241,0.12), transparent 14%), radial-gradient(circle at 80% 80%, rgba(59,130,246,0.10), transparent 18%);
-  background-size: 200% 200%;
-  mix-blend-mode: overlay;
-  opacity: 1;
-  /* quicker overlay drift to add layered parallax */
-  animation: gradientShiftAlt 12s linear infinite alternate;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -73,27 +53,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 1rem;
 }
 
 h2 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.75rem;
 }
 
 p {
@@ -102,87 +73,54 @@ p {
   line-height: 1.7;
 }
 
-/* Button Styles */
-.btn-primary {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-  color: white;
+/* Button Base Styles */
+button {
+  font-family: inherit;
   border: none;
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.025em;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+button:active {
+  transform: scale(0.98);
 }
 
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-secondary {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--secondary-light), var(--secondary-color));
-  color: var(--text-primary);
+/* Input Base Styles */
+input, select, textarea {
+  font-family: inherit;
   border: 2px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  background-color: var(--card-background);
+  color: var(--text-primary);
 }
 
-.btn-secondary:hover {
-  background: linear-gradient(135deg, var(--secondary-color), var(--secondary-light));
-  border-color: var(--text-secondary);
-  transform: translateY(-1px);
+/* Remove native spin buttons for number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-.btn-success {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--success-color), var(--success-light));
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow);
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
 }
 
-.btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14);
 }
 
-.btn-danger {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow);
-}
-
-.btn-danger:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 /* Custom Scrollbar */
@@ -197,13 +135,13 @@ p {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: var(--primary-color);
   border-radius: 4px;
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
+  background: var(--primary-hover);
 }
 
 /* Focus Styles */
@@ -221,101 +159,6 @@ textarea:focus-visible {
   50% { opacity: 0.5; }
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes gradientShiftAlt {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
-  100% { background-position: 0% 0%; }
-}
-
 .loading {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Gradient Text */
-.gradient-text {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light), var(--success-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-button {
-  font-family: inherit;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.025em;
-  position: relative;
-  overflow: hidden;
-}
-
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-input, select, textarea {
-  font-family: inherit;
-  border: 2px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 12px 16px;
-  font-size: 16px;
-  font-weight: 400;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: var(--card-background);
-  color: var(--text-primary);
-}
-
-/* Remove native spin buttons for number inputs and prevent scroll-wheel changing values */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-  background-color: var(--card-background);
-}
-
-input::placeholder, textarea::placeholder {
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }

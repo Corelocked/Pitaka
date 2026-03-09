@@ -17,8 +17,10 @@ const COLLECTION_NAMES = {
   EXPENSES: 'expenses',
   SAVINGS: 'savings',
   CATEGORIES: 'categories',
-  WALLETS: 'wallets'
-  ,LENDINGS: 'lendings'
+  WALLETS: 'wallets',
+  LENDINGS: 'lendings',
+  TRANSFERS: 'transfers',
+  INVESTMENTS: 'investments'
 }
 
 // Income operations
@@ -302,5 +304,87 @@ export const lendingService = {
 
   deleteLending: async (lendingId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.LENDINGS, lendingId))
+  }
+}
+
+// Transfer operations (money moved between wallets)
+export const transferService = {
+  // Get all transfers for a user
+  subscribeToTransfers: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.TRANSFERS),
+      where('userId', '==', userId),
+      orderBy('date', 'desc')
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const transfers = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      callback(transfers)
+    }, (err) => {
+      console.error('Transfers snapshot error:', err)
+      try { callback([]) } catch (e) { /* swallow */ }
+    })
+  },
+
+  addTransfer: async (transfer, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.TRANSFERS), {
+      ...transfer,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  updateTransfer: async (transferId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.TRANSFERS, transferId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  deleteTransfer: async (transferId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.TRANSFERS, transferId))
+  }
+}
+
+// Investment operations (stocks, bonds, mutual funds, etc.)
+export const investmentService = {
+  // Get all investments for a user
+  subscribeToInvestments: (userId, callback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.INVESTMENTS),
+      where('userId', '==', userId),
+      orderBy('purchaseDate', 'desc')
+    )
+
+    return onSnapshot(q, (querySnapshot) => {
+      const investments = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      callback(investments)
+    }, (err) => {
+      console.error('Investments snapshot error:', err)
+      try { callback([]) } catch (e) { /* swallow */ }
+    })
+  },
+
+  addInvestment: async (investment, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.INVESTMENTS), {
+      ...investment,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  updateInvestment: async (investmentId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.INVESTMENTS, investmentId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  deleteInvestment: async (investmentId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.INVESTMENTS, investmentId))
   }
 }

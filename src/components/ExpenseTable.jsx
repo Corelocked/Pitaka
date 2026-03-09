@@ -1,6 +1,7 @@
 import React from 'react'
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { CartIcon } from './Icons'
 
 export default function ExpenseTable({ expenses = [], wallets = [], onDeleteExpense, onEditExpense, onUpdateExpense, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
@@ -27,7 +28,7 @@ export default function ExpenseTable({ expenses = [], wallets = [], onDeleteExpe
       rowKey={r => r.id}
       emptyState={(
         <div className="empty-state">
-          <div className="icon">🛒</div>
+          <div className="icon"><CartIcon size={22} /></div>
           <p>No expense entries yet</p>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React from 'react'
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { HandshakeIcon } from './Icons'
 
 export default function LendingsTable({ lendings = [], wallets = [], onEdit, onDelete, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
@@ -31,7 +32,7 @@ export default function LendingsTable({ lendings = [], wallets = [], onEdit, onD
       rowKey={r => r.id}
       emptyState={(
         <div className="empty-state">
-          <div className="icon">🤝</div>
+          <div className="icon"><HandshakeIcon size={22} /></div>
           <p>No lending records yet</p>
         </div>
       )}

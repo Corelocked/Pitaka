@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useFirebase } from './useFirebase'
-import { incomeService, expenseService, savingsService, categoryService, walletService } from '../services/firebaseService'
+import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService } from '../services/firebaseService'
 import { lendingService } from '../services/firebaseService'
 
 export function useBudget() {
@@ -22,6 +22,8 @@ export function useBudget() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [lendings, setLendings] = useState([])
+  const [transfers, setTransfers] = useState([])
+  const [investments, setInvestments] = useState([])
 
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
@@ -123,6 +125,37 @@ export function useBudget() {
           unsubscribeLendings = () => {}
           if (isMounted) setLendings([])
         }
+
+        // Subscribe to transfers
+        let unsubscribeTransfers
+        try {
+          unsubscribeTransfers = transferService.subscribeToTransfers(
+            user.uid,
+            (transfersData) => {
+              if (isMounted) setTransfers(transfersData || [])
+            }
+          )
+        } catch (err) {
+          console.log('Error setting up transfers subscription:', err)
+          unsubscribeTransfers = () => {}
+          if (isMounted) setTransfers([])
+        }
+
+        // Subscribe to investments
+        let unsubscribeInvestments
+        try {
+          unsubscribeInvestments = investmentService.subscribeToInvestments(
+            user.uid,
+            (investmentsData) => {
+              if (isMounted) setInvestments(investmentsData || [])
+            }
+          )
+        } catch (err) {
+          console.log('Error setting up investments subscription:', err)
+          unsubscribeInvestments = () => {}
+          if (isMounted) setInvestments([])
+        }
+
         // Set loading to false after subscriptions are set up
         // Add a small delay to ensure subscriptions have time to connect
         const loadingTimeout = setTimeout(() => {
@@ -139,8 +172,10 @@ export function useBudget() {
           unsubscribeSavings()
           unsubscribeCategories()
           unsubscribeWallets()
-        }
           unsubscribeLendings && typeof unsubscribeLendings === 'function' && unsubscribeLendings()
+          unsubscribeTransfers && typeof unsubscribeTransfers === 'function' && unsubscribeTransfers()
+          unsubscribeInvestments && typeof unsubscribeInvestments === 'function' && unsubscribeInvestments()
+        }
       } catch (err) {
         if (isMounted) {
           setError(err.message)
@@ -510,6 +545,72 @@ export function useBudget() {
     }
   }, [])
 
+  // Transfer operations
+  const addTransfer = useCallback(async (transfer) => {
+    if (!user) return
+
+    try {
+      setError(null)
+      await transferService.addTransfer(transfer, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [user])
+
+  const updateTransfer = useCallback(async (transferId, updates) => {
+    try {
+      setError(null)
+      await transferService.updateTransfer(transferId, updates)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const deleteTransfer = useCallback(async (transferId) => {
+    try {
+      setError(null)
+      await transferService.deleteTransfer(transferId)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  // Investment operations
+  const addInvestment = useCallback(async (investment) => {
+    if (!user) return
+
+    try {
+      setError(null)
+      await investmentService.addInvestment(investment, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [user])
+
+  const updateInvestment = useCallback(async (investmentId, updates) => {
+    try {
+      setError(null)
+      await investmentService.updateInvestment(investmentId, updates)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const deleteInvestment = useCallback(async (investmentId) => {
+    try {
+      setError(null)
+      await investmentService.deleteInvestment(investmentId)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
   const filteredIncomes = incomes.filter(inc => {
     const date = new Date(inc.date)
     return timePeriod === 'yearly' ? date.getFullYear() === selectedYear : (date.getMonth() === selectedMonth && date.getFullYear() === selectedYear)
@@ -523,6 +624,7 @@ export function useBudget() {
   const totalIncome = filteredIncomes.reduce((sum, inc) => sum + parseFloat(inc.amount), 0)
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
   const totalSavings = savings.reduce((sum, saving) => sum + parseFloat(saving.currentAmount), 0)
+  const totalInvestments = investments.reduce((sum, inv) => sum + (parseFloat(inv.currentValue) || parseFloat(inv.purchasePrice) || 0), 0)
   const netIncome = totalIncome - totalExpenses
 
   const expenseCategories = [...new Set(expenses.map(exp => exp.category))]
@@ -546,8 +648,17 @@ export function useBudget() {
       if (!e.walletId) return
       map[e.walletId] = (map[e.walletId] || 0) - parseFloat(e.amount || 0)
     })
+    // Apply transfers: subtract from source, add to destination
+    transfers.forEach(t => {
+      if (t.fromWalletId) {
+        map[t.fromWalletId] = (map[t.fromWalletId] || 0) - parseFloat(t.amount || 0)
+      }
+      if (t.toWalletId) {
+        map[t.toWalletId] = (map[t.toWalletId] || 0) + parseFloat(t.amount || 0)
+      }
+    })
     return wallets.map(w => ({ ...w, balance: map[w.id] || 0 }))
-  }, [wallets, incomes, expenses])
+  }, [wallets, incomes, expenses, transfers])
 
   const exportToCSV = () => {
     const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
@@ -595,6 +706,8 @@ export function useBudget() {
     categories,
     wallets,
     lendings,
+    transfers,
+    investments,
     walletBalances,
     selectedMonth,
     selectedYear,
@@ -610,6 +723,7 @@ export function useBudget() {
     totalIncome,
     totalExpenses,
     totalSavings,
+    totalInvestments,
     netIncome,
     expensesByCategory,
     loading,
@@ -626,11 +740,15 @@ export function useBudget() {
     addLending,
     addCategory,
     addWallet,
+    addTransfer,
+    addInvestment,
     deleteIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
     deleteWallet,
+    deleteTransfer,
+    deleteInvestment,
     editIncome,
     updateIncome,
     editExpense,
@@ -642,6 +760,8 @@ export function useBudget() {
     editWallet,
     updateWallet,
     updateLending,
+    updateTransfer,
+    updateInvestment,
     deleteLending,
     exportToCSV
   }

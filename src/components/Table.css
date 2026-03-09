@@ -1,186 +1,384 @@
-/* Minimal table styles for components - improved */
-/* Glass card wrapper for tables - darker variant to match cards */
+/* Shared table styles focused on readability */
+
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* lighter canvas with elevated shadow to separate from background */
-  background: linear-gradient(180deg, rgba(79,70,229,0.04), rgba(63,63,81,0.02));
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
   padding: 8px;
-  /* stronger elevated shadow for clearer separation */
-  box-shadow: 0 14px 40px rgba(2,6,23,0.16), 0 4px 12px rgba(2,6,23,0.06);
-  /* brighter edge so the card border is distinguishable */
-  border: 1px solid rgba(255,255,255,0.06);
-  /* subtle inner highlight to accentuate the border */
-  box-shadow: 0 14px 40px rgba(2,6,23,0.16), 0 4px 12px rgba(2,6,23,0.06), inset 0 1px 0 rgba(255,255,255,0.02);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
-/* Stronger wrapper styles for specific table types used on the Categories/Savings pages */
-.table-wrapper.table--categories, .table-wrapper.table--wallets, .table-wrapper.table--savings {
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 18px 48px rgba(2,6,23,0.2), 0 6px 18px rgba(2,6,23,0.08), inset 0 1px 0 rgba(255,255,255,0.03);
-  background: linear-gradient(180deg, rgba(79,70,229,0.03), rgba(63,63,81,0.015));
-}
-
-.data-table {
+.data-table,
+.table {
   width: 100%;
   border-collapse: separate;
-  margin-top: 6px;
-  /* Allow columns to size based on content and JS-resize operations */
+  border-spacing: 0;
   table-layout: auto;
-  min-width: 480px;
-  background: transparent;
-  /* give the table itself a faint border and rounded corners to separate from the card */
-  border: 1px solid rgba(255,255,255,0.03);
-  border-radius: 8px;
-  overflow: hidden;
+  min-width: 760px;
+  color: var(--text-primary);
+  font-size: 14px;
 }
 
-.data-table th, .data-table td {
-  padding: 12px 16px;
-  box-sizing: border-box;
-  /* allow wrapping so columns can expand/shrink naturally; specific elements (buttons) keep nowrap */
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: middle;
-  color: rgba(255,255,255,0.92); /* higher contrast for dark cards */
-}
-
-/* Header and body text contrast */
-.data-table thead th { color: rgba(255,255,255,0.95) }
-.data-table tbody td { color: rgba(255,255,255,0.92) }
-
-/* Amount color emphasis */
-.amount { font-weight: 800 }
-.amount.positive { color: var(--success-color); text-shadow: 0 1px 0 rgba(255,255,255,0.02) }
-.amount.negative { color: var(--danger-color); text-shadow: 0 1px 0 rgba(255,255,255,0.02) }
-
-/* Badges for transaction types */
-.badge { display:inline-block; padding:4px 10px; border-radius: 999px; font-weight:700; font-size:12px; line-height:1; }
-.badge-income { background: linear-gradient(90deg,#10b981,#34d399); color: white }
-.badge-expense { background: linear-gradient(90deg,#ef4444,#fb7185); color: white }
-.badge-saving { background: linear-gradient(90deg,#60a5fa,#3b82f6); color: white }
-
-/* Adjust action buttons contrast */
-.edit-btn, .delete-btn { box-shadow: 0 6px 14px rgba(0,0,0,0.12) }
-
-/* Page info + pager styles */
-.page-info { color: rgba(255,255,255,0.85) }
-.pager .btn { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.03) }
-.pager .btn:disabled { opacity: 0.5 }
-
-
-/* Zebra rows and hover elevation */
-.data-table tbody tr {
-  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.12s ease;
-}
-.data-table tbody tr:nth-child(even) { background: linear-gradient(90deg, rgba(99,102,241,0.04), rgba(59,130,246,0.02)) }
-.data-table tbody tr:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(16,24,40,0.06); background: linear-gradient(90deg, rgba(99,102,241,0.08), rgba(59,130,246,0.06)); }
-.data-table tbody tr:focus { outline: 3px solid rgba(99,102,241,0.12); box-shadow: 0 10px 24px rgba(99,102,241,0.08); }
-
-
-.data-table thead th {
-  background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(99,102,241,0.06));
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  border-bottom: 2px solid rgba(255,255,255,0.04);
+.data-table thead th,
+.table thead th {
   position: sticky;
   top: 0;
-  z-index: 5;
-} 
+  z-index: 6;
+  background: #f2f7f6;
+  color: #36535a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #dbe3ee;
+}
 
-.th-content { display:flex; align-items:center; justify-content:space-between; gap:8px }
-.th-btn { background: transparent; border: none; color: inherit; display:flex; gap:8px; align-items:center; cursor: pointer; width:100%; text-align:left; padding:6px; border-radius:6px }
-.th-btn:focus-visible { outline: 3px solid rgba(99,102,241,0.12); }
-.th-sortable .th-btn:hover { color: var(--primary-color); background: rgba(59,130,246,0.03) }
-.sort-icon { width:12px; height:12px; display:inline-block; margin-left:6px; opacity:0.8; transition: transform 0.18s ease }
-.sort-icon.asc { transform: rotate(180deg); background: linear-gradient(180deg, var(--primary-color), var(--primary-light)); mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 14l5-5 5 5z'/></svg>") no-repeat center / contain; }
-.sort-icon.desc { transform: rotate(0deg); background: linear-gradient(0deg, var(--primary-color), var(--primary-light)); mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat center / contain; }
+.data-table th,
+.data-table td,
+.table th,
+.table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+  border-bottom: 1px solid #edf2f7;
+}
 
-/* Action buttons */
-.edit-btn, .delete-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:4px 6px; border-radius:8px; border:none; cursor:pointer; font-size:12px; white-space:nowrap; overflow:visible; min-width:44px; line-height:1 }
-.edit-btn { background: linear-gradient(135deg,#f59e0b,#d97706); color:white }
-.delete-btn { background: linear-gradient(135deg,#ef4444,#dc2626); color:white }
-/* Remove vertical translation on hover to avoid overlapping adjacent columns */
-.edit-btn:hover, .delete-btn:hover { transform: none; box-shadow: 0 10px 24px rgba(0,0,0,0.08) }
+.data-table tbody td,
+.table tbody td {
+  color: var(--text-primary);
+  line-height: 1.45;
+}
 
-/* Ensure action cells don't clip their children (buttons) and stay visible when table scrolls horizontally */
-.data-table td.actions, .data-table td.col-actions { overflow: visible; padding-right: 12px; white-space: nowrap }
+.data-table tbody tr:nth-child(even),
+.table tbody tr:nth-child(even) {
+  background: #f5faf9;
+}
 
-/* Keep the action column visible when horizontally scrolled */
-.data-table th.col-actions, .data-table td.col-actions {
-  position: -webkit-sticky;
+.data-table tbody tr:hover,
+.table tbody tr:hover {
+  background: #eaf6f4;
+}
+
+.data-table td.amount,
+.table td.amount,
+.amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.amount.positive {
+  color: #15803d;
+}
+
+.amount.negative {
+  color: #b91c1c;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badge-income {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-expense {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-saving {
+  background: #dff5ef;
+  color: #0f766e;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.th-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.th-sortable .th-btn:hover {
+  color: var(--primary-color);
+}
+
+.sort-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  opacity: 0.8;
+  transition: transform 0.15s ease;
+}
+
+.sort-icon.asc {
+  transform: rotate(180deg);
+  background: var(--primary-color);
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 14l5-5 5 5z'/></svg>") no-repeat center / contain;
+}
+
+.sort-icon.desc {
+  transform: rotate(0deg);
+  background: var(--primary-color);
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat center / contain;
+}
+
+.col-resizer {
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.data-table td.actions,
+.data-table td.col-actions {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.data-table th.col-actions,
+.data-table td.col-actions {
   position: sticky;
   right: 0;
-  z-index: 8;
-  /* match the table wrapper background so the sticky column blends in */
-  background: linear-gradient(180deg, rgba(79,70,229,0.04), rgba(63,63,81,0.02));
-  /* subtle separator so sticky column reads as its own panel */
-  border-left: 1px solid rgba(255,255,255,0.04);
-}
-.data-table td.actions { z-index: 7 }
-
-/* Ensure buttons stay inside their cell and don't overlap adjacent columns */
-.data-table td.actions .edit-btn, .data-table td.actions .delete-btn,
-.data-table td.col-actions .edit-btn, .data-table td.col-actions .delete-btn {
-  position: relative;
-  z-index: 1;
-  max-width: 100%;
+  background: var(--card-background);
+  border-left: 1px solid var(--border-color);
+  z-index: 7;
 }
 
-/* If buttons would overflow, truncate their text rather than overlap */
-.data-table td.actions .edit-btn span, .data-table td.actions .delete-btn span {
-  display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.col-resizer { width:8px; height:100%; cursor:col-resize; display:inline-block }
-
-.table-bulk-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 14px; background: linear-gradient(90deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04)); border-radius:10px; margin-bottom:8px; box-shadow: 0 6px 18px rgba(13,18,31,0.06); position: sticky; top: 8px; z-index: 6 }
-
-.btn { padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer }
-.btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none }
-
-.empty-state { text-align:center; padding:28px 12px; color:var(--text-secondary) }
-
-.data-table td { text-align: left }
-.data-table td.amount { text-align: left; font-weight: 700 }
-.data-table td.actions { display:flex; gap:8px; justify-content:flex-end }
-
-.table-footer { display:flex; justify-content:space-between; align-items:center; margin-top:12px }
-.pager { display:flex; gap:8px; align-items:center }
-.page-info { margin:0 12px }
-.page-size select { padding:6px 8px; border-radius:6px; background: linear-gradient(90deg, rgba(99,102,241,0.03), rgba(59,130,246,0.02)); border: 1px solid rgba(59,130,246,0.06) }
-
-/* highlight mismatches */
-.table tr.row-mismatch td { outline: 3px solid rgba(220, 38, 38, 0.9) }
-.table tr.row-mismatch { background: rgba(220,38,38,0.03) }
-
-/* Focus visible for keyboard users */
-.th-btn:focus-visible, .btn:focus-visible, .filter-toggle:focus-visible { outline: 3px solid rgba(99,102,241,0.12); border-radius: 8px }
-
-@media (max-width:720px){
-  .data-table { min-width: 520px }
+.edit-btn,
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-/* Default column width hints (can be overridden by DataTable column.width) */
-.data-table col.col-wallet { width: auto; min-width: 120px }
-.data-table col.col-amount { width: auto; min-width: 80px }
-.data-table col.col-date { width: auto; min-width: 90px }
-.data-table col.col-actions { width: auto; min-width: 80px }
-.data-table col.col-desc { width: auto; min-width: 150px }
+.edit-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
 
-/* Compact selection column (checkboxes) */
-.data-table col.col-select { width: auto; min-width: 40px }
-.data-table th.col-select, .data-table td.col-select { padding-left: 8px; padding-right: 8px; text-align: center }
-.data-table th.col-select input[type="checkbox"], .data-table td.col-select input[type="checkbox"] {
-  transform: scale(0.92);
-  margin: 0;
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.edit-btn:hover {
+  background: #fde68a;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
+.table-bulk-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf6f4;
+  border: 1px solid #cbe6e1;
+}
+
+.btn {
+  padding: 7px 11px;
+  border-radius: 8px;
+  border: 1px solid #cfd8dc;
+  background: #ffffff;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn:hover {
+  background: #f8fafc;
+}
+
+.btn.danger {
+  background: var(--danger-color);
+  color: #ffffff;
+  border-color: var(--danger-color);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-info {
+  color: #36535a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.page-size select {
+  padding: 7px 10px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 28px 12px;
+}
+
+.table tr.row-mismatch td,
+.data-table tr.row-mismatch td {
+  outline: 2px solid rgba(220, 38, 38, 0.55);
+  outline-offset: -2px;
+}
+
+.data-table col.col-select {
+  min-width: 40px;
+}
+
+.data-table th.col-select,
+.data-table td.col-select {
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align: center;
+}
+
+.data-table th.col-select input[type="checkbox"],
+.data-table td.col-select input[type="checkbox"] {
   width: 16px;
   height: 16px;
+  margin: 0;
 }
 
-/* Allow the resizer to visually indicate draggable area */
-.col-resizer { width: 10px; cursor: col-resize; touch-action: none }
+@media (max-width: 900px) {
+  .data-table,
+  .table {
+    min-width: 640px;
+    font-size: 13px;
+  }
 
+  .data-table th,
+  .data-table td,
+  .table th,
+  .table td {
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .table-wrapper {
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  .data-table,
+  .table {
+    min-width: 560px;
+  }
+
+  .table-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 430px) {
+  .table-wrapper {
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .data-table,
+  .table {
+    min-width: 470px;
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td,
+  .table th,
+  .table td {
+    padding: 8px 8px;
+  }
+
+  .data-table th.col-actions,
+  .data-table td.col-actions {
+    position: static;
+    border-left: none;
+  }
+
+  .edit-btn,
+  .delete-btn,
+  .btn {
+    min-width: 36px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .table-footer {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .pager {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .page-size {
+    width: 100%;
+  }
+
+  .page-size select {
+    width: 100%;
+  }
+}

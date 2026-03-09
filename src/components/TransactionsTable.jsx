@@ -2,6 +2,7 @@ import React from 'react'
 import DataTable from './DataTable'
 import './Table.css'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { ActivityIcon } from './Icons'
 
 export default function TransactionsTable({ transactions = [], wallets = [], onDeleteTransaction, onUpdateTransaction, onBulkDelete }) {
   const confirm = useConfirm()
@@ -33,7 +34,7 @@ export default function TransactionsTable({ transactions = [], wallets = [], onD
       rowKey={r => r.id}
       emptyState={(
         <div className="empty-state">
-          <div className="icon">🔄</div>
+          <div className="icon"><ActivityIcon size={22} /></div>
           <p>No transactions available</p>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React from 'react'
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/ConfirmContext'
+import { FolderIcon } from './Icons'
 
 export default function CategoryTable({ categories = [], onDeleteCategory, onEditCategory }) {
   const confirm = useConfirm()
@@ -18,7 +19,7 @@ export default function CategoryTable({ categories = [], onDeleteCategory, onEdi
   return (
     <DataTable tableClassName="table table--categories" columns={columns} data={categories} rowKey={r => r.id} emptyState={
       <div className="empty-state">
-        <div className="icon">📂</div>
+        <div className="icon"><FolderIcon size={22} /></div>
         <p>No categories yet</p>
       </div>
     } />
