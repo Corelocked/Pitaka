@@ -1,10 +1,13 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import { TrendUpIcon } from './Icons'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, formatCurrency } from '../utils/currency'
 import './Form.css'
 
 function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment, onCancelEdit }) {
   const [name, setName] = useState('')
   const [investmentType, setInvestmentType] = useState('stock')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [ticker, setTicker] = useState('')
   const [quantity, setQuantity] = useState('')
   const [purchasePrice, setPurchasePrice] = useState('')
@@ -18,6 +21,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
     if (editingInvestment) {
       setName(editingInvestment.name || '')
       setInvestmentType(editingInvestment.investmentType || 'stock')
+      setCurrency(editingInvestment.currency || DEFAULT_CURRENCY)
       setTicker(editingInvestment.ticker || '')
       setQuantity(editingInvestment.quantity || '')
       setPurchasePrice(editingInvestment.purchasePrice || '')
@@ -28,6 +32,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
       // Reset form
       setName('')
       setInvestmentType('stock')
+      setCurrency(DEFAULT_CURRENCY)
       setTicker('')
       setQuantity('')
       setPurchasePrice('')
@@ -60,6 +65,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
       const investmentData = {
         name: name.trim(),
         investmentType,
+        currency,
         ticker: ticker.trim().toUpperCase(),
         quantity: parseFloat(quantity),
         purchasePrice: parseFloat(purchasePrice),
@@ -75,6 +81,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         // Reset form after successful add
         setName('')
         setInvestmentType('stock')
+        setCurrency(DEFAULT_CURRENCY)
         setTicker('')
         setQuantity('')
         setPurchasePrice('')
@@ -150,6 +157,22 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
+          <label className="form-label">Currency</label>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="form-input"
+            required
+          >
+            {SUPPORTED_CURRENCIES.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.code} - {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
           <label className="form-label">Ticker/Symbol (Optional)</label>
           <input
             type="text"
@@ -175,7 +198,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Purchase Price (per unit)</label>
+          <label className="form-label">Purchase Price ({currency} per unit)</label>
           <input
             type="number"
             step="0.01"
@@ -188,7 +211,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Current Value (per unit)</label>
+          <label className="form-label">Current Value ({currency} per unit)</label>
           <input
             type="number"
             step="0.01"
@@ -197,7 +220,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
             className="form-input"
             placeholder={purchasePrice || '0.00'}
           />
-          <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+          <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
             Leave empty to use purchase price
           </small>
         </div>
@@ -228,27 +251,28 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         {/* Investment Summary */}
         {(quantity && purchasePrice) && (
           <div style={{
-            background: '#f1f5f9',
+            background: 'var(--card-background)',
+            border: '1px solid var(--border-color)',
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '16px'
           }}>
-            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '12px', color: '#475569' }}>
+            <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '12px', color: 'var(--text-secondary)' }}>
               Investment Summary
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.875rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Total Cost:</span>
-                <span style={{ fontWeight: 600 }}>₱{totalCost}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Total Cost:</span>
+                <span style={{ fontWeight: 600 }}>{formatCurrency(totalCost, currency)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Current Value:</span>
-                <span style={{ fontWeight: 600 }}>₱{currentTotal}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Current Value:</span>
+                <span style={{ fontWeight: 600 }}>{formatCurrency(currentTotal, currency)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #cbd5e1' }}>
-                <span style={{ color: '#64748b' }}>Gain/Loss:</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Gain/Loss:</span>
                 <span style={{ fontWeight: 700, color: parseFloat(gainLoss) >= 0 ? '#10b981' : '#ef4444' }}>
-                  {parseFloat(gainLoss) >= 0 ? '+' : ''}₱{gainLoss} ({gainLossPercent}%)
+                  {parseFloat(gainLoss) >= 0 ? '+' : ''}{formatCurrency(gainLoss, currency)} ({gainLossPercent}%)
                 </span>
               </div>
             </div>

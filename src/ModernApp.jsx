@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useContext } from 'react'
 import { FirebaseContext } from './contexts/FirebaseContext'
-import { useConfirm } from './contexts/ConfirmContext'
+import { useConfirm } from './contexts/useConfirm'
 import { useBudget } from './hooks/useBudget'
 import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
@@ -38,8 +38,39 @@ import {
   WalletIcon
 } from './components/Icons'
 import { exportToExcel, importFromExcel, downloadImportTemplate } from './utils/excelUtils'
+import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCurrency } from './utils/currency'
 import './MobileApp.css'
 
+const DASHBOARD_LAYOUTS = [
+  {
+    id: 'editorial',
+    name: 'Editorial',
+    description: 'Balanced hero-led dashboard with a side rail for accounts and goals.'
+  },
+  {
+    id: 'compact',
+    name: 'Compact',
+    description: 'Prioritizes fast scanning with activity and accounts closer to the top.'
+  },
+  {
+    id: 'planner',
+    name: 'Planner',
+    description: 'Pushes savings goals and spending planning ahead of transaction feed.'
+  }
+]
+
+const THEME_OPTIONS = [
+  {
+    id: 'light',
+    name: 'Light',
+    description: 'Warm atelier palette with bright paper surfaces and emerald accents.'
+  },
+  {
+    id: 'dark',
+    name: 'Dark',
+    description: 'Low-glare workspace with deep surfaces and softened contrast for evening use.'
+  }
+]
 
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user } = useContext(FirebaseContext)
@@ -61,6 +92,7 @@ function ModernApp() {
     categories,
     loading: budgetLoading,
     error,
+    syncState,
     setSelectedMonth,
     setSelectedYear,
     addIncome,
@@ -100,6 +132,116 @@ function ModernApp() {
   const [currentView, setCurrentView] = useState('dashboard')
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [bottomSheetContent, setBottomSheetContent] = useState(null)
+  const [isOnline, setIsOnline] = useState(() => (
+    typeof navigator === 'undefined' ? true : navigator.onLine
+  ))
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  })
+  const [dashboardLayoutPreferences, setDashboardLayoutPreferences] = useState(() => {
+    if (typeof window === 'undefined') return {}
+
+    try {
+      const raw = window.localStorage.getItem('pitaka.dashboardLayouts')
+      return raw ? JSON.parse(raw) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [themePreferences, setThemePreferences] = useState(() => {
+    if (typeof window === 'undefined') return {}
+
+    try {
+      const raw = window.localStorage.getItem('pitaka.themePreferences')
+      return raw ? JSON.parse(raw) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  const dashboardLayout = user?.uid && dashboardLayoutPreferences[user.uid]
+    ? dashboardLayoutPreferences[user.uid]
+    : 'editorial'
+  const themePreference = user?.uid && themePreferences[user.uid]
+    ? themePreferences[user.uid]
+    : 'light'
+
+  const updateDashboardLayout = (layoutId) => {
+    if (!user?.uid) return
+
+    const nextPreferences = {
+      ...dashboardLayoutPreferences,
+      [user.uid]: layoutId
+    }
+
+    setDashboardLayoutPreferences(nextPreferences)
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('pitaka.dashboardLayouts', JSON.stringify(nextPreferences))
+    }
+  }
+
+  const updateThemePreference = (themeId) => {
+    if (!user?.uid) return
+
+    const nextPreferences = {
+      ...themePreferences,
+      [user.uid]: themeId
+    }
+
+    setThemePreferences(nextPreferences)
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('pitaka.themePreferences', JSON.stringify(nextPreferences))
+    }
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault()
+      setDeferredInstallPrompt(event)
+    }
+    const handleInstalled = () => {
+      setIsInstalled(true)
+      setDeferredInstallPrompt(null)
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleInstalled)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    document.body.dataset.theme = themePreference
+    document.documentElement.style.colorScheme = themePreference
+  }, [themePreference])
+
+  const installApp = async () => {
+    if (!deferredInstallPrompt) return
+
+    deferredInstallPrompt.prompt()
+    const choice = await deferredInstallPrompt.userChoice
+
+    if (choice?.outcome === 'accepted') {
+      setDeferredInstallPrompt(null)
+    }
+  }
 
   // Open bottom sheet with specific content
   const openBottomSheet = (content) => {
@@ -122,6 +264,7 @@ function ModernApp() {
         ...goal,
         currentAmount,
         targetAmount,
+        currency: goal.currency || DEFAULT_CURRENCY,
         progress
       }
     })
@@ -129,6 +272,58 @@ function ModernApp() {
       if (b.progress !== a.progress) return b.progress - a.progress
       return b.currentAmount - a.currentAmount
     })
+
+  const currentPeriodLabel = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  })
+
+  const currentPeriodTransfers = transfers.filter((transfer) => {
+    const date = new Date(transfer.date)
+    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear
+  })
+
+  const topCategory = [...expensesByCategory]
+    .filter((category) => category.total > 0)
+    .sort((a, b) => b.total - a.total)[0]
+
+  const walletBalanceSummary = formatCurrencySummary(
+    summarizeByCurrency(walletBalances, (wallet) => wallet.balance || 0, (wallet) => wallet.currency || DEFAULT_CURRENCY)
+  )
+
+  const totalSavingsSummary = formatCurrencySummary(
+    summarizeByCurrency(savings, (goal) => goal.currentAmount || 0, (goal) => goal.currency || DEFAULT_CURRENCY)
+  )
+
+  const investmentValueSummary = formatCurrencySummary(
+    summarizeByCurrency(
+      investments,
+      (investment) => {
+        const quantity = parseFloat(investment.quantity || 0)
+        const unitValue = parseFloat(investment.currentValue) || parseFloat(investment.purchasePrice) || 0
+        return quantity * unitValue
+      },
+      (investment) => investment.currency || DEFAULT_CURRENCY
+    )
+  )
+
+  const renderPageIntro = ({ eyebrow, title, description, stats = [] }) => (
+    <section className="page-intro card">
+      <div className="page-intro-copy">
+        <span className="eyebrow">{eyebrow}</span>
+        <h2 className="page-intro-title">{title}</h2>
+        <p className="page-intro-text">{description}</p>
+      </div>
+      <div className="page-intro-stats">
+        {stats.map((stat) => (
+          <div key={stat.label} className="page-intro-stat">
+            <span className="page-intro-stat-label">{stat.label}</span>
+            <strong className="page-intro-stat-value">{stat.value}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
 
   // Desktop sidebar renderer
   const renderDesktopSidebar = () => (
@@ -257,49 +452,95 @@ function ModernApp() {
             expensesByCategory={expensesByCategory}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
+            layoutPreference={dashboardLayout}
           />
         )
 
       case 'transactions':
         return (
-          <div className="mobile-content">
-            <div className="card">
-              <h3 className="card-title"><IncomeIcon size={18} /> Income</h3>
-              <IncomeTable
-                incomes={filteredIncomes}
-                onEditIncome={editIncome}
-                onDeleteIncome={deleteIncome}
-                wallets={walletBalances}
-              />
-            </div>
-            <div className="card">
-              <h3 className="card-title"><ExpenseIcon size={18} /> Expenses</h3>
-              <ExpenseTable
-                expenses={filteredExpenses}
-                onEditExpense={editExpense}
-                onDeleteExpense={deleteExpense}
-                wallets={walletBalances}
-              />
-            </div>
-            <div className="card">
-              <TransfersTable
-                transfers={transfers.filter(t => {
-                  const d = new Date(t.date)
-                  return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear
-                })}
-                wallets={walletBalances}
-                onDelete={deleteTransfer}
-              />
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Activity Ledger',
+              title: 'Transactions',
+              description: `Review cash movement for ${currentPeriodLabel} across income, expenses, and transfers.`,
+              stats: [
+                { label: 'Income Rows', value: filteredIncomes.length },
+                { label: 'Expense Rows', value: filteredExpenses.length },
+                { label: 'Transfers', value: currentPeriodTransfers.length }
+              ]
+            })}
+
+            <div className="page-section-grid">
+              <div className={`card page-table-card ${filteredIncomes.length === 0 ? 'page-table-card--empty' : ''}`}>
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><IncomeIcon size={18} /> Income</h3>
+                    <p className="card-subtitle">{filteredIncomes.length} entries in {currentPeriodLabel}</p>
+                  </div>
+                </div>
+                <div className={`page-table-card-body ${filteredIncomes.length === 0 ? 'page-table-card-body--empty' : ''}`}>
+                  <IncomeTable
+                    incomes={filteredIncomes}
+                    onEditIncome={editIncome}
+                    onDeleteIncome={deleteIncome}
+                    wallets={walletBalances}
+                  />
+                </div>
+              </div>
+
+              <div className={`card page-table-card ${filteredExpenses.length === 0 ? 'page-table-card--empty' : ''}`}>
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><ExpenseIcon size={18} /> Expenses</h3>
+                    <p className="card-subtitle">{filteredExpenses.length} entries in {currentPeriodLabel}</p>
+                  </div>
+                </div>
+                <div className={`page-table-card-body ${filteredExpenses.length === 0 ? 'page-table-card-body--empty' : ''}`}>
+                  <ExpenseTable
+                    expenses={filteredExpenses}
+                    onEditExpense={editExpense}
+                    onDeleteExpense={deleteExpense}
+                    wallets={walletBalances}
+                  />
+                </div>
+              </div>
+
+              <div className="card page-table-card">
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><TransferIcon size={18} /> Transfers</h3>
+                    <p className="card-subtitle">{currentPeriodTransfers.length} internal movements</p>
+                  </div>
+                </div>
+                <TransfersTable
+                  transfers={currentPeriodTransfers}
+                  wallets={walletBalances}
+                  onDelete={deleteTransfer}
+                />
+              </div>
             </div>
           </div>
         )
 
       case 'accounts':
         return (
-          <div className="mobile-content">
-            <div className="card">
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Account Registry',
+              title: 'Accounts',
+              description: 'Manage every wallet, bank, and funding bucket from one place.',
+              stats: [
+                { label: 'Accounts', value: walletBalances.length },
+                { label: 'Combined Balance', value: walletBalanceSummary }
+              ]
+            })}
+
+            <div className="card page-hero-card">
               <div className="card-header">
-                <h3 className="card-title"><WalletIcon size={18} /> My Accounts</h3>
+                <div>
+                  <h3 className="card-title"><WalletIcon size={18} /> My Accounts</h3>
+                  <p className="card-subtitle">Track balances, edit account details, and keep your sources organized.</p>
+                </div>
                 <button
                   onClick={() => openBottomSheet('addWallet')}
                   className="btn btn-primary"
@@ -327,16 +568,26 @@ function ModernApp() {
 
       case 'savings':
         return (
-          <div className="mobile-content">
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Future Planning',
+              title: 'Savings Goals',
+              description: 'Turn long-term plans into visible targets and keep them funded with intention.',
+              stats: [
+                { label: 'Active Goals', value: savings.length },
+                { label: 'Reserved', value: totalSavingsSummary }
+              ]
+            })}
+
             <div className="card savings-overview-card">
               <div className="card-header">
                 <div>
                   <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
                   <p className="card-subtitle">{savings.length} active goal{savings.length === 1 ? '' : 's'}</p>
                 </div>
-                <div className="savings-summary-amount">
-                  <span className="currency-mark">₱</span>{totalSavings.toFixed(2)}
-                </div>
+              <div className="savings-summary-amount">
+                {totalSavingsSummary}
+              </div>
               </div>
 
               <div className="savings-actions">
@@ -366,7 +617,7 @@ function ModernApp() {
                       <div>
                         <div className="savings-goal-name">{goal.goal}</div>
                         <div className="savings-goal-meta">
-                          <span className="currency-mark">₱</span>{goal.currentAmount.toFixed(2)} saved of <span className="currency-mark">₱</span>{goal.targetAmount.toFixed(2)}
+                          {formatCurrency(goal.currentAmount, goal.currency)} saved of {formatCurrency(goal.targetAmount, goal.currency)}
                         </div>
                       </div>
                       <div className="savings-goal-percent">{goal.progress.toFixed(0)}%</div>
@@ -383,7 +634,7 @@ function ModernApp() {
                           : 'No target date set'}
                       </div>
                       <div className="savings-goal-remaining">
-                        <span className="currency-mark">₱</span>{Math.max(goal.targetAmount - goal.currentAmount, 0).toFixed(2)} left
+                        {formatCurrency(Math.max(goal.targetAmount - goal.currentAmount, 0), goal.currency)} left
                       </div>
                     </div>
 
@@ -443,10 +694,23 @@ function ModernApp() {
 
       case 'categories':
         return (
-          <div className="mobile-content">
-            <div className="card">
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Classification',
+              title: 'Categories',
+              description: 'Keep spending reports clean by maintaining the labels behind every expense.',
+              stats: [
+                { label: 'Categories', value: categories.length },
+                { label: 'Top Spend Bucket', value: topCategory?.category || 'None yet' }
+              ]
+            })}
+
+            <div className="card page-hero-card">
               <div className="card-header">
-                <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
+                <div>
+                  <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
+                  <p className="card-subtitle">Create and refine the buckets that power dashboard insights and expense tracking.</p>
+                </div>
                 <button
                   onClick={() => openBottomSheet('addCategory')}
                   className="btn btn-primary"
@@ -474,10 +738,23 @@ function ModernApp() {
 
       case 'investments':
         return (
-          <div className="mobile-content">
-            <div className="card">
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Capital Allocation',
+              title: 'Investments',
+              description: 'Monitor positions, update holdings, and keep your invested capital visible beside cash.',
+              stats: [
+                { label: 'Positions', value: investments.length },
+                { label: 'Tracked Value', value: investmentValueSummary }
+              ]
+            })}
+
+            <div className="card page-hero-card">
               <div className="card-header">
-                <h3 className="card-title"><TrendUpIcon size={18} /> Investments</h3>
+                <div>
+                  <h3 className="card-title"><TrendUpIcon size={18} /> Investments</h3>
+                  <p className="card-subtitle">Record positions, refresh values, and keep your portfolio organized.</p>
+                </div>
                 <button
                   onClick={() => openBottomSheet('addInvestment')}
                   className="btn btn-primary"
@@ -505,8 +782,71 @@ function ModernApp() {
 
       case 'settings':
         return (
-          <div className="mobile-content">
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Controls & Tools',
+              title: 'Settings',
+              description: 'Customize your workspace, move data in and out, and maintain supporting configuration.',
+              stats: [
+                { label: 'Dashboard Mode', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Editorial' },
+                { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'Light' },
+                { label: 'Categories', value: categories.length }
+              ]
+            })}
+
             <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><HomeIcon size={18} /> Dashboard Layout</h3>
+                  <p className="card-subtitle">Choose how the home view organizes your financial overview.</p>
+                </div>
+              </div>
+
+              <div className="layout-preference-list">
+                {DASHBOARD_LAYOUTS.map((layout) => (
+                  <button
+                    key={layout.id}
+                    type="button"
+                    className={`layout-preference-card ${dashboardLayout === layout.id ? 'active' : ''}`}
+                    onClick={() => updateDashboardLayout(layout.id)}
+                  >
+                    <div className="layout-preference-top">
+                      <span className="layout-preference-name">{layout.name}</span>
+                      <span className="layout-preference-state">{dashboardLayout === layout.id ? 'Selected' : 'Choose'}</span>
+                    </div>
+                    <div className="layout-preference-description">{layout.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><SettingsIcon size={18} /> Appearance</h3>
+                  <p className="card-subtitle">Pick the surface theme that feels best for your workspace.</p>
+                </div>
+              </div>
+
+              <div className="layout-preference-list layout-preference-list--two-up">
+                {THEME_OPTIONS.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    className={`layout-preference-card ${themePreference === theme.id ? 'active' : ''}`}
+                    onClick={() => updateThemePreference(theme.id)}
+                  >
+                    <div className="layout-preference-top">
+                      <span className="layout-preference-name">{theme.name}</span>
+                      <span className="layout-preference-state">{themePreference === theme.id ? 'Selected' : 'Choose'}</span>
+                    </div>
+                    <div className="layout-preference-description">{theme.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="card page-hero-card">
               <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
@@ -564,13 +904,14 @@ function ModernApp() {
                 <div style={{
                   marginTop: '12px',
                   padding: '16px',
-                  background: '#f1f5f9',
+                  background: 'var(--card-background)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '12px'
                 }}>
                   <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '8px' }}>
                     About Import/Export
                   </h4>
-                  <p style={{ fontSize: '0.875rem', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
                     Export creates an Excel-compatible CSV file with all your data. 
                     Import allows you to bulk add data from a CSV file. 
                     Download the template to see the required format.
@@ -579,7 +920,26 @@ function ModernApp() {
               </div>
             </div>
 
-            <div className="card" style={{ marginTop: '16px' }}>
+            {!isInstalled && deferredInstallPrompt && (
+              <div className="card page-hero-card">
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><DownloadIcon size={18} /> Install App</h3>
+                    <p className="card-subtitle">Add Pitaka to your home screen for faster launch and easier mobile access.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={installApp}
+                    className="btn btn-primary"
+                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                  >
+                    Install
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="card page-hero-card" style={{ marginTop: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
                 <button
@@ -791,11 +1151,12 @@ function ModernApp() {
             <div className="form-container">
               <h3 className="card-title"><UploadIcon size={18} /> Import Data</h3>
               <div style={{ marginBottom: '20px' }}>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '16px' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                   Ready to import data from your file. Review the summary below:
                 </p>
                 <div style={{
-                  background: '#f1f5f9',
+                  background: 'var(--card-background)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '12px',
                   padding: '16px',
                   display: 'flex',
@@ -831,10 +1192,11 @@ function ModernApp() {
                 <div style={{
                   marginTop: '16px',
                   padding: '12px',
-                  background: '#dff5ef',
+                  background: 'rgba(31, 106, 57, 0.12)',
+                  border: '1px solid rgba(31, 106, 57, 0.18)',
                   borderRadius: '8px',
                   fontSize: '0.875rem',
-                  color: 'var(--primary-700)'
+                  color: 'var(--text-secondary)'
                 }}>
                   Tip: Accounts and categories will be imported first, followed by transactions. Existing data will not be affected.
                 </div>
@@ -1030,6 +1392,28 @@ function ModernApp() {
           fontWeight: 500
         }}>
           ⚠️ {error}
+        </div>
+      )}
+
+      {(!isOnline || syncState.hasPendingWrites || (!isInstalled && deferredInstallPrompt)) && (
+        <div className="status-strip">
+          {!isOnline && (
+            <div className="status-pill warning">
+              Offline mode: cached pages are available and changes will sync when connection returns.
+            </div>
+          )}
+
+          {syncState.hasPendingWrites && (
+            <div className="status-pill accent">
+              Sync pending: local changes are queued and waiting for Firestore confirmation.
+            </div>
+          )}
+
+          {!isInstalled && deferredInstallPrompt && (
+            <button type="button" className="status-pill action" onClick={installApp}>
+              Install Pitaka
+            </button>
+          )}
         </div>
       )}
 

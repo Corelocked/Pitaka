@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useFirebase } from './useFirebase'
 import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService } from '../services/firebaseService'
-import { lendingService } from '../services/firebaseService'
 
 export function useBudget() {
   const { user, loading: authLoading } = useFirebase()
@@ -17,13 +16,15 @@ export function useBudget() {
   const [editingSavings, setEditingSavings] = useState(null)
   const [editingCategory, setEditingCategory] = useState(null)
   const [editingWallet, setEditingWallet] = useState(null)
-  const [viewMode, setViewMode] = useState('dashboard') // 'dashboard' or 'breakdown'
   const [timePeriod, setTimePeriod] = useState('monthly') // 'monthly' or 'yearly'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [lendings, setLendings] = useState([])
   const [transfers, setTransfers] = useState([])
   const [investments, setInvestments] = useState([])
+  const [syncState, setSyncState] = useState({
+    hasPendingWrites: false,
+    isFromCache: false
+  })
 
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
@@ -42,6 +43,19 @@ export function useBudget() {
       setLoading(true)
       setError(null)
 
+      const metadataState = {}
+      const updateSyncState = (key, metadata) => {
+        metadataState[key] = metadata
+
+        if (!isMounted) return
+
+        const values = Object.values(metadataState)
+        setSyncState({
+          hasPendingWrites: values.some((entry) => entry?.hasPendingWrites),
+          isFromCache: values.length > 0 && values.every((entry) => entry?.fromCache)
+        })
+      }
+
       try {
         // Subscribe to incomes
         const unsubscribeIncomes = incomeService.subscribeToIncomes(
@@ -50,7 +64,8 @@ export function useBudget() {
             if (isMounted) {
               setIncomes(incomesData)
             }
-          }
+          },
+          (metadata) => updateSyncState('incomes', metadata)
         )
 
         // Subscribe to expenses
@@ -60,7 +75,8 @@ export function useBudget() {
             if (isMounted) {
               setExpenses(expensesData)
             }
-          }
+          },
+          (metadata) => updateSyncState('expenses', metadata)
         )
 
         // Subscribe to savings
@@ -70,7 +86,8 @@ export function useBudget() {
             if (isMounted) {
               setSavings(savingsData)
             }
-          }
+          },
+          (metadata) => updateSyncState('savings', metadata)
         )
 
         // Subscribe to categories
@@ -82,7 +99,8 @@ export function useBudget() {
               if (isMounted) {
                 setCategories(categoriesData || [])
               }
-            }
+            },
+            (metadata) => updateSyncState('categories', metadata)
           )
         } catch (err) {
           console.log('Error setting up categories subscription:', err)
@@ -101,7 +119,8 @@ export function useBudget() {
               if (isMounted) {
                 setWallets(walletsData || [])
               }
-            }
+            },
+            (metadata) => updateSyncState('wallets', metadata)
           )
         } catch (err) {
           console.log('Error setting up wallets subscription:', err)
@@ -111,21 +130,6 @@ export function useBudget() {
           }
         }
 
-        // Subscribe to lendings
-        let unsubscribeLendings
-        try {
-          unsubscribeLendings = lendingService.subscribeToLendings(
-            user.uid,
-            (lendingsData) => {
-              if (isMounted) setLendings(lendingsData || [])
-            }
-          )
-        } catch (err) {
-          console.log('Error setting up lendings subscription:', err)
-          unsubscribeLendings = () => {}
-          if (isMounted) setLendings([])
-        }
-
         // Subscribe to transfers
         let unsubscribeTransfers
         try {
@@ -133,7 +137,8 @@ export function useBudget() {
             user.uid,
             (transfersData) => {
               if (isMounted) setTransfers(transfersData || [])
-            }
+            },
+            (metadata) => updateSyncState('transfers', metadata)
           )
         } catch (err) {
           console.log('Error setting up transfers subscription:', err)
@@ -148,7 +153,8 @@ export function useBudget() {
             user.uid,
             (investmentsData) => {
               if (isMounted) setInvestments(investmentsData || [])
-            }
+            },
+            (metadata) => updateSyncState('investments', metadata)
           )
         } catch (err) {
           console.log('Error setting up investments subscription:', err)
@@ -172,7 +178,6 @@ export function useBudget() {
           unsubscribeSavings()
           unsubscribeCategories()
           unsubscribeWallets()
-          unsubscribeLendings && typeof unsubscribeLendings === 'function' && unsubscribeLendings()
           unsubscribeTransfers && typeof unsubscribeTransfers === 'function' && unsubscribeTransfers()
           unsubscribeInvestments && typeof unsubscribeInvestments === 'function' && unsubscribeInvestments()
         }
@@ -200,6 +205,9 @@ export function useBudget() {
   // Clear data when user becomes unauthenticated
   useEffect(() => {
     if (!user && !authLoading) {
+      // This effect intentionally clears local budget state after sign-out so stale user data
+      // never flashes in the next session.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIncomes([])
       setExpenses([])
       setSavings([])
@@ -209,8 +217,11 @@ export function useBudget() {
       setEditingSavings(null)
       setEditingCategory(null)
       setError(null)
+      setSyncState({
+        hasPendingWrites: false,
+        isFromCache: false
+      })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading])
 
   const addIncome = useCallback(async (income) => {
@@ -226,7 +237,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [user, wallets])
+  }, [user])
 
   const addExpense = useCallback(async (expense) => {
     if (!user) return
@@ -248,7 +259,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [lendings, wallets])
+  }, [])
 
   const deleteExpense = useCallback(async (id) => {
     try {
@@ -258,7 +269,7 @@ export function useBudget() {
       setError(err.message)
       throw err
     }
-  }, [lendings, wallets])
+  }, [])
 
   const editIncome = useCallback((income) => {
     setEditingIncome(income)
@@ -360,126 +371,6 @@ export function useBudget() {
     }
   }, [user])
 
-  const addLending = useCallback(async (lending) => {
-    if (!user) return
-    try {
-      setError(null)
-      // Persist lending
-      const id = await lendingService.addLending(lending, user.uid)
-
-      // If lending references a wallet, adjust that wallet's startingBalance accordingly
-      if (lending.walletId) {
-        let w = wallets.find(w => w.id === lending.walletId)
-        if (!w) {
-          // try fetching directly from Firestore if not present in local state
-          try {
-            w = await walletService.getWallet(lending.walletId)
-          } catch (err) {
-            console.error('addLending: failed to fetch wallet from firestore', lending.walletId, err)
-            w = null
-          }
-        }
-
-        if (w) {
-          const current = parseFloat(w.startingBalance || 0)
-          const delta = (lending.direction === 'lent' ? -1 : 1) * parseFloat(lending.amount || 0)
-          const newStarting = current + delta
-          console.log('addLending: wallet', w.id, 'current', current, 'delta', delta, 'newStarting', newStarting)
-          // optimistic UI update
-          setWallets(prev => prev.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
-          try {
-            await walletService.updateWallet(w.id, { startingBalance: newStarting })
-            console.log('addLending: persisted wallet update', w.id)
-          } catch (err) {
-            console.error('Failed to persist wallet balance change from lending add:', err)
-          }
-        } else {
-          console.warn('addLending: referenced wallet not found after fetch', lending.walletId)
-        }
-      }
-
-      return id
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [user])
-
-  const updateLending = useCallback(async (updatedLending) => {
-    try {
-      setError(null)
-      const { id, ...updates } = updatedLending
-
-      // find previous lending to compute delta
-      const prev = lendings.find(l => l.id === id)
-      await lendingService.updateLending(id, updates)
-
-      if (prev && (prev.walletId || updates.walletId)) {
-        const oldWalletId = prev.walletId
-        const newWalletId = updates.walletId !== undefined ? updates.walletId : prev.walletId
-
-        const oldAmount = parseFloat(prev.amount || 0)
-        const oldDir = prev.direction
-        const newAmount = parseFloat((updates.amount !== undefined) ? updates.amount : prev.amount || 0)
-        const newDir = updates.direction || prev.direction
-
-        // revert old effect
-        if (oldWalletId) {
-          const w = wallets.find(w => w.id === oldWalletId)
-          if (w) {
-            const current = parseFloat(w.startingBalance || 0)
-            const revertDelta = (oldDir === 'lent' ? 1 : -1) * oldAmount
-            const newStarting = current + revertDelta
-            console.log('updateLending: revert on old wallet', w.id, 'current', current, 'revertDelta', revertDelta, 'newStarting', newStarting)
-            setWallets(prevs => prevs.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
-            try { await walletService.updateWallet(w.id, { startingBalance: newStarting }); console.log('updateLending: persisted revert for', w.id) } catch (e) { console.error(e) }
-          }
-        }
-
-        // apply new effect
-        if (newWalletId) {
-          const w2 = wallets.find(w => w.id === newWalletId)
-          if (w2) {
-            const current2 = parseFloat(w2.startingBalance || 0)
-            const applyDelta = (newDir === 'lent' ? -1 : 1) * newAmount
-            const newStarting2 = current2 + applyDelta
-            console.log('updateLending: apply on new wallet', w2.id, 'current', current2, 'applyDelta', applyDelta, 'newStarting', newStarting2)
-            setWallets(prevs => prevs.map(p => p.id === w2.id ? { ...p, startingBalance: newStarting2 } : p))
-            try { await walletService.updateWallet(w2.id, { startingBalance: newStarting2 }); console.log('updateLending: persisted apply for', w2.id) } catch (e) { console.error(e) }
-          }
-        }
-      }
-
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [])
-
-  const deleteLending = useCallback(async (id) => {
-    try {
-      setError(null)
-      // find lending to revert its effect on wallet
-      const existing = lendings.find(l => l.id === id)
-      await lendingService.deleteLending(id)
-      if (existing && existing.walletId) {
-        const w = wallets.find(w => w.id === existing.walletId)
-        if (w) {
-          const current = parseFloat(w.startingBalance || 0)
-          // revert: if previously lent (decreased), add back; if borrowed (increased), subtract
-          const delta = (existing.direction === 'lent' ? 1 : -1) * parseFloat(existing.amount || 0)
-          const newStarting = current + delta
-          console.log('deleteLending: revert wallet', w.id, 'current', current, 'delta', delta, 'newStarting', newStarting)
-          setWallets(prev => prev.map(p => p.id === w.id ? { ...p, startingBalance: newStarting } : p))
-          try { await walletService.updateWallet(w.id, { startingBalance: newStarting }); console.log('deleteLending: persisted revert for', w.id) } catch (e) { console.error(e) }
-        }
-      }
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [])
-
   const addWallet = useCallback(async (wallet) => {
     if (!user) return
 
@@ -490,6 +381,7 @@ export function useBudget() {
       name: wallet.name,
       description: wallet.description || '',
       startingBalance: wallet.startingBalance || 0,
+      currency: wallet.currency,
       userId: user.uid,
       createdAt: new Date()
     }
@@ -551,8 +443,6 @@ export function useBudget() {
   }, [])
 
   const editCategory = useCallback((category) => {
-    console.log('useBudget: editCategory called with:', category)
-    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'useBudget: editCategory ' + (category ? category.id : 'null') }) } catch (e) {}
     setEditingCategory(category)
   }, [])
 
@@ -715,24 +605,6 @@ export function useBudget() {
     document.body.removeChild(link)
   }
 
-  // Debug logs to help trace why incomes may not appear in filtered lists / totals
-  useEffect(() => {
-    console.log('useBudget debug:', {
-      user: user?.uid,
-      incomesCount: incomes.length,
-      expensesCount: expenses.length,
-      walletsCount: wallets.length,
-      walletIds: wallets.map(w => w.id),
-      selectedMonth,
-      selectedYear,
-      timePeriod,
-      filteredIncomesCount: filteredIncomes.length,
-      filteredExpensesCount: filteredExpenses.length,
-      totalIncome,
-      totalExpenses
-    })
-  }, [user, incomes, expenses, wallets, selectedMonth, selectedYear, timePeriod, totalIncome, totalExpenses])
-
   return {
     // State
     incomes,
@@ -740,7 +612,6 @@ export function useBudget() {
     savings,
     categories,
     wallets,
-    lendings,
     transfers,
     investments,
     walletBalances,
@@ -751,7 +622,6 @@ export function useBudget() {
     editingSavings,
     editingCategory,
     editingWallet,
-    viewMode,
     timePeriod,
     filteredIncomes,
     filteredExpenses,
@@ -763,16 +633,15 @@ export function useBudget() {
     expensesByCategory,
     loading,
     error,
+    syncState,
 
     // Actions
     setSelectedMonth,
     setSelectedYear,
-    setViewMode,
     setTimePeriod,
     addIncome,
     addExpense,
     addSavings,
-    addLending,
     addCategory,
     addWallet,
     addTransfer,
@@ -795,10 +664,8 @@ export function useBudget() {
     updateCategory,
     editWallet,
     updateWallet,
-    updateLending,
     updateTransfer,
     updateInvestment,
-    deleteLending,
     exportToCSV
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './Form.css'
+import { DEFAULT_CURRENCY, formatCurrency } from '../utils/currency'
 
 function AddToSavingsForm({ savings, onAddToSavings, initialSelectedId = '' }) {
   const [manualSelectedId, setManualSelectedId] = useState('')
@@ -11,6 +12,8 @@ function AddToSavingsForm({ savings, onAddToSavings, initialSelectedId = '' }) {
         ? initialSelectedId
         : savings?.[0]?.id || ''
   )
+  const selectedGoal = savings.find((entry) => entry.id === selectedId)
+  const activeCurrency = selectedGoal?.currency || DEFAULT_CURRENCY
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -26,13 +29,13 @@ function AddToSavingsForm({ savings, onAddToSavings, initialSelectedId = '' }) {
         <label htmlFor="select-saving">Select Saving</label>
         <select id="select-saving" value={selectedId} onChange={(e) => setManualSelectedId(e.target.value)}>
           {savings.map(s => (
-            <option key={s.id} value={s.id}>{s.goal} — ₱{parseFloat(s.currentAmount).toFixed(2)}</option>
+            <option key={s.id} value={s.id}>{s.goal} — {formatCurrency(parseFloat(s.currentAmount), s.currency || DEFAULT_CURRENCY)}</option>
           ))}
         </select>
       </div>
 
       <div className="form-group">
-        <label htmlFor="add-amount">Amount to Add (₱)</label>
+        <label htmlFor="add-amount">Amount to Add ({activeCurrency})</label>
         <input
           id="add-amount"
           type="number"

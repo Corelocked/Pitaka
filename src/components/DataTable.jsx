@@ -105,7 +105,7 @@ export default function DataTable({
   // Reordering
   const dragging = useRef(null)
   const onDragStart = (index) => (e) => { dragging.current = index; e.dataTransfer?.setData('text/plain', 'drag') }
-  const onDragOver = (index) => (e) => { e.preventDefault() }
+  const onDragOver = () => (e) => { e.preventDefault() }
   const onDrop = (index) => (e) => {
     e.preventDefault()
     const from = dragging.current
@@ -152,7 +152,7 @@ export default function DataTable({
     rows.forEach(r => {
       const cells = localCols.map(c => {
         const val = (c.exportValue ? c.exportValue(r) : (typeof c.render === 'function' ? c.render(r) : r[c.key])) ?? ''
-        const text = String(val).replace(/\n/g, ' ').replace(/\,/g, ' ')
+        const text = String(val).replace(/\n/g, ' ').replace(/,/g, ' ')
         return `"${text.replace(/"/g, '""')}"`
       })
       lines.push(cells.join(','))
@@ -171,7 +171,7 @@ export default function DataTable({
   const selectedRows = useMemo(() => {
     const ids = new Set(Array.from(selected))
     return data.filter(r => ids.has(rowKey(r)))
-  }, [selected, data])
+  }, [selected, data, rowKey])
 
   // default bulk export (if parent doesn't provide)
   const handleBulkExport = (rows) => {
@@ -295,7 +295,6 @@ export default function DataTable({
                 <td className="col-select"><input type="checkbox" checked={selected.has(rowKey(row))} onChange={() => toggleSelect(rowKey(row))} aria-label={`Select row ${i + 1}`} /></td>
               )}
               {localCols.map(col => {
-                const cellKey = `${rowKey(row)}:${col.key}`
                 const isEditing = editing && editing.id === rowKey(row) && editing.key === col.key
                 return (
                   <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowKey(row), col.key)}>

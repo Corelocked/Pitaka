@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TransferIcon } from './Icons'
 import './Form.css'
+import { formatCurrency, getWalletCurrency } from '../utils/currency'
 
 function TransferForm({ onAddTransfer, wallets }) {
   const [fromWalletId, setFromWalletId] = useState('')
@@ -9,6 +10,10 @@ function TransferForm({ onAddTransfer, wallets }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
+
+  const fromWallet = wallets.find((wallet) => wallet.id === fromWalletId)
+  const toWallet = wallets.find((wallet) => wallet.id === toWalletId)
+  const transferCurrency = fromWallet ? getWalletCurrency(fromWallet) : null
 
   // Reset form when wallets change
   useEffect(() => {
@@ -39,11 +44,17 @@ function TransferForm({ onAddTransfer, wallets }) {
       return
     }
 
+    if (fromWallet && toWallet && getWalletCurrency(fromWallet) !== getWalletCurrency(toWallet)) {
+      setError('Cross-currency transfers are not supported yet. Please use wallets with the same currency.')
+      return
+    }
+
     try {
       await onAddTransfer({
         fromWalletId,
         toWalletId,
         amount: parseFloat(amount),
+        currency: transferCurrency,
         date,
         notes
       })
@@ -109,7 +120,7 @@ function TransferForm({ onAddTransfer, wallets }) {
           >
             {wallets.map(wallet => (
               <option key={wallet.id} value={wallet.id}>
-                {wallet.name} (₱{parseFloat(wallet.balance || 0).toFixed(2)})
+                {wallet.name} ({formatCurrency(wallet.balance || 0, getWalletCurrency(wallet))})
               </option>
             ))}
           </select>
@@ -125,14 +136,14 @@ function TransferForm({ onAddTransfer, wallets }) {
           >
             {availableToWallets.map(wallet => (
               <option key={wallet.id} value={wallet.id}>
-                {wallet.name} (₱{parseFloat(wallet.balance || 0).toFixed(2)})
+                {wallet.name} ({formatCurrency(wallet.balance || 0, getWalletCurrency(wallet))})
               </option>
             ))}
           </select>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Amount</label>
+          <label className="form-label">Amount{transferCurrency ? ` (${transferCurrency})` : ''}</label>
           <input
             type="number"
             step="0.01"
@@ -168,7 +179,7 @@ function TransferForm({ onAddTransfer, wallets }) {
         </div>
 
         <button type="submit" className="btn-submit">
-          Transfer ₱{amount || '0.00'}
+          Transfer {transferCurrency ? formatCurrency(amount || 0, transferCurrency) : amount || '0.00'}
         </button>
       </form>
     </div>

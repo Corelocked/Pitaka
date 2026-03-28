@@ -1,6 +1,11 @@
 // Firebase configuration and initialization
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { getAnalytics } from "firebase/analytics";
 
@@ -17,10 +22,16 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+getAnalytics(app);
 
 // Initialize Firebase services
-export const db = getFirestore(app)
+export const db = typeof window !== 'undefined'
+  ? initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    })
+  : getFirestore(app)
 export const auth = getAuth(app)
 
 export default app

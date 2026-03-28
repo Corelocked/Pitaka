@@ -21,17 +21,15 @@ export default function Modal({ open, title, description, children, onConfirm, o
             <button
               className="btn"
               type="button"
-              onClick={(e) => {
-                try { console.log('Modal: Cancel clicked', { hasOnCancel: !!onCancel }) } catch (e) {}
-                if (typeof onCancel === 'function') onCancel(e)
+              onClick={() => {
+                if (typeof onCancel === 'function') onCancel()
               }}
             >{cancelText}</button>
             <button
               className="btn danger"
               type="button"
-              onClick={(e) => {
-                try { console.log('Modal: Confirm clicked', { hasOnConfirm: !!onConfirm }) } catch (err) {}
-                if (typeof onConfirm === 'function') onConfirm(e)
+              onClick={() => {
+                if (typeof onConfirm === 'function') onConfirm()
               }}
             >{confirmText}</button>
           </div>

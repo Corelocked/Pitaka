@@ -1,11 +1,14 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react'
 import './Form.css'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '../utils/currency'
 
 function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [accountType, setAccountType] = useState('cash')
   const [startingBalance, setStartingBalance] = useState('')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [error, setError] = useState('')
 
   // Populate form when editing
@@ -15,12 +18,14 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setDescription(editingWallet.description || '')
       setAccountType(editingWallet.accountType || 'cash')
       setStartingBalance(editingWallet.startingBalance || '')
+      setCurrency(editingWallet.currency || DEFAULT_CURRENCY)
     } else {
       // Reset form
       setName('')
       setDescription('')
       setAccountType('cash')
       setStartingBalance('')
+      setCurrency(DEFAULT_CURRENCY)
     }
   }, [editingWallet])
 
@@ -38,7 +43,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         name: name.trim(),
         description: description.trim(),
         accountType,
-        startingBalance: parseFloat(startingBalance) || 0
+        startingBalance: parseFloat(startingBalance) || 0,
+        currency
       }
 
       if (editingWallet) {
@@ -50,6 +56,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         setDescription('')
         setAccountType('cash')
         setStartingBalance('')
+        setCurrency(DEFAULT_CURRENCY)
       }
     } catch (err) {
       console.error('Wallet form error:', err)
@@ -112,6 +119,22 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         </div>
 
         <div className="form-group">
+          <label className="form-label">Currency</label>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="form-input"
+            required
+          >
+            {SUPPORTED_CURRENCIES.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.code} - {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
           <label className="form-label">Starting Balance</label>
           <input
             type="number"
@@ -122,7 +145,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
             placeholder="0.00"
           />
           <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-            Initial balance when you started tracking this account
+            Initial balance in {currency} when you started tracking this account
           </small>
         </div>
 

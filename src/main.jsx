@@ -10,11 +10,11 @@ import { Analytics } from "@vercel/analytics/react"
 
 // Prevent mouse wheel from changing focused number inputs by blurring them.
 if (typeof window !== 'undefined') {
-  window.addEventListener('wheel', (e) => {
+  window.addEventListener('wheel', () => {
     const el = document.activeElement
     if (el && el.tagName === 'INPUT' && el.type === 'number') {
       // remove focus so wheel scrolls the page instead of changing the input value
-      try { el.blur() } catch (err) { /* ignore */ }
+      try { el.blur() } catch { /* ignore */ }
     }
   })
 }
@@ -30,3 +30,11 @@ createRoot(document.getElementById('root')).render(
     </FirebaseProvider>
   </StrictMode>,
 )
+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Ignore registration failures so the app still boots normally.
+    })
+  })
+}

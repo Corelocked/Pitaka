@@ -1,5 +1,6 @@
-import { useConfirm } from '../contexts/ConfirmContext'
+import { useConfirm } from '../contexts/useConfirm'
 import { ActivityIcon, ChartIcon, EditIcon, TrendUpIcon, TrashIcon, WalletIcon } from './Icons'
+import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, getCurrencyCode, summarizeByCurrency } from '../utils/currency'
 import './Table.css'
 
 function InvestmentsTable({ investments, onEdit, onDelete }) {
@@ -56,6 +57,8 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
     return { cost, current, gainLoss, gainLossPercent }
   }
 
+  const getInvestmentCurrency = (investment) => investment.currency || DEFAULT_CURRENCY
+
   if (!investments || investments.length === 0) {
     return (
       <div className="table-container">
@@ -71,18 +74,23 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
   }
 
   // Calculate total portfolio value
-  const totalValue = investments.reduce((sum, inv) => {
-    const metrics = calculateMetrics(inv)
-    return sum + metrics.current
-  }, 0)
+  const totalValueSummary = summarizeByCurrency(
+    investments,
+    (investment) => calculateMetrics(investment).current,
+    (investment) => getInvestmentCurrency(investment)
+  )
 
-  const totalCost = investments.reduce((sum, inv) => {
-    const metrics = calculateMetrics(inv)
-    return sum + metrics.cost
-  }, 0)
+  const totalCostSummary = summarizeByCurrency(
+    investments,
+    (investment) => calculateMetrics(investment).cost,
+    (investment) => getInvestmentCurrency(investment)
+  )
 
-  const totalGainLoss = totalValue - totalCost
-  const totalGainLossPercent = totalCost > 0 ? ((totalGainLoss / totalCost) * 100) : 0
+  const totalGainLossSummary = summarizeByCurrency(
+    investments,
+    (investment) => calculateMetrics(investment).gainLoss,
+    (investment) => getInvestmentCurrency(investment)
+  )
 
   return (
     <div className="table-container">
@@ -98,17 +106,21 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
           Total Portfolio Value
         </h4>
         <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '12px' }}>
-          ₱{totalValue.toFixed(2)}
+          {formatCurrencySummary(totalValueSummary)}
         </div>
         <div style={{ display: 'flex', gap: '20px', fontSize: '0.875rem' }}>
           <div>
             <div style={{ opacity: 0.8 }}>Cost Basis</div>
-            <div style={{ fontWeight: 600, marginTop: '4px' }}>₱{totalCost.toFixed(2)}</div>
+            <div style={{ fontWeight: 600, marginTop: '4px' }}>{formatCurrencySummary(totalCostSummary)}</div>
           </div>
           <div>
             <div style={{ opacity: 0.8 }}>Gain/Loss</div>
             <div style={{ fontWeight: 700, marginTop: '4px' }}>
-              {totalGainLoss >= 0 ? '+' : ''}₱{totalGainLoss.toFixed(2)} ({totalGainLossPercent.toFixed(2)}%)
+              {totalGainLossSummary.map(({ currency, total }) => (
+                <div key={currency}>
+                  {total >= 0 ? '+' : ''}{formatCurrency(total, currency)}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -118,6 +130,8 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
       <div className="transaction-list">
         {investments.map((investment) => {
           const metrics = calculateMetrics(investment)
+          const currency = getInvestmentCurrency(investment)
+
           return (
             <div key={investment.id} className="transaction-item" style={{ cursor: 'pointer' }}>
               <div className="transaction-icon" style={{
@@ -132,28 +146,29 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
                     <span style={{
                       marginLeft: '8px',
                       padding: '2px 8px',
-                      background: '#f1f5f9',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
                       borderRadius: '4px',
                       fontSize: '0.75rem',
                       fontWeight: 600,
-                      color: '#475569'
+                      color: 'var(--text-secondary)'
                     }}>
                       {investment.ticker}
                     </span>
                   )}
                 </div>
                 <div className="transaction-subtitle">
-                  {getInvestmentTypeLabel(investment.investmentType)} • {investment.quantity} units @ ₱{parseFloat(investment.currentValue || investment.purchasePrice).toFixed(2)}
+                  {getInvestmentTypeLabel(investment.investmentType)} • {investment.quantity} units @ {formatCurrency(parseFloat(investment.currentValue || investment.purchasePrice), currency)} {getCurrencyCode(currency)}
                 </div>
                 <div style={{ marginTop: '8px', fontSize: '0.875rem' }}>
-                  <span style={{ color: metrics.gainLoss >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
-                    {metrics.gainLoss >= 0 ? '+' : ''}₱{metrics.gainLoss.toFixed(2)} ({metrics.gainLossPercent.toFixed(2)}%)
+                  <span style={{ color: metrics.gainLoss >= 0 ? 'var(--success-color)' : 'var(--danger-color)', fontWeight: 600 }}>
+                    {metrics.gainLoss >= 0 ? '+' : ''}{formatCurrency(metrics.gainLoss, currency)} ({metrics.gainLossPercent.toFixed(2)}%)
                   </span>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b' }}>
-                  ₱{metrics.current.toFixed(2)}
+                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {formatCurrency(metrics.current, currency)}
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
@@ -163,8 +178,9 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
                     }}
                     className="icon-btn"
                     style={{
-                      background: '#eaf6f4',
-                      color: 'var(--primary-700)',
+                      background: 'rgba(31, 106, 57, 0.14)',
+                      color: 'var(--success-color)',
+                      border: '1px solid rgba(31, 106, 57, 0.18)',
                       width: '36px',
                       height: '36px',
                       fontSize: '16px'
@@ -180,8 +196,9 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
                     }}
                     className="icon-btn"
                     style={{
-                      background: '#fee',
-                      color: '#ef4444',
+                      background: 'rgba(215, 131, 120, 0.12)',
+                      color: 'var(--danger-color)',
+                      border: '1px solid rgba(215, 131, 120, 0.16)',
                       width: '36px',
                       height: '36px',
                       fontSize: '16px'

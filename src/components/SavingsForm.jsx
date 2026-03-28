@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '../utils/currency'
 
 function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEdit }) {
   const [goal, setGoal] = useState('')
   const [targetAmount, setTargetAmount] = useState('')
   const [currentAmount, setCurrentAmount] = useState('')
   const [targetDate, setTargetDate] = useState('')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
 
   useEffect(() => {
     if (editingSavings) {
@@ -17,6 +19,8 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
       setCurrentAmount(editingSavings.currentAmount.toString())
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTargetDate(editingSavings.targetDate)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrency(editingSavings.currency || DEFAULT_CURRENCY)
     }
   }, [editingSavings])
 
@@ -29,19 +33,22 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
           goal,
           targetAmount: parseFloat(targetAmount),
           currentAmount: parseFloat(currentAmount) || 0,
-          targetDate
+          targetDate,
+          currency
         })
       } else {
         onAddSavings({
           goal,
           targetAmount: parseFloat(targetAmount),
           currentAmount: parseFloat(currentAmount) || 0,
-          targetDate
+          targetDate,
+          currency
         })
         setGoal('')
         setTargetAmount('')
         setCurrentAmount('')
         setTargetDate('')
+        setCurrency(DEFAULT_CURRENCY)
       }
     }
   }
@@ -51,6 +58,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
     setTargetAmount('')
     setCurrentAmount('')
     setTargetDate('')
+    setCurrency(DEFAULT_CURRENCY)
     onCancelEdit()
   }
 
@@ -68,7 +76,17 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
         />
       </div>
       <div className="form-group">
-        <label htmlFor="savings-target">Target Amount (₱)</label>
+        <label htmlFor="savings-currency">Currency</label>
+        <select id="savings-currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+          {SUPPORTED_CURRENCIES.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.code} - {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label htmlFor="savings-target">Target Amount ({currency})</label>
         <input
           id="savings-target"
           type="number"
@@ -81,7 +99,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
         />
       </div>
       <div className="form-group">
-        <label htmlFor="savings-current">Current Amount (₱)</label>
+        <label htmlFor="savings-current">Current Amount ({currency})</label>
         <input
           id="savings-current"
           type="number"

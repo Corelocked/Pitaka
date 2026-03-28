@@ -1,6 +1,7 @@
-import { useConfirm } from '../contexts/ConfirmContext'
+import { useConfirm } from '../contexts/useConfirm'
 import { ActivityIcon, TransferIcon, TrashIcon } from './Icons'
 import './Table.css'
+import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 
 function TransfersTable({ transfers, wallets, onDelete }) {
   const confirm = useConfirm()
@@ -11,9 +12,10 @@ function TransfersTable({ transfers, wallets, onDelete }) {
   }
 
   const handleDelete = async (transfer) => {
+    const currency = transfer.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === transfer.fromWalletId)) || DEFAULT_CURRENCY
     const ok = await confirm({
       title: 'Delete Transfer',
-      description: `Are you sure you want to delete this transfer of ₱${parseFloat(transfer.amount).toFixed(2)}?`,
+      description: `Are you sure you want to delete this transfer of ${formatCurrency(transfer.amount, currency)}?`,
       confirmText: 'Delete',
       cancelText: 'Cancel'
     })
@@ -42,7 +44,10 @@ function TransfersTable({ transfers, wallets, onDelete }) {
     <div className="table-container">
       <h3 className="card-title"><TransferIcon size={18} /> Transfers ({transfers.length})</h3>
       <div className="transaction-list">
-        {transfers.map((transfer) => (
+        {transfers.map((transfer) => {
+          const currency = transfer.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === transfer.fromWalletId)) || DEFAULT_CURRENCY
+
+          return (
           <div key={transfer.id} className="transaction-item">
             <div className="transaction-icon transfer">
               <ActivityIcon size={20} />
@@ -62,7 +67,7 @@ function TransfersTable({ transfers, wallets, onDelete }) {
             </div>
             <div className="transaction-actions">
               <div className="transaction-amount transfer">
-                ₱{parseFloat(transfer.amount).toFixed(2)}
+                {formatCurrency(transfer.amount, currency)}
               </div>
               <button
                 onClick={() => handleDelete(transfer)}
@@ -80,7 +85,8 @@ function TransfersTable({ transfers, wallets, onDelete }) {
               </button>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

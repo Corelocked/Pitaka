@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
+import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 
 function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, wallets = [] }) {
   const [source, setSource] = useState('')
@@ -7,6 +8,9 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [walletId, setWalletId] = useState('')
   const [message, setMessage] = useState('')
+
+  const selectedWallet = wallets.find((wallet) => wallet.id === walletId)
+  const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingIncome?.currency || DEFAULT_CURRENCY)
 
   useEffect(() => {
     if (editingIncome) {
@@ -27,10 +31,10 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
 
     try {
       if (editingIncome) {
-        onUpdateIncome({ ...editingIncome, source, amount: parseFloat(amount), date, walletId: walletId || null })
+        onUpdateIncome({ ...editingIncome, source, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
         setMessage('Income updated successfully!')
       } else {
-        onAddIncome({ source, amount: parseFloat(amount), date, walletId: walletId || null })
+        onAddIncome({ source, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
         setMessage('Income added successfully!')
         setSource('')
         setAmount('')
@@ -67,7 +71,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
       </div>
 
       <div className="form-group">
-        <label htmlFor="income-amount">Amount (₱)</label>
+        <label htmlFor="income-amount">Amount ({activeCurrency})</label>
         <input
           id="income-amount"
           type="number"
@@ -93,7 +97,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
             wallets.map(w => {
               const bal = (w.balance !== undefined && w.balance !== null) ? w.balance : w.startingBalance
               return (
-                <option key={w.id} value={w.id}>{w.name}{(bal !== undefined && bal !== null) ? ` (${Number(bal).toFixed(2)})` : ''}</option>
+                <option key={w.id} value={w.id}>{w.name}{(bal !== undefined && bal !== null) ? ` (${formatCurrency(bal, getWalletCurrency(w))})` : ''}</option>
               )
             })
           ) : (

@@ -18,28 +18,41 @@ const COLLECTION_NAMES = {
   SAVINGS: 'savings',
   CATEGORIES: 'categories',
   WALLETS: 'wallets',
-  LENDINGS: 'lendings',
   TRANSFERS: 'transfers',
   INVESTMENTS: 'investments'
+}
+
+function subscribeWithMetadata(q, callback, metadataCallback, errorCallback) {
+  return onSnapshot(
+    q,
+    { includeMetadataChanges: true },
+    (querySnapshot) => {
+      const items = querySnapshot.docs.map((snapshotDoc) => ({
+        id: snapshotDoc.id,
+        ...snapshotDoc.data()
+      }))
+
+      callback(items)
+      metadataCallback?.({
+        hasPendingWrites: querySnapshot.metadata.hasPendingWrites,
+        fromCache: querySnapshot.metadata.fromCache
+      })
+    },
+    errorCallback
+  )
 }
 
 // Income operations
 export const incomeService = {
   // Get all incomes for a user
-  subscribeToIncomes: (userId, callback) => {
+  subscribeToIncomes: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.INCOMES),
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const incomes = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      callback(incomes)
-    })
+    return subscribeWithMetadata(q, callback, metadataCallback)
   },
 
   // Add new income
@@ -70,20 +83,14 @@ export const incomeService = {
 // Expense operations
 export const expenseService = {
   // Get all expenses for a user
-  subscribeToExpenses: (userId, callback) => {
+  subscribeToExpenses: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.EXPENSES),
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const expenses = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      callback(expenses)
-    })
+    return subscribeWithMetadata(q, callback, metadataCallback)
   },
 
   // Add new expense
@@ -114,20 +121,14 @@ export const expenseService = {
 // Savings operations
 export const savingsService = {
   // Get all savings for a user
-  subscribeToSavings: (userId, callback) => {
+  subscribeToSavings: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.SAVINGS),
       where('userId', '==', userId),
       orderBy('createdAt', 'desc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const savings = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      callback(savings)
-    })
+    return subscribeWithMetadata(q, callback, metadataCallback)
   },
 
   // Add new savings goal
@@ -158,20 +159,14 @@ export const savingsService = {
 // Category operations
 export const categoryService = {
   // Get all categories for a user
-  subscribeToCategories: (userId, callback) => {
+  subscribeToCategories: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.CATEGORIES),
       where('userId', '==', userId),
       orderBy('name', 'asc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const categories = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      callback(categories)
-    })
+    return subscribeWithMetadata(q, callback, metadataCallback)
   },
 
   // Add new category
@@ -202,7 +197,7 @@ export const categoryService = {
 // Wallet operations
 export const walletService = {
   // Get all wallets for a user
-  subscribeToWallets: (userId, callback) => {
+  subscribeToWallets: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.WALLETS),
       where('userId', '==', userId),
@@ -213,10 +208,15 @@ export const walletService = {
     // requires a composite index or permissions block the query.
     const unsubscribe = onSnapshot(
       q,
+      { includeMetadataChanges: true },
       (querySnapshot) => {
         try {
           const wallets = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
           callback(wallets || [])
+          metadataCallback?.({
+            hasPendingWrites: querySnapshot.metadata.hasPendingWrites,
+            fromCache: querySnapshot.metadata.fromCache
+          })
         } catch (err) {
           console.error('Error processing wallets snapshot:', err)
           callback([])
@@ -225,7 +225,7 @@ export const walletService = {
       (err) => {
         console.error('Wallets snapshot listener error:', err)
         // report empty list to allow UI to render a fallback
-        try { callback([]) } catch (e) { /* swallow */ }
+        try { callback([]) } catch { /* swallow */ }
       }
     )
 
@@ -266,63 +266,19 @@ export const walletService = {
   }
 }
 
-// Lending operations (money lent or borrowed)
-export const lendingService = {
-  // Get all lendings for a user
-  subscribeToLendings: (userId, callback) => {
-    const q = query(
-      collection(db, COLLECTION_NAMES.LENDINGS),
-      where('userId', '==', userId),
-      orderBy('date', 'desc')
-    )
-
-    return onSnapshot(q, (querySnapshot) => {
-      const lendings = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-      callback(lendings)
-    }, (err) => {
-      console.error('Lendings snapshot error:', err)
-      try { callback([]) } catch (e) { /* swallow */ }
-    })
-  },
-
-  addLending: async (lending, userId) => {
-    const docRef = await addDoc(collection(db, COLLECTION_NAMES.LENDINGS), {
-      ...lending,
-      userId,
-      createdAt: new Date()
-    })
-    return docRef.id
-  },
-
-  updateLending: async (lendingId, updates) => {
-    const docRef = doc(db, COLLECTION_NAMES.LENDINGS, lendingId)
-    await updateDoc(docRef, {
-      ...updates,
-      updatedAt: new Date()
-    })
-  },
-
-  deleteLending: async (lendingId) => {
-    await deleteDoc(doc(db, COLLECTION_NAMES.LENDINGS, lendingId))
-  }
-}
-
 // Transfer operations (money moved between wallets)
 export const transferService = {
   // Get all transfers for a user
-  subscribeToTransfers: (userId, callback) => {
+  subscribeToTransfers: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.TRANSFERS),
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const transfers = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-      callback(transfers)
-    }, (err) => {
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
       console.error('Transfers snapshot error:', err)
-      try { callback([]) } catch (e) { /* swallow */ }
+      try { callback([]) } catch { /* swallow */ }
     })
   },
 
@@ -351,19 +307,16 @@ export const transferService = {
 // Investment operations (stocks, bonds, mutual funds, etc.)
 export const investmentService = {
   // Get all investments for a user
-  subscribeToInvestments: (userId, callback) => {
+  subscribeToInvestments: (userId, callback, metadataCallback) => {
     const q = query(
       collection(db, COLLECTION_NAMES.INVESTMENTS),
       where('userId', '==', userId),
       orderBy('purchaseDate', 'desc')
     )
 
-    return onSnapshot(q, (querySnapshot) => {
-      const investments = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }))
-      callback(investments)
-    }, (err) => {
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
       console.error('Investments snapshot error:', err)
-      try { callback([]) } catch (e) { /* swallow */ }
+      try { callback([]) } catch { /* swallow */ }
     })
   },
 

@@ -14,7 +14,7 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
     setLoading(true)
     try {
       await onLogin(email, password)
-    } catch (err) {
+    } catch {
       // Error is handled by parent component
     } finally {
       setLoading(false)
@@ -25,7 +25,7 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
     setGoogleLoading(true)
     try {
       await onGoogleSignIn()
-    } catch (err) {
+    } catch {
       // Error is handled by parent component
     } finally {
       setGoogleLoading(false)

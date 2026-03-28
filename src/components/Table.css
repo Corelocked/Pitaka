@@ -4,11 +4,11 @@
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 8px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .data-table,
@@ -268,10 +268,57 @@
   color: var(--text-primary);
 }
 
-.empty-state {
+.table-wrapper .empty-state {
   text-align: center;
   color: var(--text-secondary);
-  padding: 28px 12px;
+  padding: 32px 16px;
+  border-radius: 18px;
+  background: rgba(245, 243, 242, 0.82);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.table-wrapper .empty-state p {
+  margin: 0;
+}
+
+.table-wrapper .empty-state .icon,
+.table-wrapper .empty-state .empty-state-icon {
+  width: auto;
+  height: auto;
+  margin: 0;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: none;
+}
+
+.table-empty-state {
+  width: 100%;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.table-empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.table-empty-state-text {
+  margin: 0;
 }
 
 .table tr.row-mismatch td,
@@ -315,8 +362,8 @@
 
 @media (max-width: 640px) {
   .table-wrapper {
-    padding: 6px;
-    border-radius: 12px;
+    padding: 0;
+    border-radius: 0;
   }
 
   .data-table,
@@ -332,8 +379,8 @@
 
 @media (max-width: 430px) {
   .table-wrapper {
-    padding: 4px;
-    border-radius: 10px;
+    padding: 0;
+    border-radius: 0;
   }
 
   .data-table,

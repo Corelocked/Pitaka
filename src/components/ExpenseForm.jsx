@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
+import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 
 function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [], wallets = [] }) {
   const [description, setDescription] = useState('')
@@ -7,6 +8,9 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [walletId, setWalletId] = useState('')
+
+  const selectedWallet = wallets.find((wallet) => wallet.id === walletId)
+  const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingExpense?.currency || DEFAULT_CURRENCY)
 
   useEffect(() => {
     if (editingExpense) {
@@ -27,9 +31,9 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
     e.preventDefault()
     if (description && category && amount) {
       if (editingExpense) {
-        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date, walletId: walletId || null })
+        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
       } else {
-        onAddExpense({ description, category, amount: parseFloat(amount), date, walletId: walletId || null })
+        onAddExpense({ description, category, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
         setDescription('')
         setCategory('')
         setAmount('')
@@ -76,7 +80,7 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
         </select>
       </div>
       <div className="form-group">
-        <label htmlFor="expense-amount">Amount (₱)</label>
+        <label htmlFor="expense-amount">Amount ({activeCurrency})</label>
         <input
           id="expense-amount"
           type="number"
@@ -105,7 +109,7 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
           <option value="">Select a wallet</option>
           {wallets && wallets.length > 0 ? wallets.map(w => {
             const bal = (w.balance !== undefined && w.balance !== null) ? w.balance : w.startingBalance
-            return <option key={w.id} value={w.id}>{w.name}{(bal !== undefined && bal !== null) ? ` (${Number(bal).toFixed(2)})` : ''}</option>
+            return <option key={w.id} value={w.id}>{w.name}{(bal !== undefined && bal !== null) ? ` (${formatCurrency(bal, getWalletCurrency(w))})` : ''}</option>
           }) : (
             <option value="" disabled>No wallets available</option>
           )}
