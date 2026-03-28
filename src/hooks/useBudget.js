@@ -635,13 +635,22 @@ export function useBudget() {
   const totalInvestments = investments.reduce((sum, inv) => sum + (parseFloat(inv.currentValue) || parseFloat(inv.purchasePrice) || 0), 0)
   const netIncome = totalIncome - totalExpenses
 
-  const expenseCategories = [...new Set(expenses.map(exp => exp.category))]
+  // Build a list of categories to display in the dashboard chart.
+  // Include all created categories (from `categories`) plus any category names
+  // that appear only on expenses (to avoid dropping ad-hoc names). This
+  // ensures categories with zero spending still appear with total 0.
+  const expenseCategoryNames = [
+    ...(categories || []).map(c => c.name),
+    ...expenses.map(exp => exp.category).filter(Boolean)
+  ]
+  const expenseCategories = [...new Set(expenseCategoryNames)]
 
-  const expensesByCategory = expenseCategories.map(category => {
-    const categoryExpenses = filteredExpenses.filter(exp => exp.category === category)
-    const total = categoryExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+  const expensesByCategory = expenseCategories.map(categoryName => {
+    const name = categoryName || 'Uncategorized'
+    const categoryExpenses = filteredExpenses.filter(exp => (exp.category || '') === (categoryName || ''))
+    const total = categoryExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0)
     const percentage = totalExpenses > 0 ? (total / totalExpenses * 100).toFixed(1) : 0
-    return { category, total, percentage }
+    return { category: name, total, percentage }
   })
 
   // Wallet balances calculated from linked incomes/expenses plus startingBalance
