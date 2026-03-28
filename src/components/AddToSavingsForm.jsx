@@ -1,19 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './Form.css'
 
-function AddToSavingsForm({ savings, onAddToSavings }) {
-  const [selectedId, setSelectedId] = useState(savings?.[0]?.id || '')
+function AddToSavingsForm({ savings, onAddToSavings, initialSelectedId = '' }) {
+  const [manualSelectedId, setManualSelectedId] = useState('')
   const [amount, setAmount] = useState('')
-
-  useEffect(() => {
-    // Ensure a valid selectedId is chosen when `savings` loads or changes
-    if (savings && savings.length > 0) {
-      const exists = selectedId && savings.some(s => s.id === selectedId)
-      if (!exists) setSelectedId(savings[0].id)
-    } else {
-      if (selectedId) setSelectedId('')
-    }
-  }, [savings, selectedId])
+  const selectedId = (
+    manualSelectedId && savings.some((s) => s.id === manualSelectedId)
+      ? manualSelectedId
+      : initialSelectedId && savings.some((s) => s.id === initialSelectedId)
+        ? initialSelectedId
+        : savings?.[0]?.id || ''
+  )
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -27,7 +24,7 @@ function AddToSavingsForm({ savings, onAddToSavings }) {
     <form onSubmit={handleSubmit} className="form add-to-savings-form">
       <div className="form-group">
         <label htmlFor="select-saving">Select Saving</label>
-        <select id="select-saving" value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+        <select id="select-saving" value={selectedId} onChange={(e) => setManualSelectedId(e.target.value)}>
           {savings.map(s => (
             <option key={s.id} value={s.id}>{s.goal} — ₱{parseFloat(s.currentAmount).toFixed(2)}</option>
           ))}

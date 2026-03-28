@@ -330,6 +330,24 @@ export function useBudget() {
     }
   }, [])
 
+  const addToSavingsGoal = useCallback(async (savingsId, amount) => {
+    const goal = savings.find((entry) => entry.id === savingsId)
+
+    if (!goal) {
+      throw new Error('Savings goal not found')
+    }
+
+    try {
+      setError(null)
+      await savingsService.updateSavings(savingsId, {
+        currentAmount: parseFloat(goal.currentAmount || 0) + parseFloat(amount || 0)
+      })
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [savings])
+
   const addCategory = useCallback(async (category) => {
     if (!user) return
 
@@ -772,6 +790,7 @@ export function useBudget() {
     updateExpense,
     editSavings,
     updateSavings,
+    addToSavingsGoal,
     editCategory,
     updateCategory,
     editWallet,

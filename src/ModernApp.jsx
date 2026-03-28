@@ -10,6 +10,8 @@ import ExpenseForm from './components/ExpenseForm'
 import TransferForm from './components/TransferForm'
 import WalletForm from './components/WalletForm'
 import CategoryForm from './components/CategoryForm'
+import SavingsForm from './components/SavingsForm'
+import AddToSavingsForm from './components/AddToSavingsForm'
 import TransfersTable from './components/TransfersTable'
 import IncomeTable from './components/IncomeTable'
 import ExpenseTable from './components/ExpenseTable'
@@ -38,6 +40,7 @@ import {
 import { exportToExcel, importFromExcel, downloadImportTemplate } from './utils/excelUtils'
 import './MobileApp.css'
 
+
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user } = useContext(FirebaseContext)
   const confirm = useConfirm()
@@ -46,11 +49,11 @@ function ModernApp() {
     selectedYear,
     editingIncome,
     editingExpense,
+    editingSavings,
     editingCategory,
     totalIncome,
     totalExpenses,
     totalSavings,
-    totalInvestments,
     netIncome,
     expensesByCategory,
     filteredIncomes,
@@ -62,16 +65,21 @@ function ModernApp() {
     setSelectedYear,
     addIncome,
     addExpense,
+    addSavings,
     addCategory,
     deleteIncome,
     deleteExpense,
+    deleteSavings,
     deleteCategory,
     editIncome,
     updateIncome,
     editExpense,
     updateExpense,
+    editSavings,
+    updateSavings,
     editCategory,
     updateCategory,
+    addToSavingsGoal,
     walletBalances,
     addWallet,
     deleteWallet,
@@ -80,6 +88,7 @@ function ModernApp() {
     deleteTransfer,
     transfers,
     investments,
+    savings,
     addInvestment,
     updateInvestment,
     deleteInvestment,
@@ -103,12 +112,31 @@ function ModernApp() {
     setTimeout(() => setBottomSheetContent(null), 300)
   }
 
+  const featuredSavings = [...savings]
+    .map((goal) => {
+      const currentAmount = parseFloat(goal.currentAmount || 0)
+      const targetAmount = parseFloat(goal.targetAmount || 0)
+      const progress = targetAmount > 0 ? Math.min((currentAmount / targetAmount) * 100, 100) : 0
+
+      return {
+        ...goal,
+        currentAmount,
+        targetAmount,
+        progress
+      }
+    })
+    .sort((a, b) => {
+      if (b.progress !== a.progress) return b.progress - a.progress
+      return b.currentAmount - a.currentAmount
+    })
+
   // Desktop sidebar renderer
   const renderDesktopSidebar = () => (
     <div className="desktop-sidebar">
       <div className="sidebar-header">
+        <div className="sidebar-kicker">Financial Atelier</div>
         <h1>Pitaka</h1>
-        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '8px' }}>
+        <div className="sidebar-period">
           {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
             month: 'long', 
             year: 'numeric' 
@@ -137,6 +165,13 @@ function ModernApp() {
         >
           <div className="sidebar-nav-icon"><WalletIcon size={20} /></div>
           <div>Accounts</div>
+        </button>
+        <button
+          className={`sidebar-nav-item ${currentView === 'savings' ? 'active' : ''}`}
+          onClick={() => setCurrentView('savings')}
+        >
+          <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
+          <div>Savings</div>
         </button>
         <button
           className={`sidebar-nav-item ${currentView === 'investments' ? 'active' : ''}`}
@@ -213,7 +248,9 @@ function ModernApp() {
             totalIncome={totalIncome}
             totalExpenses={totalExpenses}
             netIncome={netIncome}
+            totalSavings={totalSavings}
             walletBalances={walletBalances}
+            savings={savings}
             filteredIncomes={filteredIncomes}
             filteredExpenses={filteredExpenses}
             transfers={transfers}
@@ -285,6 +322,122 @@ function ModernApp() {
                 }}
               />
             </div>
+          </div>
+        )
+
+      case 'savings':
+        return (
+          <div className="mobile-content">
+            <div className="card savings-overview-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
+                  <p className="card-subtitle">{savings.length} active goal{savings.length === 1 ? '' : 's'}</p>
+                </div>
+                <div className="savings-summary-amount">
+                  <span className="currency-mark">₱</span>{totalSavings.toFixed(2)}
+                </div>
+              </div>
+
+              <div className="savings-actions">
+                <button
+                  onClick={() => openBottomSheet('addSavings')}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                >
+                  + New Goal
+                </button>
+                <button
+                  onClick={() => openBottomSheet('addToSavings')}
+                  className="btn btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                  disabled={savings.length === 0}
+                >
+                  Add Funds
+                </button>
+              </div>
+            </div>
+
+            {featuredSavings.length > 0 ? (
+              <div className="savings-goals-stack">
+                {featuredSavings.map((goal) => (
+                  <div key={goal.id} className="card savings-detail-card">
+                    <div className="savings-detail-top">
+                      <div>
+                        <div className="savings-goal-name">{goal.goal}</div>
+                        <div className="savings-goal-meta">
+                          <span className="currency-mark">₱</span>{goal.currentAmount.toFixed(2)} saved of <span className="currency-mark">₱</span>{goal.targetAmount.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="savings-goal-percent">{goal.progress.toFixed(0)}%</div>
+                    </div>
+
+                    <div className="savings-goal-track">
+                      <div className="savings-goal-fill" style={{ width: `${goal.progress}%` }} />
+                    </div>
+
+                    <div className="savings-detail-bottom">
+                      <div className="savings-goal-timeline">
+                        {goal.targetDate
+                          ? `Target date: ${new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                          : 'No target date set'}
+                      </div>
+                      <div className="savings-goal-remaining">
+                        <span className="currency-mark">₱</span>{Math.max(goal.targetAmount - goal.currentAmount, 0).toFixed(2)} left
+                      </div>
+                    </div>
+
+                    <div className="savings-card-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => openBottomSheet({ type: 'fundSavings', savingsId: goal.id })}
+                      >
+                        Add Funds
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => openBottomSheet({ type: 'editSavings', savings: goal })}
+                      >
+                        Edit Goal
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary savings-delete-btn"
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: 'Delete Savings Goal',
+                            description: `Delete "${goal.goal}"? This action cannot be undone.`,
+                            confirmText: 'Delete',
+                            cancelText: 'Cancel'
+                          })
+
+                          if (ok) {
+                            await deleteSavings(goal.id)
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="card">
+                <div className="empty-state">
+                  <div className="empty-state-icon"><TrendUpIcon size={56} /></div>
+                  <div className="empty-state-title">No savings goals yet</div>
+                  <div className="empty-state-description">
+                    Create a goal and start funding it to watch your progress build on the dashboard.
+                  </div>
+                  <button className="btn btn-primary" onClick={() => openBottomSheet('addSavings')}>
+                    Create First Goal
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )
 
@@ -522,6 +675,40 @@ function ModernApp() {
           />
         )
 
+      case 'addSavings':
+        return (
+          <SavingsForm
+            onAddSavings={async (goal) => {
+              await addSavings(goal)
+              closeBottomSheet()
+            }}
+            editingSavings={editingSavings}
+            onUpdateSavings={async (goal) => {
+              await updateSavings(goal)
+              closeBottomSheet()
+            }}
+            onCancelEdit={() => {
+              editSavings(null)
+              closeBottomSheet()
+            }}
+          />
+        )
+
+      case 'addToSavings':
+        return (
+          <div className="form-container">
+            <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
+            <AddToSavingsForm
+              savings={savings}
+              initialSelectedId={savings[0]?.id}
+              onAddToSavings={async (savingsId, amount) => {
+                await addToSavingsGoal(savingsId, amount)
+                closeBottomSheet()
+              }}
+            />
+          </div>
+        )
+
       case 'addCategory':
         return (
           <CategoryForm
@@ -559,6 +746,34 @@ function ModernApp() {
               }}
               onCancelEdit={closeBottomSheet}
             />
+          )
+        } else if (bottomSheetContent?.type === 'editSavings') {
+          return (
+            <SavingsForm
+              editingSavings={bottomSheetContent.savings}
+              onUpdateSavings={async (goal) => {
+                await updateSavings(goal)
+                closeBottomSheet()
+              }}
+              onCancelEdit={() => {
+                editSavings(null)
+                closeBottomSheet()
+              }}
+            />
+          )
+        } else if (bottomSheetContent?.type === 'fundSavings') {
+          return (
+            <div className="form-container">
+              <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
+              <AddToSavingsForm
+                savings={savings}
+                initialSelectedId={bottomSheetContent.savingsId}
+                onAddToSavings={async (savingsId, amount) => {
+                  await addToSavingsGoal(savingsId, amount)
+                  closeBottomSheet()
+                }}
+              />
+            </div>
           )
         } else if (bottomSheetContent?.type === 'editInvestment') {
           return (
@@ -753,9 +968,10 @@ function ModernApp() {
         {/* Header */}
         <div className="mobile-header">
           <div className="mobile-header-content">
-            <div>
+            <div className="header-title-block">
+              <span className="eyebrow">Private Banking View</span>
               <h1>Pitaka</h1>
-              <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
+              <div className="header-period">
                 {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
                   month: 'long', 
                   year: 'numeric' 
@@ -824,19 +1040,25 @@ function ModernApp() {
             className="quick-action-btn"
             onClick={() => openBottomSheet('addIncome')}
           >
-            <IncomeIcon className="quick-action-icon" size={16} /> Add Income
+            <IncomeIcon className="quick-action-icon" size={16} /> Record Income
           </button>
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addExpense')}
           >
-            <ExpenseIcon className="quick-action-icon" size={16} /> Add Expense
+            <ExpenseIcon className="quick-action-icon" size={16} /> Log Expense
           </button>
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addTransfer')}
           >
-            <TransferIcon className="quick-action-icon" size={16} /> Transfer
+            <TransferIcon className="quick-action-icon" size={16} /> Move Funds
+          </button>
+          <button
+            className="quick-action-btn"
+            onClick={() => openBottomSheet('addSavings')}
+          >
+            <TrendUpIcon className="quick-action-icon" size={16} /> New Goal
           </button>
         </div>
       </div>
@@ -866,6 +1088,13 @@ function ModernApp() {
         >
           <div className="bottom-nav-icon"><WalletIcon size={22} /></div>
           <div>Accounts</div>
+        </button>
+        <button
+          className={`bottom-nav-item ${currentView === 'savings' ? 'active' : ''}`}
+          onClick={() => setCurrentView('savings')}
+        >
+          <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
+          <div>Goals</div>
         </button>
         <button
           className={`bottom-nav-item ${currentView === 'investments' ? 'active' : ''}`}

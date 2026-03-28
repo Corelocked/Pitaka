@@ -5,6 +5,8 @@ import './MobileApp.css'
 import ModernApp from './ModernApp.jsx'
 import { FirebaseProvider } from './contexts/FirebaseContext.jsx'
 import { ConfirmProvider } from './contexts/ConfirmContext'
+import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react"
 
 // Prevent mouse wheel from changing focused number inputs by blurring them.
 if (typeof window !== 'undefined') {
@@ -22,6 +24,8 @@ createRoot(document.getElementById('root')).render(
     <FirebaseProvider>
       <ConfirmProvider>
         <ModernApp />
+        <Analytics/>
+        <SpeedInsights/>
       </ConfirmProvider>
     </FirebaseProvider>
   </StrictMode>,
