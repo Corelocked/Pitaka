@@ -46,6 +46,7 @@ function ModernApp() {
     selectedYear,
     editingIncome,
     editingExpense,
+    editingCategory,
     totalIncome,
     totalExpenses,
     totalSavings,
@@ -443,9 +444,9 @@ function ModernApp() {
                   openBottomSheet('addCategory')
                 }}
                 onDelete={async (id) => {
-                  const ok = await requestConfirmation({
+                  const ok = await confirm({
                     title: 'Delete Category',
-                    message: 'Are you sure you want to delete this category? This action cannot be undone.',
+                    description: 'Are you sure you want to delete this category? This action cannot be undone.',
                     confirmText: 'Delete',
                     cancelText: 'Cancel'
                   })
@@ -528,6 +529,12 @@ function ModernApp() {
               await addCategory(category)
               closeBottomSheet()
             }}
+            editingCategory={editingCategory}
+            onUpdateCategory={async (category) => {
+              await updateCategory(category)
+              closeBottomSheet()
+            }}
+            onCancelEdit={() => { editCategory(null); closeBottomSheet() }}
           />
         )
 

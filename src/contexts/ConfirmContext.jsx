@@ -1,26 +1,46 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react'
 import Modal from '../components/Modal'
 
 const ConfirmContext = createContext(null)
 
 export function ConfirmProvider({ children }) {
-  const [state, setState] = useState({ open: false, title: '', description: '', confirmText: 'Confirm', cancelText: 'Cancel', resolver: null })
+  const [state, setState] = useState({ open: false, title: '', description: '', confirmText: 'Confirm', cancelText: 'Cancel' })
+  const resolverRef = useRef(null)
 
   const showConfirm = useCallback(({ title = 'Confirm', description = '', confirmText = 'Confirm', cancelText = 'Cancel' } = {}) => {
+    console.log('ConfirmProvider: showConfirm', { title })
+    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'ConfirmProvider: showConfirm ' + title }) } catch (e) {}
     return new Promise((resolve) => {
-      setState({ open: true, title, description, confirmText, cancelText, resolver: resolve })
+      resolverRef.current = resolve
+      setState({ open: true, title, description, confirmText, cancelText })
     })
   }, [])
 
   const handleConfirm = useCallback(() => {
-    if (state.resolver) state.resolver(true)
-    setState(s => ({ ...s, open: false, resolver: null }))
-  }, [state.resolver])
+    console.log('ConfirmProvider: handleConfirm - resolving true')
+    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'ConfirmProvider: handleConfirm' }) } catch (e) {}
+    try {
+      if (resolverRef.current) resolverRef.current(true)
+    } catch (err) {
+      console.error('ConfirmProvider: error resolving confirm promise', err)
+    } finally {
+      resolverRef.current = null
+      setState(s => ({ ...s, open: false }))
+    }
+  }, [])
 
   const handleCancel = useCallback(() => {
-    if (state.resolver) state.resolver(false)
-    setState(s => ({ ...s, open: false, resolver: null }))
-  }, [state.resolver])
+    console.log('ConfirmProvider: handleCancel - resolving false')
+    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'ConfirmProvider: handleCancel' }) } catch (e) {}
+    try {
+      if (resolverRef.current) resolverRef.current(false)
+    } catch (err) {
+      console.error('ConfirmProvider: error resolving cancel promise', err)
+    } finally {
+      resolverRef.current = null
+      setState(s => ({ ...s, open: false }))
+    }
+  }, [])
 
   return (
     <ConfirmContext.Provider value={{ showConfirm }}>

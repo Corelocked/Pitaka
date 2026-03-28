@@ -520,27 +520,35 @@ export function useBudget() {
   }, [])
 
   const deleteCategory = useCallback(async (id) => {
+    console.log('useBudget: deleteCategory called with id:', id)
     try {
       setError(null)
       await categoryService.deleteCategory(id)
+      console.log('useBudget: deleteCategory succeeded for id:', id)
     } catch (err) {
       setError(err.message)
+      console.error('useBudget: deleteCategory error for id:', id, err)
       throw err
     }
   }, [])
 
   const editCategory = useCallback((category) => {
+    console.log('useBudget: editCategory called with:', category)
+    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'useBudget: editCategory ' + (category ? category.id : 'null') }) } catch (e) {}
     setEditingCategory(category)
   }, [])
 
   const updateCategory = useCallback(async (updatedCategory) => {
+    console.log('useBudget: updateCategory called with:', updatedCategory)
     try {
       setError(null)
       const { id, ...updates } = updatedCategory
       await categoryService.updateCategory(id, updates)
       setEditingCategory(null)
+      console.log('useBudget: updateCategory succeeded for id:', id)
     } catch (err) {
       setError(err.message)
+      console.error('useBudget: updateCategory error for id:', updatedCategory?.id, err)
       throw err
     }
   }, [])

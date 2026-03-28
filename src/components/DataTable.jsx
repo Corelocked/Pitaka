@@ -69,6 +69,8 @@ export default function DataTable({
   // Pagination
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [page, setPage] = useState(0)
+  // Reset page to 0 whenever data changes (e.g., after edit/delete)
+  useEffect(() => { setPage(0) }, [data])
   useEffect(() => setPage(0), [sortedData, pageSize])
   const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
   const pageData = useMemo(() => {

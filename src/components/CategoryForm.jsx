@@ -6,23 +6,34 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
   const [description, setDescription] = useState('')
 
   useEffect(() => {
+    console.log('CategoryForm: editingCategory changed', editingCategory)
+    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'CategoryForm: editingCategory ' + (editingCategory ? editingCategory.id : 'null') }) } catch (e) {}
     if (editingCategory) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(editingCategory.name)
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setDescription(editingCategory.description || '')
+    } else {
+      setName('')
+      setDescription('')
     }
   }, [editingCategory])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (name.trim()) {
-      if (editingCategory) {
-        onUpdateCategory({ ...editingCategory, name: name.trim(), description: description.trim() })
-      } else {
-        onAddCategory({ name: name.trim(), description: description.trim() })
-        setName('')
-        setDescription('')
+      try {
+        if (editingCategory) {
+          await onUpdateCategory({ ...editingCategory, name: name.trim(), description: description.trim() })
+        } else {
+          await onAddCategory({ name: name.trim(), description: description.trim() })
+          setName('')
+          setDescription('')
+        }
+      } catch (err) {
+        console.error('CategoryForm submit error:', err)
+        // surface error to the user
+        try { alert(err?.message || 'Failed to save category') } catch (e) { /* ignore */ }
       }
     }
   }
