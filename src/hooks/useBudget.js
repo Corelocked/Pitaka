@@ -29,11 +29,8 @@ export function useBudget() {
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
     if (!user || authLoading) {
-      console.log('useBudget: Not loading data - user:', !!user, 'authLoading:', authLoading)
       return
     }
-
-    console.log('useBudget: Starting to load data for user:', user.uid)
 
     let isMounted = true
 
@@ -103,7 +100,7 @@ export function useBudget() {
             (metadata) => updateSyncState('categories', metadata)
           )
         } catch (err) {
-          console.log('Error setting up categories subscription:', err)
+          console.error('Error setting up categories subscription:', err)
           unsubscribeCategories = () => {}
           if (isMounted) {
             setCategories([])
@@ -123,7 +120,7 @@ export function useBudget() {
             (metadata) => updateSyncState('wallets', metadata)
           )
         } catch (err) {
-          console.log('Error setting up wallets subscription:', err)
+          console.error('Error setting up wallets subscription:', err)
           unsubscribeWallets = () => {}
           if (isMounted) {
             setWallets([])
@@ -141,7 +138,7 @@ export function useBudget() {
             (metadata) => updateSyncState('transfers', metadata)
           )
         } catch (err) {
-          console.log('Error setting up transfers subscription:', err)
+          console.error('Error setting up transfers subscription:', err)
           unsubscribeTransfers = () => {}
           if (isMounted) setTransfers([])
         }
@@ -157,22 +154,16 @@ export function useBudget() {
             (metadata) => updateSyncState('investments', metadata)
           )
         } catch (err) {
-          console.log('Error setting up investments subscription:', err)
+          console.error('Error setting up investments subscription:', err)
           unsubscribeInvestments = () => {}
           if (isMounted) setInvestments([])
         }
 
-        // Set loading to false after subscriptions are set up
-        // Add a small delay to ensure subscriptions have time to connect
-        const loadingTimeout = setTimeout(() => {
-          console.log('useBudget: Setting loading to false')
-          if (isMounted) {
-            setLoading(false)
-          }
-        }, 2000) // Increased timeout to 2 seconds
+        if (isMounted) {
+          setLoading(false)
+        }
 
         return () => {
-          clearTimeout(loadingTimeout)
           unsubscribeIncomes()
           unsubscribeExpenses()
           unsubscribeSavings()
@@ -430,14 +421,11 @@ export function useBudget() {
   }, [])
 
   const deleteCategory = useCallback(async (id) => {
-    console.log('useBudget: deleteCategory called with id:', id)
     try {
       setError(null)
       await categoryService.deleteCategory(id)
-      console.log('useBudget: deleteCategory succeeded for id:', id)
     } catch (err) {
       setError(err.message)
-      console.error('useBudget: deleteCategory error for id:', id, err)
       throw err
     }
   }, [])
@@ -447,16 +435,13 @@ export function useBudget() {
   }, [])
 
   const updateCategory = useCallback(async (updatedCategory) => {
-    console.log('useBudget: updateCategory called with:', updatedCategory)
     try {
       setError(null)
       const { id, ...updates } = updatedCategory
       await categoryService.updateCategory(id, updates)
       setEditingCategory(null)
-      console.log('useBudget: updateCategory succeeded for id:', id)
     } catch (err) {
       setError(err.message)
-      console.error('useBudget: updateCategory error for id:', updatedCategory?.id, err)
       throw err
     }
   }, [])

@@ -333,16 +333,34 @@ function Dashboard({
 
   const layoutSections = {
     editorial: {
-      main: [recentActivityCard, spendingCard],
-      side: [accountsCard, savingsCard]
+      main: [
+        { id: 'recent-activity', node: recentActivityCard },
+        { id: 'spending', node: spendingCard }
+      ],
+      side: [
+        { id: 'accounts', node: accountsCard },
+        { id: 'savings', node: savingsCard }
+      ]
     },
     compact: {
-      main: [recentActivityCard, accountsCard],
-      side: [spendingCard, savingsCard]
+      main: [
+        { id: 'recent-activity', node: recentActivityCard },
+        { id: 'accounts', node: accountsCard }
+      ],
+      side: [
+        { id: 'spending', node: spendingCard },
+        { id: 'savings', node: savingsCard }
+      ]
     },
     planner: {
-      main: [savingsCard, spendingCard],
-      side: [accountsCard, recentActivityCard]
+      main: [
+        { id: 'savings', node: savingsCard },
+        { id: 'spending', node: spendingCard }
+      ],
+      side: [
+        { id: 'accounts', node: accountsCard },
+        { id: 'recent-activity', node: recentActivityCard }
+      ]
     }
   }
 
@@ -388,11 +406,23 @@ function Dashboard({
 
         <section className={`dashboard-content-grid dashboard-content-grid--${layoutPreference}`}>
           <div className="dashboard-main-column">
-            {activeLayout.main.filter(Boolean)}
+            {activeLayout.main
+              .filter((section) => Boolean(section.node))
+              .map((section) => (
+                <div key={section.id}>
+                  {section.node}
+                </div>
+              ))}
           </div>
 
           <aside className="dashboard-side-column">
-            {activeLayout.side.filter(Boolean)}
+            {activeLayout.side
+              .filter((section) => Boolean(section.node))
+              .map((section) => (
+                <div key={section.id}>
+                  {section.node}
+                </div>
+              ))}
           </aside>
         </section>
 

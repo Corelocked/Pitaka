@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import { TrendUpIcon } from './Icons'
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, formatCurrency } from '../utils/currency'
+import { DEFAULT_CURRENCY, formatCurrency, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
+import { useFirebase } from '../hooks/useFirebase'
 import './Form.css'
 
 function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment, onCancelEdit }) {
+  const { isPro } = useFirebase()
   const [name, setName] = useState('')
   const [investmentType, setInvestmentType] = useState('stock')
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
@@ -105,6 +107,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
     { value: 'commodity', label: 'Commodity' },
     { value: 'other', label: 'Other' }
   ]
+  const availableCurrencies = getAllowedCurrencies(isPro, editingInvestment?.currency)
 
   const totalCost = quantity && purchasePrice ? (parseFloat(quantity) * parseFloat(purchasePrice)).toFixed(2) : '0.00'
   const currentTotal = quantity && currentValue ? (parseFloat(quantity) * parseFloat(currentValue)).toFixed(2) : totalCost
@@ -164,12 +167,17 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
             className="form-input"
             required
           >
-            {SUPPORTED_CURRENCIES.map((option) => (
+            {availableCurrencies.map((option) => (
               <option key={option.code} value={option.code}>
-                {option.code} - {option.label}
+                {option.code} - {option.label}{!isPro && isCurrencyProOnly(option.code) ? ' (Pro locked)' : ''}
               </option>
             ))}
           </select>
+          {!isPro && (
+            <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+              Basic investing supports `PHP` and `USD`. Upgrade to Pro for all supported currencies.
+            </small>
+          )}
         </div>
 
         <div className="form-group">

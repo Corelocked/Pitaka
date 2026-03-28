@@ -55,5 +55,19 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
+
+    // User profiles — each signed-in user can read and manage only their own profile document
+    match /users/{userId} {
+      allow get: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.plan in ['basic', 'pro']
+        && request.resource.data.tags is list;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.plan in ['basic', 'pro']
+        && request.resource.data.tags is list;
+      allow delete: if false;
+    }
   }
 }

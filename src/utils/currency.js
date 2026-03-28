@@ -1,5 +1,7 @@
 export const DEFAULT_CURRENCY = 'PHP'
 
+export const BASIC_CURRENCIES = ['PHP', 'USD']
+
 export const SUPPORTED_CURRENCIES = [
   { code: 'PHP', label: 'Philippine Peso', locale: 'en-PH' },
   { code: 'USD', label: 'US Dollar', locale: 'en-US' },
@@ -23,6 +25,21 @@ export function getCurrencyConfig(currencyCode = DEFAULT_CURRENCY) {
 
 export function getCurrencyCode(currencyCode = DEFAULT_CURRENCY) {
   return getCurrencyConfig(currencyCode).code
+}
+
+export function getAllowedCurrencies(isPro = false, currentCurrency) {
+  const allowedCodes = isPro ? SUPPORTED_CURRENCIES.map((currency) => currency.code) : BASIC_CURRENCIES
+  const mergedCodes = currentCurrency && !allowedCodes.includes(currentCurrency)
+    ? [...allowedCodes, currentCurrency]
+    : allowedCodes
+
+  return mergedCodes
+    .map((code) => getCurrencyConfig(code))
+    .filter(Boolean)
+}
+
+export function isCurrencyProOnly(currencyCode = DEFAULT_CURRENCY) {
+  return !BASIC_CURRENCIES.includes(getCurrencyCode(currencyCode))
 }
 
 export function formatCurrency(amount = 0, currencyCode = DEFAULT_CURRENCY, options = {}) {

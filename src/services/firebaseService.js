@@ -8,7 +8,8 @@ import {
   where,
   orderBy,
   onSnapshot,
-  getDoc
+  getDoc,
+  setDoc
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -19,7 +20,8 @@ const COLLECTION_NAMES = {
   CATEGORIES: 'categories',
   WALLETS: 'wallets',
   TRANSFERS: 'transfers',
-  INVESTMENTS: 'investments'
+  INVESTMENTS: 'investments',
+  USERS: 'users'
 }
 
 function subscribeWithMetadata(q, callback, metadataCallback, errorCallback) {
@@ -339,5 +341,52 @@ export const investmentService = {
 
   deleteInvestment: async (investmentId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.INVESTMENTS, investmentId))
+  }
+}
+
+export const userProfileService = {
+  subscribeToUserProfile: (userId, callback) => (
+    onSnapshot(
+      doc(db, COLLECTION_NAMES.USERS, userId),
+      (snapshotDoc) => {
+        if (!snapshotDoc.exists()) {
+          callback(null)
+          return
+        }
+
+        callback({
+          id: snapshotDoc.id,
+          ...snapshotDoc.data()
+        })
+      },
+      (err) => {
+        console.error('User profile snapshot error:', err)
+        callback(null)
+      }
+    )
+  ),
+
+  ensureUserProfile: async (user) => {
+    const docRef = doc(db, COLLECTION_NAMES.USERS, user.uid)
+    const snapshotDoc = await getDoc(docRef)
+
+    if (!snapshotDoc.exists()) {
+      await setDoc(docRef, {
+        email: user.email || '',
+        displayName: user.displayName || '',
+        plan: 'basic',
+        tags: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  },
+
+  updateUserProfile: async (userId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.USERS, userId)
+    await setDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    }, { merge: true })
   }
 }

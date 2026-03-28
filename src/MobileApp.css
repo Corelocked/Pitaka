@@ -2460,6 +2460,40 @@ html {
   line-height: 1.55;
 }
 
+.plan-checklist {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.plan-checklist-item {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.plan-checklist-item::before {
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  font-weight: 800;
+}
+
+.plan-checklist-item.is-included::before {
+  content: '✓';
+  color: var(--primary-600);
+}
+
+.plan-checklist-item.is-locked::before {
+  content: '×';
+  color: var(--danger-color);
+}
+
+.plan-checklist-item.is-included {
+  color: var(--text-primary);
+}
+
 .desktop-sidebar {
   background: rgba(255, 255, 255, 0.72);
   border-right: 1px solid rgba(27, 28, 28, 0.06);
@@ -2518,6 +2552,32 @@ html {
 
 .sidebar-user-info {
   min-width: 0;
+}
+
+.sidebar-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  width: fit-content;
+}
+
+.sidebar-plan-badge.basic {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.sidebar-plan-badge.pro {
+  background: linear-gradient(135deg, rgba(var(--gold-rgb), 0.28), rgba(var(--primary-rgb), 0.24));
+  color: #fff7e7;
+  border-color: rgba(var(--gold-rgb), 0.26);
 }
 
 .desktop-main-wrapper {
@@ -2641,6 +2701,7 @@ html {
     left: 10px;
     right: 10px;
     bottom: 10px;
+    justify-content: space-around;
   }
 
   .savings-detail-top,

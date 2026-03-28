@@ -2,11 +2,13 @@ import React, { createContext, useEffect, useState } from 'react'
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getAuthErrorMessage } from '../utils/authErrors'
+import { userProfileService } from '../services/firebaseService'
 
 const FirebaseContext = createContext()
 
 export function FirebaseProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -20,21 +22,37 @@ export function FirebaseProvider({ children }) {
     }, 10000)
 
     // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let unsubscribeProfile = null
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       clearTimeout(authTimeout) // Clear the timeout since we got a response
       
       if (user) {
         setUser(user)
         setError(null)
+
+        try {
+          await userProfileService.ensureUserProfile(user)
+          unsubscribeProfile?.()
+          unsubscribeProfile = userProfileService.subscribeToUserProfile(user.uid, (profile) => {
+            setUserProfile(profile)
+          })
+        } catch (err) {
+          console.error('Failed to initialize user profile:', err)
+          setUserProfile(null)
+          setError('Signed in, but profile access is blocked. Please update Firestore rules for the users collection.')
+        }
       } else {
         // User is not authenticated, stay in loading state until they authenticate
         setUser(null)
+        setUserProfile(null)
       }
       setLoading(false)
     })
 
     return () => {
       clearTimeout(authTimeout)
+      unsubscribeProfile?.()
       unsubscribe()
     }
   }, [])
@@ -97,15 +115,19 @@ export function FirebaseProvider({ children }) {
     }
   }
 
+  const isPro = userProfile?.plan === 'pro' || userProfile?.tags?.includes?.('pro')
+
   const value = {
     user,
+    userProfile,
     loading,
     error,
     login,
     signup,
     logout,
     googleSignIn,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isPro
   }
 
   return (

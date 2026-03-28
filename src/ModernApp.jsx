@@ -73,7 +73,7 @@ const THEME_OPTIONS = [
 ]
 
 function ModernApp() {
-  const { isAuthenticated, loading: authLoading, logout, user } = useContext(FirebaseContext)
+  const { isAuthenticated, loading: authLoading, logout, user, userProfile, isPro } = useContext(FirebaseContext)
   const confirm = useConfirm()
   const {
     selectedMonth,
@@ -331,6 +331,9 @@ function ModernApp() {
       <div className="sidebar-header">
         <div className="sidebar-kicker">Financial Atelier</div>
         <h1>Pitaka</h1>
+        <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
+          {isPro ? 'Pro' : 'Basic'}
+        </div>
         <div className="sidebar-period">
           {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -362,19 +365,28 @@ function ModernApp() {
           <div>Accounts</div>
         </button>
         <button
-          className={`sidebar-nav-item ${currentView === 'savings' ? 'active' : ''}`}
-          onClick={() => setCurrentView('savings')}
+          className={`sidebar-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
+          onClick={() => setCurrentView('wealth')}
         >
           <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
-          <div>Savings</div>
+          <div>Wealth</div>
         </button>
         <button
-          className={`sidebar-nav-item ${currentView === 'investments' ? 'active' : ''}`}
-          onClick={() => setCurrentView('investments')}
+          className={`sidebar-nav-item ${currentView === 'categories' ? 'active' : ''}`}
+          onClick={() => setCurrentView('categories')}
         >
-          <div className="sidebar-nav-icon"><ChartIcon size={20} /></div>
-          <div>Investments</div>
+          <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
+          <div>Categories</div>
         </button>
+        {!isPro && (
+          <button
+            className={`sidebar-nav-item ${currentView === 'pro' ? 'active' : ''}`}
+            onClick={() => setCurrentView('pro')}
+          >
+            <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
+            <div>Unlock Pro</div>
+          </button>
+        )}
         <button
           className={`sidebar-nav-item ${currentView === 'settings' ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
@@ -567,15 +579,18 @@ function ModernApp() {
         )
 
       case 'savings':
+      case 'investments':
+      case 'wealth':
         return (
           <div className="mobile-content page-shell">
             {renderPageIntro({
-              eyebrow: 'Future Planning',
-              title: 'Savings Goals',
-              description: 'Turn long-term plans into visible targets and keep them funded with intention.',
+              eyebrow: 'Wealth Planning',
+              title: 'Wealth',
+              description: 'Manage savings goals and investment positions together so future plans and invested capital stay aligned.',
               stats: [
                 { label: 'Active Goals', value: savings.length },
-                { label: 'Reserved', value: totalSavingsSummary }
+                { label: 'Reserved', value: totalSavingsSummary },
+                { label: 'Investments', value: isPro ? investmentValueSummary : 'Pro only' }
               ]
             })}
 
@@ -689,6 +704,61 @@ function ModernApp() {
                 </div>
               </div>
             )}
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><ChartIcon size={18} /> Investments</h3>
+                  <p className="card-subtitle">
+                    {isPro
+                      ? 'Record positions, refresh values, and keep your portfolio organized beside your goals.'
+                      : 'Investment tracking is available on Pro. Upgrade to unlock portfolio monitoring and position management.'}
+                  </p>
+                </div>
+                {isPro ? (
+                  <button
+                    onClick={() => openBottomSheet('addInvestment')}
+                    className="btn btn-primary"
+                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                  >
+                    + Add Investment
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setCurrentView('pro')}
+                    className="btn btn-primary"
+                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                  >
+                    Unlock Pro
+                  </button>
+                )}
+              </div>
+              {isPro ? (
+                <InvestmentsTable
+                  investments={investments}
+                  onEdit={(investment) => openBottomSheet({ type: 'editInvestment', investment })}
+                  onDelete={async (id) => {
+                    const ok = await confirm({
+                      title: 'Delete Investment',
+                      description: 'Are you sure you want to delete this investment?',
+                      confirmText: 'Delete',
+                      cancelText: 'Cancel'
+                    })
+                    if (ok) deleteInvestment(id)
+                  }}
+                />
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-state-icon"><ChartIcon size={56} /></div>
+                  <div className="empty-state-title">Investment Tracking Is Pro Only</div>
+                  <div className="empty-state-description">
+                    Upgrade to Pro to record positions, monitor portfolio value, and manage investment performance.
+                  </div>
+                  <button className="btn btn-primary" onClick={() => setCurrentView('pro')}>
+                    See Pro Features
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )
 
@@ -736,46 +806,77 @@ function ModernApp() {
           </div>
         )
 
-      case 'investments':
+      case 'pro':
         return (
           <div className="mobile-content page-shell">
             {renderPageIntro({
-              eyebrow: 'Capital Allocation',
-              title: 'Investments',
-              description: 'Monitor positions, update holdings, and keep your invested capital visible beside cash.',
+              eyebrow: 'Membership',
+              title: 'Pitaka Pro',
+              description: 'Manage your membership tier and unlock the premium feature set from a dedicated workspace.',
               stats: [
-                { label: 'Positions', value: investments.length },
-                { label: 'Tracked Value', value: investmentValueSummary }
+                { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
+                { label: 'Currency Access', value: isPro ? 'All Supported' : 'PHP + USD' }
               ]
             })}
 
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><TrendUpIcon size={18} /> Investments</h3>
-                  <p className="card-subtitle">Record positions, refresh values, and keep your portfolio organized.</p>
+                  <h3 className="card-title"><TrendUpIcon size={18} /> Pitaka Pro</h3>
+                  <p className="card-subtitle">
+                    {isPro
+                      ? 'Your account already has Pro access and can use every supported currency.'
+                      : 'Pro access is currently assigned manually. Add the pro tag in the database to unlock the full currency catalog and future advanced features.'}
+                  </p>
                 </div>
-                <button
-                  onClick={() => openBottomSheet('addInvestment')}
-                  className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
-                >
-                  + Add Investment
-                </button>
+                <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
+                  {isPro ? 'Pro Active' : 'Basic'}
+                </div>
               </div>
-              <InvestmentsTable
-                investments={investments}
-                onEdit={(investment) => openBottomSheet({ type: 'editInvestment', investment })}
-                onDelete={async (id) => {
-                  const ok = await confirm({
-                    title: 'Delete Investment',
-                    description: 'Are you sure you want to delete this investment?',
-                    confirmText: 'Delete',
-                    cancelText: 'Cancel'
-                  })
-                  if (ok) deleteInvestment(id)
-                }}
-              />
+
+              <div className="layout-preference-list layout-preference-list--two-up">
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Basic</span>
+                    <span className="layout-preference-state">Included</span>
+                  </div>
+                  <div className="plan-checklist">
+                    <div className="plan-checklist-item is-included">PHP currency support</div>
+                    <div className="plan-checklist-item is-included">USD currency support</div>
+                    <div className="plan-checklist-item is-locked">All other currencies</div>
+                    <div className="plan-checklist-item is-included">Savings goals</div>
+                    <div className="plan-checklist-item is-locked">Investment tracking</div>
+                    <div className="plan-checklist-item is-locked">Future Pro-only upgrades</div>
+                  </div>
+                </div>
+
+                <div className={`layout-preference-card ${isPro ? 'active' : ''}`}>
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Pro</span>
+                    <span className="layout-preference-state">{isPro ? 'Unlocked' : 'Upgrade'}</span>
+                  </div>
+                  <div className="plan-checklist">
+                    <div className="plan-checklist-item is-included">PHP currency support</div>
+                    <div className="plan-checklist-item is-included">USD currency support</div>
+                    <div className="plan-checklist-item is-included">All supported currencies</div>
+                    <div className="plan-checklist-item is-included">Savings goals</div>
+                    <div className="plan-checklist-item is-included">Investment tracking</div>
+                    <div className="plan-checklist-item is-included">Future Pro-only upgrades</div>
+                  </div>
+                </div>
+              </div>
+
+              {!isPro && (
+                <div style={{ marginTop: '1rem' }} className="card-subtitle">
+                  Pro is temporarily managed outside the app. Add the <code>pro</code> tag or set the plan to <code>pro</code> on this user in Firestore when you want to enable premium features.
+                </div>
+              )}
+
+              {isPro && userProfile && (
+                <div style={{ marginTop: '1rem' }} className="card-subtitle">
+                  Pro tag stored on this user profile{userProfile.email ? ` for ${userProfile.email}` : ''}.
+                </div>
+              )}
             </div>
           </div>
         )
@@ -785,14 +886,63 @@ function ModernApp() {
           <div className="mobile-content page-shell">
             {renderPageIntro({
               eyebrow: 'Controls & Tools',
-              title: 'Settings',
-              description: 'Customize your workspace, move data in and out, and maintain supporting configuration.',
+              title: 'More',
+              description: 'Reach advanced sections, workspace controls, and data tools from one clean mobile hub.',
               stats: [
-                { label: 'Dashboard Mode', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Editorial' },
+                { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'Light' },
-                { label: 'Categories', value: categories.length }
+                { label: 'Plan', value: isPro ? 'Pro' : 'Basic' }
               ]
             })}
+
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><SettingsIcon size={18} /> Explore More</h3>
+                  <p className="card-subtitle">Open dedicated sections for membership, category structure, and workspace settings.</p>
+                </div>
+              </div>
+
+              <div className="layout-preference-list">
+                <button
+                  type="button"
+                  className="layout-preference-card"
+                  onClick={() => setCurrentView('categories')}
+                >
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Categories</span>
+                    <span className="layout-preference-state">Open</span>
+                  </div>
+                  <div className="layout-preference-description">
+                    Manage the labels behind your expense insights and reporting structure.
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`layout-preference-card ${isPro ? 'active' : ''}`}
+                  onClick={() => setCurrentView('pro')}
+                >
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Pitaka Pro</span>
+                    <span className="layout-preference-state">{isPro ? 'Active' : 'Open'}</span>
+                  </div>
+                  <div className="layout-preference-description">
+                    Review your plan, unlock premium currencies, and manage Pro access.
+                  </div>
+                </button>
+
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Workspace</span>
+                    <span className="layout-preference-state">Here</span>
+                  </div>
+                  <div className="layout-preference-description">
+                    Adjust dashboard layout, theme preference, install state, and data tools from this page.
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="card">
               <div className="card-header">
@@ -1086,13 +1236,36 @@ function ModernApp() {
         )
 
       case 'addInvestment':
-        return (
+        return isPro ? (
           <InvestmentForm
             onAddInvestment={async (investment) => {
               await addInvestment(investment)
               closeBottomSheet()
             }}
           />
+        ) : (
+          <div className="form-container">
+            <h3 className="card-title"><TrendUpIcon size={18} /> Pro Required</h3>
+            <p className="card-subtitle" style={{ marginTop: '0.75rem' }}>
+              Investment tracking is part of Pitaka Pro. Add the Pro tag on this user in the database to enable investment access.
+            </p>
+            <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+              <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeBottomSheet}>
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  closeBottomSheet()
+                  setCurrentView('pro')
+                }}
+              >
+                View Pro Access
+              </button>
+            </div>
+          </div>
         )
 
       default:
@@ -1136,7 +1309,7 @@ function ModernApp() {
             </div>
           )
         } else if (bottomSheetContent?.type === 'editInvestment') {
-          return (
+          return isPro ? (
             <InvestmentForm
               editingInvestment={bottomSheetContent.investment}
               onUpdateInvestment={async (id, updates) => {
@@ -1145,7 +1318,7 @@ function ModernApp() {
               }}
               onCancelEdit={closeBottomSheet}
             />
-          )
+          ) : null
         } else if (bottomSheetContent?.type === 'importData') {
           return (
             <div className="form-container">
@@ -1474,26 +1647,28 @@ function ModernApp() {
           <div>Accounts</div>
         </button>
         <button
-          className={`bottom-nav-item ${currentView === 'savings' ? 'active' : ''}`}
-          onClick={() => setCurrentView('savings')}
+          className={`bottom-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
+          onClick={() => setCurrentView('wealth')}
         >
           <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
-          <div>Goals</div>
+          <div>Wealth</div>
         </button>
         <button
-          className={`bottom-nav-item ${currentView === 'investments' ? 'active' : ''}`}
-          onClick={() => setCurrentView('investments')}
-        >
-          <div className="bottom-nav-icon"><ChartIcon size={22} /></div>
-          <div>Invest</div>
-        </button>
-        <button
-          className={`bottom-nav-item ${currentView === 'settings' ? 'active' : ''}`}
+          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
         >
           <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>
           <div>More</div>
         </button>
+        {!isPro && (
+          <button
+            className={`bottom-nav-item ${currentView === 'pro' ? 'active' : ''}`}
+            onClick={() => setCurrentView('pro')}
+          >
+            <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
+            <div>Pro</div>
+          </button>
+        )}
       </div>
       
       </div> {/* End desktop-main-wrapper */}

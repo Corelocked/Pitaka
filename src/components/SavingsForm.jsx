@@ -1,8 +1,11 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import './Form.css'
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '../utils/currency'
+import { DEFAULT_CURRENCY, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
+import { useFirebase } from '../hooks/useFirebase'
 
 function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEdit }) {
+  const { isPro } = useFirebase()
   const [goal, setGoal] = useState('')
   const [targetAmount, setTargetAmount] = useState('')
   const [currentAmount, setCurrentAmount] = useState('')
@@ -11,15 +14,10 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
 
   useEffect(() => {
     if (editingSavings) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGoal(editingSavings.goal)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTargetAmount(editingSavings.targetAmount.toString())
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentAmount(editingSavings.currentAmount.toString())
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTargetDate(editingSavings.targetDate)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrency(editingSavings.currency || DEFAULT_CURRENCY)
     }
   }, [editingSavings])
@@ -62,6 +60,8 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
     onCancelEdit()
   }
 
+  const availableCurrencies = getAllowedCurrencies(isPro, editingSavings?.currency)
+
   return (
     <form onSubmit={handleSubmit} className="form">
       <div className="form-group">
@@ -78,12 +78,17 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
       <div className="form-group">
         <label htmlFor="savings-currency">Currency</label>
         <select id="savings-currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-          {SUPPORTED_CURRENCIES.map((option) => (
+          {availableCurrencies.map((option) => (
             <option key={option.code} value={option.code}>
-              {option.code} - {option.label}
+              {option.code} - {option.label}{!isPro && isCurrencyProOnly(option.code) ? ' (Pro locked)' : ''}
             </option>
           ))}
         </select>
+        {!isPro && (
+          <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+            Basic goals can use `PHP` and `USD`. Pro unlocks the full currency list.
+          </small>
+        )}
       </div>
       <div className="form-group">
         <label htmlFor="savings-target">Target Amount ({currency})</label>

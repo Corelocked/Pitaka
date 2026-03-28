@@ -1,9 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react'
 import './Form.css'
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '../utils/currency'
+import { DEFAULT_CURRENCY, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
+import { useFirebase } from '../hooks/useFirebase'
 
 function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }) {
+  const { isPro } = useFirebase()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [accountType, setAccountType] = useState('cash')
@@ -72,6 +74,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
     { value: 'savings', label: 'Savings Account', color: '#11998e' },
     { value: 'other', label: 'Other', color: '#9ca3af' }
   ]
+  const availableCurrencies = getAllowedCurrencies(isPro, editingWallet?.currency)
 
   return (
     <div className="form-container">
@@ -126,12 +129,17 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
             className="form-input"
             required
           >
-            {SUPPORTED_CURRENCIES.map((option) => (
+            {availableCurrencies.map((option) => (
               <option key={option.code} value={option.code}>
-                {option.code} - {option.label}
+                {option.code} - {option.label}{!isPro && isCurrencyProOnly(option.code) ? ' (Pro locked)' : ''}
               </option>
             ))}
           </select>
+          {!isPro && (
+            <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+              Basic accounts can use `PHP` and `USD`. Upgrade to Pro to unlock more currencies.
+            </small>
+          )}
         </div>
 
         <div className="form-group">
