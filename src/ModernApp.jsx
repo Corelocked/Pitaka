@@ -358,6 +358,55 @@ function ModernApp() {
     )
   )
 
+  const normalizeImportValue = (value) => String(value ?? '').trim().toLowerCase()
+  const normalizeImportAmount = (value) => Number(parseFloat(value || 0).toFixed(2))
+  const getWalletNameById = (walletId) => walletBalances.find((wallet) => wallet.id === walletId)?.name || ''
+
+  const walletExists = (wallet) => walletBalances.some((existingWallet) => (
+    normalizeImportValue(existingWallet.name) === normalizeImportValue(wallet.name) &&
+    normalizeImportValue(existingWallet.accountType || 'cash') === normalizeImportValue(wallet.accountType || 'cash') &&
+    normalizeImportAmount(existingWallet.startingBalance || existingWallet.balance || 0) === normalizeImportAmount(wallet.startingBalance || 0) &&
+    normalizeImportValue(existingWallet.description) === normalizeImportValue(wallet.description)
+  ))
+
+  const categoryExists = (category) => categories.some((existingCategory) => (
+    normalizeImportValue(existingCategory.name) === normalizeImportValue(category.name)
+  ))
+
+  const incomeExists = (income) => incomes.some((existingIncome) => (
+    normalizeImportValue(existingIncome.date) === normalizeImportValue(income.date) &&
+    normalizeImportValue(existingIncome.source) === normalizeImportValue(income.source) &&
+    normalizeImportAmount(existingIncome.amount) === normalizeImportAmount(income.amount) &&
+    normalizeImportValue(getWalletNameById(existingIncome.walletId)) === normalizeImportValue(income.walletName) &&
+    normalizeImportValue(existingIncome.notes) === normalizeImportValue(income.notes)
+  ))
+
+  const expenseExists = (expense) => expenses.some((existingExpense) => (
+    normalizeImportValue(existingExpense.date) === normalizeImportValue(expense.date) &&
+    normalizeImportValue(existingExpense.description) === normalizeImportValue(expense.description) &&
+    normalizeImportAmount(existingExpense.amount) === normalizeImportAmount(expense.amount) &&
+    normalizeImportValue(existingExpense.category) === normalizeImportValue(expense.category) &&
+    normalizeImportValue(getWalletNameById(existingExpense.walletId)) === normalizeImportValue(expense.walletName) &&
+    normalizeImportValue(existingExpense.notes) === normalizeImportValue(expense.notes)
+  ))
+
+  const transferExists = (transfer) => transfers.some((existingTransfer) => (
+    normalizeImportValue(existingTransfer.date) === normalizeImportValue(transfer.date) &&
+    normalizeImportAmount(existingTransfer.amount) === normalizeImportAmount(transfer.amount) &&
+    normalizeImportValue(getWalletNameById(existingTransfer.fromWalletId)) === normalizeImportValue(transfer.fromWalletName) &&
+    normalizeImportValue(getWalletNameById(existingTransfer.toWalletId)) === normalizeImportValue(transfer.toWalletName) &&
+    normalizeImportValue(existingTransfer.notes) === normalizeImportValue(transfer.notes)
+  ))
+
+  const investmentExists = (investment) => investments.some((existingInvestment) => (
+    normalizeImportValue(existingInvestment.name) === normalizeImportValue(investment.name) &&
+    normalizeImportValue(existingInvestment.investmentType) === normalizeImportValue(investment.investmentType) &&
+    normalizeImportValue(existingInvestment.ticker) === normalizeImportValue(investment.ticker) &&
+    normalizeImportAmount(existingInvestment.quantity) === normalizeImportAmount(investment.quantity) &&
+    normalizeImportAmount(existingInvestment.purchasePrice) === normalizeImportAmount(investment.purchasePrice) &&
+    normalizeImportValue(existingInvestment.purchaseDate) === normalizeImportValue(investment.purchaseDate)
+  ))
+
   const renderPageIntro = ({ eyebrow, title, description, stats = [] }) => (
     <section className="page-intro card">
       <div className="page-intro-copy">
@@ -1366,11 +1415,16 @@ function ModernApp() {
                       const importData = bottomSheetContent.data
                       let successCount = 0
                       let errorCount = 0
+                      let skippedCount = 0
 
                       // Import wallets first (needed for incomes/expenses/transfers)
                       if (importData.wallets?.length > 0) {
                         for (const wallet of importData.wallets) {
                           try {
+                            if (walletExists(wallet)) {
+                              skippedCount++
+                              continue
+                            }
                             await addWallet(wallet)
                             successCount++
                           } catch (err) {
@@ -1384,6 +1438,10 @@ function ModernApp() {
                       if (importData.categories?.length > 0) {
                         for (const category of importData.categories) {
                           try {
+                            if (categoryExists(category)) {
+                              skippedCount++
+                              continue
+                            }
                             await addCategory(category)
                             successCount++
                           } catch (err) {
@@ -1397,6 +1455,10 @@ function ModernApp() {
                       if (importData.incomes?.length > 0) {
                         for (const income of importData.incomes) {
                           try {
+                            if (incomeExists(income)) {
+                              skippedCount++
+                              continue
+                            }
                             await addIncome(income)
                             successCount++
                           } catch (err) {
@@ -1410,6 +1472,10 @@ function ModernApp() {
                       if (importData.expenses?.length > 0) {
                         for (const expense of importData.expenses) {
                           try {
+                            if (expenseExists(expense)) {
+                              skippedCount++
+                              continue
+                            }
                             await addExpense(expense)
                             successCount++
                           } catch (err) {
@@ -1423,6 +1489,10 @@ function ModernApp() {
                       if (importData.transfers?.length > 0) {
                         for (const transfer of importData.transfers) {
                           try {
+                            if (transferExists(transfer)) {
+                              skippedCount++
+                              continue
+                            }
                             await addTransfer(transfer)
                             successCount++
                           } catch (err) {
@@ -1436,6 +1506,10 @@ function ModernApp() {
                       if (importData.investments?.length > 0) {
                         for (const investment of importData.investments) {
                           try {
+                            if (investmentExists(investment)) {
+                              skippedCount++
+                              continue
+                            }
                             await addInvestment(investment)
                             successCount++
                           } catch (err) {
@@ -1447,9 +1521,9 @@ function ModernApp() {
 
                       // Show result message
                       if (errorCount === 0) {
-                        alert(`Successfully imported ${successCount} items.`)
+                        alert(`Import finished.\nImported: ${successCount}\nSkipped duplicates: ${skippedCount}`)
                       } else {
-                        alert(`Import completed with some errors:\nSuccess: ${successCount}\nFailed: ${errorCount}`)
+                        alert(`Import completed with some errors:\nImported: ${successCount}\nSkipped duplicates: ${skippedCount}\nFailed: ${errorCount}`)
                       }
                       closeBottomSheet()
                     } catch (err) {

@@ -1,24 +1,82 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(6,8,19,0.45);
+  background: rgba(6, 8, 19, 0.52);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
   z-index: 9999;
 }
 
 .modal {
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(6px);
-  border-radius: 12px;
-  padding: 20px;
-  width: 420px;
-  box-shadow: 0 10px 30px rgba(10,10,30,0.25);
+  width: min(100%, 440px);
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 22px 48px rgba(10, 10, 30, 0.28);
+  color: var(--text-primary);
 }
 
-.modal h3 { margin: 0 0 8px 0; font-size: 1.15rem }
-.modal-body { margin-bottom: 16px; color: var(--text-secondary) }
-.modal-actions { display:flex; justify-content:flex-end; gap:8px }
-.modal .btn { padding:8px 12px }
-.modal .btn.danger { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; border:none }
+.modal h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  margin-bottom: 18px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal .btn {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.modal .btn:not(.danger) {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text-primary);
+}
+
+.modal .btn.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+}
+
+body[data-theme='dark'] .modal {
+  background: #171d19;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.38);
+}
+
+body[data-theme='dark'] .modal h3 {
+  color: var(--text-primary);
+}
+
+body[data-theme='dark'] .modal-body {
+  color: var(--text-secondary);
+}
+
+body[data-theme='dark'] .modal .btn:not(.danger) {
+  background: #232a26;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+body[data-theme='dark'] .modal .btn:not(.danger):hover {
+  background: #2a322d;
+}
