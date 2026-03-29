@@ -22,6 +22,33 @@
   font-size: 14px;
 }
 
+/* Allow tables inside the page cards to shrink to their container
+   and avoid forcing horizontal overflow in two-column layouts. */
+.page-table-card .data-table,
+.page-table-card .table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.page-table-card .data-table th,
+.page-table-card .data-table td,
+.page-table-card .table th,
+.page-table-card .table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Preserve nowrap and visibility for special columns */
+.page-table-card .data-table td.amount,
+.page-table-card .data-table td.col-actions,
+.page-table-card .data-table td.col-select,
+.page-table-card .data-table td.actions {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .data-table thead th,
 .table thead th {
   position: sticky;

@@ -528,7 +528,7 @@ function ModernApp() {
               ]
             })}
 
-            <div className="page-section-grid">
+            <div className="page-section-grid page-section-grid--stacked">
               <div className={`card page-table-card ${filteredIncomes.length === 0 ? 'page-table-card--empty' : ''}`}>
                 <div className="card-header">
                   <div>
