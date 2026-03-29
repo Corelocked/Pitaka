@@ -73,6 +73,10 @@ const THEME_OPTIONS = [
   }
 ]
 
+const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 50000)
+const PRO_PRICE_CURRENCY = String(import.meta.env.VITE_PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase()
+const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_METHOD_LABEL || 'QRPh')
+
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user, userProfile, isPro } = useContext(FirebaseContext)
   const confirm = useConfirm()
@@ -340,6 +344,8 @@ function ModernApp() {
     summarizeByCurrency(savings, (goal) => goal.currentAmount || 0, (goal) => goal.currency || DEFAULT_CURRENCY)
   )
 
+  const proPriceLabel = formatCurrency(PRO_PRICE_AMOUNT / 100, PRO_PRICE_CURRENCY)
+
   const investmentValueSummary = formatCurrencySummary(
     summarizeByCurrency(
       investments,
@@ -376,17 +382,12 @@ function ModernApp() {
       <div className="sidebar-header">
         <div className="sidebar-kicker">Financial Atelier</div>
         <h1>Pitaka</h1>
-        <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
-          {isPro ? 'Pro' : 'Basic'}
-        </div>
+        <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>{isPro ? 'Pro' : 'Basic'}</div>
         <div className="sidebar-period">
-          {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
-            month: 'long', 
-            year: 'numeric' 
-          })}
+          {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </div>
       </div>
-      
+
       <nav className="sidebar-nav">
         <button
           className={`sidebar-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
@@ -871,7 +872,7 @@ function ModernApp() {
                   <p className="card-subtitle">
                     {isPro
                       ? 'Your account already has Pro access and can use every supported currency.'
-                      : 'Pro access is currently assigned manually. Add the pro tag in the database to unlock the full currency catalog and future advanced features.'}
+                      : 'Upgrade with PayMongo to unlock full currency access, investment tracking, and future premium features.'}
                   </p>
                 </div>
                 <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
@@ -889,6 +890,56 @@ function ModernApp() {
                 <div className="status-pill warning" style={{ marginTop: '1rem' }}>
                   Checkout was cancelled before payment completed.
                 </div>
+              )}
+
+              {!isPro && (
+                <section className="pro-purchase-card">
+                  <div className="pro-purchase-copy">
+                    <span className="eyebrow">Upgrade Access</span>
+                    <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
+                    <p className="pro-purchase-text">
+                      Pitaka Pro is a <strong>one-time payment</strong>—no subscription, no recurring fees. Get full currency support, investment tracking, and future premium tools through a hosted PayMongo checkout.
+                    </p>
+                    <div className="pro-purchase-price-row">
+                      <div className="pro-purchase-price-block">
+                        <div className="pro-purchase-price">{proPriceLabel}</div>
+                        <div className="pro-purchase-price-note">One-time upgrade via {PRO_PAYMENT_METHOD_LABEL}</div>
+                      </div>
+                      <div className="pro-purchase-chip">Secure Checkout</div>
+                    </div>
+                    <div className="pro-purchase-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={async () => {
+                          try {
+                            await startProCheckout()
+                          } catch (checkoutError) {
+                            alert(checkoutError.message || 'Failed to start PayMongo checkout.')
+                          }
+                        }}
+                        disabled={isStartingCheckout}
+                      >
+                        {isStartingCheckout ? 'Opening PayMongo...' : 'Buy Pro with PayMongo'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pro-purchase-meta">
+                    <div className="pro-purchase-meta-card">
+                      <span className="pro-purchase-meta-label">Payment Method</span>
+                      <strong>{PRO_PAYMENT_METHOD_LABEL}</strong>
+                    </div>
+                    <div className="pro-purchase-meta-card">
+                      <span className="pro-purchase-meta-label">Upgrade Applies</span>
+                      <strong>After webhook confirmation</strong>
+                    </div>
+                    <div className="pro-purchase-meta-card">
+                      <span className="pro-purchase-meta-label">Account</span>
+                      <strong>{user?.email || 'Signed-in user'}</strong>
+                    </div>
+                  </div>
+                </section>
               )}
 
               <div className="layout-preference-list layout-preference-list--two-up">
@@ -924,28 +975,27 @@ function ModernApp() {
               </div>
 
               {!isPro && (
-                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                  <div className="card-subtitle">
-                    PayMongo checkout is now connected for Pro purchases. Your account will be upgraded after PayMongo sends a successful payment webhook back to Pitaka.
+                <div className="pro-flow-notes">
+                  <div className="pro-flow-note">
+                    <span className="pro-flow-step">1</span>
+                    <div>
+                      <strong>Checkout on PayMongo</strong>
+                      <div className="card-subtitle">Users are redirected to PayMongo to complete the payment securely.</div>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={async () => {
-                        try {
-                          await startProCheckout()
-                        } catch (checkoutError) {
-                          alert(checkoutError.message || 'Failed to start PayMongo checkout.')
-                        }
-                      }}
-                      disabled={isStartingCheckout}
-                    >
-                      {isStartingCheckout ? 'Opening PayMongo...' : 'Continue to PayMongo'}
-                    </button>
+                  <div className="pro-flow-note">
+                    <span className="pro-flow-step">2</span>
+                    <div>
+                      <strong>Webhook confirms payment</strong>
+                      <div className="card-subtitle">Pitaka waits for <code>checkout_session.payment.paid</code> before upgrading the account.</div>
+                    </div>
                   </div>
-                  <div className="card-subtitle">
-                    If you still want to manage access manually, you can keep using the <code>pro</code> tag or set the plan to <code>pro</code> directly in Firestore.
+                  <div className="pro-flow-note">
+                    <span className="pro-flow-step">3</span>
+                    <div>
+                      <strong>Pro unlocks automatically</strong>
+                      <div className="card-subtitle">The user profile is updated to <code>plan: pro</code> with the <code>pro</code> tag after confirmation.</div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1646,7 +1696,7 @@ function ModernApp() {
         </div>
       )}
 
-      {(!isOnline || syncState.hasPendingWrites || (!isInstalled && deferredInstallPrompt)) && (
+      {(!isOnline || syncState.hasPendingWrites) && (
         <div className="status-strip">
           {!isOnline && (
             <div className="status-pill warning">
@@ -1658,12 +1708,6 @@ function ModernApp() {
             <div className="status-pill accent">
               Sync pending: local changes are queued and waiting for Firestore confirmation.
             </div>
-          )}
-
-          {!isInstalled && deferredInstallPrompt && (
-            <button type="button" className="status-pill action" onClick={installApp}>
-              Install Pitaka
-            </button>
           )}
         </div>
       )}

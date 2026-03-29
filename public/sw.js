@@ -4,8 +4,7 @@ const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/pitaka-logo.png',
-  '/budgetbook-logo.png'
+  '/pitaka-logo.png'
 ]
 
 self.addEventListener('install', (event) => {

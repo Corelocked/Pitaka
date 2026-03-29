@@ -2408,6 +2408,17 @@ html {
   gap: 0.85rem;
 }
 
+@media (min-width: 900px) {
+  .pro-purchase-card {
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    align-items: end;
+  }
+
+  .pro-purchase-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .layout-preference-card {
   width: 100%;
   text-align: left;
@@ -2492,6 +2503,145 @@ html {
 
 .plan-checklist-item.is-included {
   color: var(--text-primary);
+}
+
+.pro-purchase-card {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.15rem;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 242, 0.92)),
+    radial-gradient(circle at top right, rgba(var(--gold-rgb), 0.18), transparent 34%);
+  border: 1px solid rgba(var(--gold-rgb), 0.2);
+}
+
+.pro-purchase-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pro-purchase-title {
+  margin: 0;
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: 1.45rem;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.pro-purchase-text {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.pro-purchase-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pro-purchase-price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pro-purchase-price {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.pro-purchase-price-note,
+.pro-purchase-meta-label {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.pro-purchase-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(2, 54, 22, 0.08);
+  color: var(--text-accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pro-purchase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.pro-purchase-meta {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pro-purchase-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(27, 28, 28, 0.05);
+}
+
+.pro-purchase-meta-card strong {
+  color: var(--text-primary);
+  font-family: 'Manrope', 'Inter', sans-serif;
+  word-break: break-word;
+}
+
+.pro-flow-notes {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.pro-flow-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: rgba(245, 243, 242, 0.78);
+  border: 1px solid rgba(27, 28, 28, 0.05);
+}
+
+.pro-flow-note strong {
+  color: var(--text-primary);
+  font-family: 'Manrope', 'Inter', sans-serif;
+}
+
+.pro-flow-step {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: white;
+  font-size: 0.84rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-colored);
 }
 
 .desktop-sidebar {
@@ -2914,6 +3064,9 @@ body[data-theme='dark'] .quick-action-btn,
 body[data-theme='dark'] .layout-preference-card,
 body[data-theme='dark'] .page-intro-stat,
 body[data-theme='dark'] .dashboard-hero-total,
+body[data-theme='dark'] .pro-purchase-card,
+body[data-theme='dark'] .pro-purchase-meta-card,
+body[data-theme='dark'] .pro-flow-note,
 body[data-theme='dark'] .status-pill.warning,
 body[data-theme='dark'] .status-pill.accent,
 body[data-theme='dark'] .sidebar-user,
@@ -2949,6 +3102,25 @@ body[data-theme='dark'] .status-pill.action {
   background: linear-gradient(135deg, #1f6a39 0%, #34563f 100%);
   color: #f8faf7;
   box-shadow: 0 18px 40px rgba(3, 20, 10, 0.3);
+}
+
+body[data-theme='dark'] .pro-purchase-text,
+body[data-theme='dark'] .pro-purchase-price-note,
+body[data-theme='dark'] .pro-purchase-meta-label,
+body[data-theme='dark'] .pro-flow-note .card-subtitle {
+  color: var(--text-secondary);
+}
+
+body[data-theme='dark'] .pro-purchase-title,
+body[data-theme='dark'] .pro-purchase-price,
+body[data-theme='dark'] .pro-purchase-meta-card strong,
+body[data-theme='dark'] .pro-flow-note strong {
+  color: var(--text-primary);
+}
+
+body[data-theme='dark'] .pro-purchase-chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
 }
 
 body[data-theme='dark'] .transaction-item {
