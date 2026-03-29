@@ -903,95 +903,97 @@ function ModernApp() {
       </div>
 
       <nav className="sidebar-nav">
-        <button
-          className={`sidebar-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setCurrentView('dashboard')}
-        >
-          <div className="sidebar-nav-icon"><HomeIcon size={20} /></div>
-          <div>Dashboard</div>
-        </button>
-        <button
-          className={`sidebar-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
-          onClick={() => setCurrentView('transactions')}
-        >
-          <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
-          <div>Transactions</div>
-        </button>
-        <button
-          className={`sidebar-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
-          onClick={() => setCurrentView('accounts')}
-        >
-          <div className="sidebar-nav-icon"><WalletIcon size={20} /></div>
-          <div>Accounts</div>
-        </button>
-        <button
-          className={`sidebar-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
-          onClick={() => setCurrentView('wealth')}
-        >
-          <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
-          <div>Wealth</div>
-        </button>
-        <button
-          className={`sidebar-nav-item ${currentView === 'categories' ? 'active' : ''}`}
-          onClick={() => setCurrentView('categories')}
-        >
-          <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
-          <div>Categories</div>
-        </button>
-        <button
-          className={`sidebar-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`}
-          onClick={() => setCurrentView('subscriptions')}
-        >
-          <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
-          <div>Subscriptions</div>
-        </button>
-        {!isPro && (
+        <div className="sidebar-nav-scroll">
           <button
-            className={`sidebar-nav-item ${currentView === 'pro' ? 'active' : ''}`}
-            onClick={() => setCurrentView('pro')}
+            className={`sidebar-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setCurrentView('dashboard')}
+          >
+            <div className="sidebar-nav-icon"><HomeIcon size={20} /></div>
+            <div>Dashboard</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
+            onClick={() => setCurrentView('transactions')}
+          >
+            <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
+            <div>Transactions</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
+            onClick={() => setCurrentView('accounts')}
+          >
+            <div className="sidebar-nav-icon"><WalletIcon size={20} /></div>
+            <div>Accounts</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
+            onClick={() => setCurrentView('wealth')}
           >
             <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
-            <div>Unlock Pro</div>
+            <div>Wealth</div>
           </button>
-        )}
-        <button
-          className={`sidebar-nav-item ${currentView === 'settings' ? 'active' : ''}`}
-          onClick={() => setCurrentView('settings')}
-        >
-          <div className="sidebar-nav-icon"><SettingsIcon size={20} /></div>
-          <div>Settings</div>
-        </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'categories' ? 'active' : ''}`}
+            onClick={() => setCurrentView('categories')}
+          >
+            <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
+            <div>Categories</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`}
+            onClick={() => setCurrentView('subscriptions')}
+          >
+            <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
+            <div>Subscriptions</div>
+          </button>
+          {!isPro && (
+            <button
+              className={`sidebar-nav-item ${currentView === 'pro' ? 'active' : ''}`}
+              onClick={() => setCurrentView('pro')}
+            >
+              <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
+              <div>Unlock Pro</div>
+            </button>
+          )}
+          <button
+            className={`sidebar-nav-item ${currentView === 'settings' ? 'active' : ''}`}
+            onClick={() => setCurrentView('settings')}
+          >
+            <div className="sidebar-nav-icon"><SettingsIcon size={20} /></div>
+            <div>Settings</div>
+          </button>
 
-        {currentView === 'dashboard' && (
-        <button
-          type="button"
-          className={`sidebar-nav-item ${isDesktopDashboardEditMode ? 'active' : ''}`}
-          onClick={() => setIsDesktopDashboardEditMode((current) => !current)}
-        >
-          <div className="sidebar-nav-icon"><TemplateIcon size={20} /></div>
-          <div>{isDesktopDashboardEditMode ? 'Done Editing' : 'Edit Dashboard'}</div>
-        </button>
+          {currentView === 'dashboard' && (
+          <button
+            type="button"
+            className={`sidebar-nav-item ${isDesktopDashboardEditMode ? 'active' : ''}`}
+            onClick={() => setIsDesktopDashboardEditMode((current) => !current)}
+          >
+            <div className="sidebar-nav-icon"><TemplateIcon size={20} /></div>
+            <div>{isDesktopDashboardEditMode ? 'Done Editing' : 'Edit Dashboard'}</div>
+          </button>
 
-        )}
+          )}
 
-        {currentView === 'dashboard' && isDesktopDashboardEditMode && (
-          <div className="sidebar-visualizer-list">
-            {availableDashboardWidgets.map((widget) => {
-              const isHidden = dashboardCustomization.hiddenSectionIds.includes(widget.id)
-              return (
-                <button
-                  key={widget.id}
-                  type="button"
-                  className={`sidebar-visualizer-item ${isHidden ? '' : 'active'}`}
-                  onClick={() => toggleDashboardWidgetVisibility(widget.id)}
-                >
-                  <span>{widget.name}</span>
-                  <span>{isHidden ? 'Hidden' : 'Shown'}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
+          {currentView === 'dashboard' && isDesktopDashboardEditMode && (
+            <div className="sidebar-visualizer-list">
+              {availableDashboardWidgets.map((widget) => {
+                const isHidden = dashboardCustomization.hiddenSectionIds.includes(widget.id)
+                return (
+                  <button
+                    key={widget.id}
+                    type="button"
+                    className={`sidebar-visualizer-item ${isHidden ? '' : 'active'}`}
+                    onClick={() => toggleDashboardWidgetVisibility(widget.id)}
+                  >
+                    <span>{widget.name}</span>
+                    <span>{isHidden ? 'Hidden' : 'Shown'}</span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </nav>
 
       <div className="sidebar-footer">
