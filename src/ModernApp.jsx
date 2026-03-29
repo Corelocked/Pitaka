@@ -381,8 +381,10 @@ function ModernApp() {
     <div className="desktop-sidebar">
       <div className="sidebar-header">
         <div className="sidebar-kicker">Financial Atelier</div>
-        <h1>Pitaka</h1>
-        <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>{isPro ? 'Pro' : 'Basic'}</div>
+        <div className="sidebar-title-row">
+          <h1>Pitaka</h1>
+          <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>{isPro ? 'Pro' : 'Basic'}</div>
+        </div>
         <div className="sidebar-period">
           {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </div>

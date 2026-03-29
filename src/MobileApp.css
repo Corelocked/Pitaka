@@ -943,6 +943,18 @@ body[data-theme='dark'] .form-select {
   z-index: 1;
 }
 
+/* Align title and badge horizontally and center them vertically */
+.sidebar-header h1 {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+/* Show the plan badge beside the title instead of below it */
+.sidebar-header h1 {
+  display: inline-block;
+}
+
 .sidebar-nav {
   flex: 1;
   padding: 24px 0;
@@ -2732,7 +2744,9 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 0.75rem;
+  margin-top: 0;
+  margin-left: 0;
+  transform: none;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -2741,6 +2755,14 @@ html {
   text-transform: uppercase;
   border: 1px solid rgba(255, 255, 255, 0.18);
   width: fit-content;
+}
+
+/* Horizontal wrapper for title + badge */
+.sidebar-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .sidebar-plan-badge.basic {
