@@ -5,6 +5,25 @@ let firestoreDb = null
 export function getFirestore(config) {
   if (firestoreDb) return firestoreDb
 
+  // Prefer FIREBASE_SERVICE_ACCOUNT if available
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT
+  if (serviceAccountJson) {
+    let serviceAccount
+    try {
+      serviceAccount = JSON.parse(serviceAccountJson)
+    } catch (err) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT env var is not valid JSON')
+    }
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      })
+    }
+    firestoreDb = admin.firestore()
+    return firestoreDb
+  }
+
+  // Fallback to split env vars (backward compatibility)
   if (!config.firebaseProjectId || !config.firebaseClientEmail || !config.firebasePrivateKey) {
     throw new Error('Missing Firebase Admin credentials in env variables')
   }
