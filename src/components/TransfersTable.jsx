@@ -28,7 +28,6 @@ function TransfersTable({ transfers, wallets, onDelete }) {
   if (!transfers || transfers.length === 0) {
     return (
       <div className="table-container">
-        <h3 className="card-title"><TransferIcon size={18} /> Transfers</h3>
         <div className="empty-state">
           <div className="empty-state-icon"><TransferIcon size={52} /></div>
           <div className="empty-state-title">No transfers yet</div>
@@ -42,7 +41,6 @@ function TransfersTable({ transfers, wallets, onDelete }) {
 
   return (
     <div className="table-container">
-      <h3 className="card-title"><TransferIcon size={18} /> Transfers ({transfers.length})</h3>
       <div className="transaction-list">
         {transfers.map((transfer) => {
           const currency = transfer.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === transfer.fromWalletId)) || DEFAULT_CURRENCY

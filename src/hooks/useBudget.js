@@ -371,7 +371,10 @@ export function useBudget() {
       id: tempId,
       name: wallet.name,
       description: wallet.description || '',
+      accountType: wallet.accountType || 'cash',
       startingBalance: wallet.startingBalance || 0,
+      creditLimit: wallet.creditLimit || null,
+      creditAlertPercent: wallet.creditAlertPercent || null,
       currency: wallet.currency,
       userId: user.uid,
       createdAt: new Date()
@@ -570,6 +573,36 @@ export function useBudget() {
     return wallets.map(w => ({ ...w, balance: map[w.id] || 0 }))
   }, [wallets, incomes, expenses, transfers])
 
+  const creditCardSummaries = useMemo(() => {
+    return walletBalances
+      .filter((wallet) => wallet.accountType === 'credit')
+      .map((wallet) => {
+        const creditLimit = parseFloat(wallet.creditLimit || 0)
+        const spent = Math.max(parseFloat(wallet.balance || 0) * -1, 0)
+        const available = creditLimit > 0 ? creditLimit - spent : 0
+        const utilization = creditLimit > 0 ? (spent / creditLimit) * 100 : 0
+        const alertPercent = parseFloat(wallet.creditAlertPercent || 80)
+
+        let status = 'ok'
+        if (creditLimit > 0 && utilization >= 100) {
+          status = 'maxed'
+        } else if (creditLimit > 0 && utilization >= alertPercent) {
+          status = 'warning'
+        }
+
+        return {
+          ...wallet,
+          creditLimit,
+          spent,
+          available,
+          utilization,
+          alertPercent,
+          status
+        }
+      })
+      .sort((a, b) => b.utilization - a.utilization)
+  }, [walletBalances])
+
   const exportToCSV = () => {
     const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
 
@@ -600,6 +633,7 @@ export function useBudget() {
     transfers,
     investments,
     walletBalances,
+    creditCardSummaries,
     selectedMonth,
     selectedYear,
     editingIncome,

@@ -280,14 +280,16 @@ function Dashboard({
   const accountsCard = walletBalances.length > 0 ? (
     <div className="card">
       <div className="card-header">
-        <h3 className="card-title"><WalletIcon size={18} /> Accounts</h3>
+        <div>
+          <h3 className="card-title"><WalletIcon size={18} /> Accounts</h3>
+        </div>
         <span className="card-subtitle">{walletBalances.length} total</span>
       </div>
       <div className="account-grid dashboard-account-grid">
         {walletBalances.slice(0, 6).map((wallet) => (
           <div
             key={wallet.id}
-            className={`account-card ${wallet.name.toLowerCase().includes('cash') ? 'cash' : wallet.name.toLowerCase().includes('bank') ? 'bank' : 'credit'}`}
+            className={`account-card ${wallet.accountType === 'bank' ? 'bank' : wallet.accountType === 'credit' ? 'credit' : 'cash'}`}
           >
             <div className="account-card-meta">
               <div className="account-name">{wallet.name}</div>
@@ -303,7 +305,9 @@ function Dashboard({
   const savingsCard = savings.length > 0 ? (
     <div className="card">
       <div className="card-header">
-        <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
+        <div>
+          <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
+        </div>
         <span className="card-subtitle">{totalSavingsLabel} reserved</span>
       </div>
       <div className="savings-goals-list">

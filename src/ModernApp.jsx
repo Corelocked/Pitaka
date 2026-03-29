@@ -535,8 +535,8 @@ function ModernApp() {
                 <div className="card-header">
                   <div>
                     <h3 className="card-title"><IncomeIcon size={18} /> Income</h3>
-                    <p className="card-subtitle">{filteredIncomes.length} entries in {currentPeriodLabel}</p>
                   </div>
+                  <p className="card-subtitle">{filteredIncomes.length} entries in {currentPeriodLabel}</p>
                 </div>
                 <div className={`page-table-card-body ${filteredIncomes.length === 0 ? 'page-table-card-body--empty' : ''}`}>
                   <IncomeTable
@@ -552,8 +552,8 @@ function ModernApp() {
                 <div className="card-header">
                   <div>
                     <h3 className="card-title"><ExpenseIcon size={18} /> Expenses</h3>
-                    <p className="card-subtitle">{filteredExpenses.length} entries in {currentPeriodLabel}</p>
                   </div>
+                  <p className="card-subtitle">{filteredExpenses.length} entries in {currentPeriodLabel}</p>
                 </div>
                 <div className={`page-table-card-body ${filteredExpenses.length === 0 ? 'page-table-card-body--empty' : ''}`}>
                   <ExpenseTable
@@ -569,8 +569,8 @@ function ModernApp() {
                 <div className="card-header">
                   <div>
                     <h3 className="card-title"><TransferIcon size={18} /> Transfers</h3>
-                    <p className="card-subtitle">{currentPeriodTransfers.length} internal movements</p>
                   </div>
+                  <p className="card-subtitle">{currentPeriodTransfers.length} internal movements</p>
                 </div>
                 <TransfersTable
                   transfers={currentPeriodTransfers}
@@ -648,12 +648,7 @@ function ModernApp() {
                   <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
                   <p className="card-subtitle">{savings.length} active goal{savings.length === 1 ? '' : 's'}</p>
                 </div>
-              <div className="savings-summary-amount">
-                {totalSavingsSummary}
-              </div>
-              </div>
-
-              <div className="savings-actions">
+                <div className="savings-actions">
                 <button
                   onClick={() => openBottomSheet('addSavings')}
                   className="btn btn-primary"
@@ -669,8 +664,11 @@ function ModernApp() {
                 >
                   Add Funds
                 </button>
+                </div>
+                <div className="savings-summary-amount">
+                  {totalSavingsSummary}
+                </div>
               </div>
-            </div>
 
             {featuredSavings.length > 0 ? (
               <div className="savings-goals-stack">
@@ -752,6 +750,7 @@ function ModernApp() {
                 </div>
               </div>
             )}
+            </div>
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
@@ -1249,14 +1248,14 @@ function ModernApp() {
             </div>
           </div>
         )
-
       default:
         return null
     }
   }
-
   const renderBottomSheetContent = () => {
-    if (!bottomSheetContent) return null
+    if (!bottomSheetContent) {
+      return null
+    }
 
     switch (bottomSheetContent) {
       case 'addIncome':
@@ -1809,5 +1808,6 @@ function ModernApp() {
     </div>
   )
 }
+
 
 export default ModernApp

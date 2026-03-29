@@ -10,6 +10,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
   const [description, setDescription] = useState('')
   const [accountType, setAccountType] = useState('cash')
   const [startingBalance, setStartingBalance] = useState('')
+  const [creditLimit, setCreditLimit] = useState('')
+  const [creditAlertPercent, setCreditAlertPercent] = useState('80')
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [error, setError] = useState('')
 
@@ -20,6 +22,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setDescription(editingWallet.description || '')
       setAccountType(editingWallet.accountType || 'cash')
       setStartingBalance(editingWallet.startingBalance || '')
+      setCreditLimit(editingWallet.creditLimit || '')
+      setCreditAlertPercent(editingWallet.creditAlertPercent || '80')
       setCurrency(editingWallet.currency || DEFAULT_CURRENCY)
     } else {
       // Reset form
@@ -27,6 +31,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setDescription('')
       setAccountType('cash')
       setStartingBalance('')
+      setCreditLimit('')
+      setCreditAlertPercent('80')
       setCurrency(DEFAULT_CURRENCY)
     }
   }, [editingWallet])
@@ -40,12 +46,19 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       return
     }
 
+    if (accountType === 'credit' && !(parseFloat(creditLimit) > 0)) {
+      setError('Credit limit is required for credit cards')
+      return
+    }
+
     try {
       const walletData = {
         name: name.trim(),
         description: description.trim(),
         accountType,
         startingBalance: parseFloat(startingBalance) || 0,
+        creditLimit: accountType === 'credit' ? (parseFloat(creditLimit) || 0) : null,
+        creditAlertPercent: accountType === 'credit' ? (parseFloat(creditAlertPercent) || 80) : null,
         currency
       }
 
@@ -58,6 +71,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         setDescription('')
         setAccountType('cash')
         setStartingBalance('')
+        setCreditLimit('')
+        setCreditAlertPercent('80')
         setCurrency(DEFAULT_CURRENCY)
       }
     } catch (err) {
@@ -143,7 +158,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         </div>
 
         <div className="form-group">
-          <label className="form-label">Starting Balance</label>
+          <label className="form-label">{accountType === 'credit' ? 'Current Card Balance' : 'Starting Balance'}</label>
           <input
             type="number"
             step="0.01"
@@ -153,9 +168,49 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
             placeholder="0.00"
           />
           <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-            Initial balance in {currency} when you started tracking this account
+            {accountType === 'credit'
+              ? `Use a negative number if this card already has an outstanding balance in ${currency}.`
+              : `Initial balance in ${currency} when you started tracking this account`}
           </small>
         </div>
+
+        {accountType === 'credit' && (
+          <>
+            <div className="form-group">
+              <label className="form-label">Credit Limit</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditLimit}
+                onChange={(e) => setCreditLimit(e.target.value)}
+                className="form-input"
+                placeholder="50000.00"
+                required
+              />
+              <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                This is the maximum spendable amount for the card in {currency}.
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Utilization Warning (%)</label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                max="100"
+                value={creditAlertPercent}
+                onChange={(e) => setCreditAlertPercent(e.target.value)}
+                className="form-input"
+                placeholder="80"
+              />
+              <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                Pitaka will flag the card once spending reaches this percentage of the limit.
+              </small>
+            </div>
+          </>
+        )}
 
         <div className="form-group">
           <label className="form-label">Description (Optional)</label>
