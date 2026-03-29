@@ -26,6 +26,10 @@ export function useBudget() {
     isFromCache: false
   })
 
+  const normalizeCategoryName = useCallback((value) => (
+    String(value || '').trim().toLowerCase()
+  ), [])
+
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
     if (!user || authLoading) {
@@ -355,12 +359,26 @@ export function useBudget() {
 
     try {
       setError(null)
+      const nextName = normalizeCategoryName(category?.name)
+
+      if (!nextName) {
+        throw new Error('Category name is required')
+      }
+
+      const alreadyExists = categories.some((existingCategory) => (
+        normalizeCategoryName(existingCategory.name) === nextName
+      ))
+
+      if (alreadyExists) {
+        throw new Error('A category with that name already exists')
+      }
+
       await categoryService.addCategory(category, user.uid)
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [user])
+  }, [categories, normalizeCategoryName, user])
 
   const addWallet = useCallback(async (wallet) => {
     if (!user) return
@@ -426,12 +444,25 @@ export function useBudget() {
   const deleteCategory = useCallback(async (id) => {
     try {
       setError(null)
+      const categoryToDelete = categories.find((category) => category.id === id)
+      const categoryName = categoryToDelete?.name || ''
+      const linkedExpenses = expenses.filter((expense) => expense.category === categoryName)
+
+      if (linkedExpenses.length > 0) {
+        await Promise.all(
+          linkedExpenses.map((expense) => (
+            expenseService.updateExpense(expense.id, { category: '' })
+          ))
+        )
+      }
+
       await categoryService.deleteCategory(id)
+      setEditingCategory((current) => (current?.id === id ? null : current))
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [categories, expenses])
 
   const editCategory = useCallback((category) => {
     setEditingCategory(category)
@@ -440,14 +471,46 @@ export function useBudget() {
   const updateCategory = useCallback(async (updatedCategory) => {
     try {
       setError(null)
+      const nextName = normalizeCategoryName(updatedCategory?.name)
+
+      if (!nextName) {
+        throw new Error('Category name is required')
+      }
+
+      const alreadyExists = categories.some((category) => (
+        category.id !== updatedCategory.id &&
+        normalizeCategoryName(category.name) === nextName
+      ))
+
+      if (alreadyExists) {
+        throw new Error('A category with that name already exists')
+      }
+
+      const previousCategory = categories.find((category) => category.id === updatedCategory.id)
       const { id, ...updates } = updatedCategory
       await categoryService.updateCategory(id, updates)
+
+      const previousName = previousCategory?.name || ''
+      const nextDisplayName = updatedCategory.name
+
+      if (previousName && previousName !== nextDisplayName) {
+        const linkedExpenses = expenses.filter((expense) => expense.category === previousName)
+
+        if (linkedExpenses.length > 0) {
+          await Promise.all(
+            linkedExpenses.map((expense) => (
+              expenseService.updateExpense(expense.id, { category: nextDisplayName })
+            ))
+          )
+        }
+      }
+
       setEditingCategory(null)
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [categories, expenses, normalizeCategoryName])
 
   // Transfer operations
   const addTransfer = useCallback(async (transfer) => {

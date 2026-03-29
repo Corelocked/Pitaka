@@ -303,6 +303,11 @@ function ModernApp() {
     setTimeout(() => setBottomSheetContent(null), 300)
   }
 
+  const openCategorySheet = (category = null) => {
+    editCategory(category)
+    openBottomSheet('addCategory')
+  }
+
   const featuredSavings = [...savings]
     .map((goal) => {
       const currentAmount = parseFloat(goal.currentAmount || 0)
@@ -878,7 +883,7 @@ function ModernApp() {
                   <p className="card-subtitle">Create and refine the buckets that power dashboard insights and expense tracking.</p>
                 </div>
                 <button
-                  onClick={() => openBottomSheet('addCategory')}
+                  onClick={() => openCategorySheet()}
                   className="btn btn-primary"
                   style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
@@ -887,7 +892,7 @@ function ModernApp() {
               </div>
               <CategoryTable
                 categories={categories}
-                onEditCategory={editCategory}
+                onEditCategory={openCategorySheet}
                 onDeleteCategory={async (id) => {
                   const ok = await confirm({
                     title: 'Delete Category',
@@ -895,7 +900,9 @@ function ModernApp() {
                     confirmText: 'Delete',
                     cancelText: 'Cancel'
                   })
-                  if (ok) deleteCategory(id)
+                  if (ok) {
+                    await deleteCategory(id)
+                  }
                 }}
               />
             </div>
@@ -1070,6 +1077,14 @@ function ModernApp() {
               <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+                <button
+                  onClick={() => setCurrentView('categories')}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <CategoryIcon size={16} /> Manage Categories
+                </button>
+
                 <button
                   onClick={() => {
                     exportToExcel({

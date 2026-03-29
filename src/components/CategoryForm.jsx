@@ -6,8 +6,6 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
   const [description, setDescription] = useState('')
 
   useEffect(() => {
-    console.log('CategoryForm: editingCategory changed', editingCategory)
-    try { window.__APP_LOGS = window.__APP_LOGS || []; window.__APP_LOGS.unshift({ ts: Date.now(), msg: 'CategoryForm: editingCategory ' + (editingCategory ? editingCategory.id : 'null') }) } catch (e) {}
     if (editingCategory) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(editingCategory.name)
@@ -32,7 +30,6 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
         }
       } catch (err) {
         console.error('CategoryForm submit error:', err)
-        // surface error to the user
         try { alert(err?.message || 'Failed to save category') } catch (e) { /* ignore */ }
       }
     }
