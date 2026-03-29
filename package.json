@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "payments:dev": "node --env-file=server/payments/.env server/payments/index.js",
     "webhooks:dev": "node server/webhooks/index.js",
     "webhooks:test": "node server/webhooks/test-normalizers.mjs"
   },

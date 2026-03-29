@@ -38,6 +38,7 @@ import {
   WalletIcon
 } from './components/Icons'
 import { exportToExcel, importFromExcel, downloadImportTemplate } from './utils/excelUtils'
+import { createProCheckoutSession } from './services/billingService'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCurrency } from './utils/currency'
 import './MobileApp.css'
 
@@ -136,6 +137,8 @@ function ModernApp() {
     typeof navigator === 'undefined' ? true : navigator.onLine
   ))
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
+  const [billingStatus, setBillingStatus] = useState(null)
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false)
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
@@ -232,6 +235,24 @@ function ModernApp() {
     document.documentElement.style.colorScheme = themePreference
   }, [themePreference])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const view = params.get('view')
+    const billing = params.get('billing')
+
+    if (view === 'pro') {
+      setCurrentView('pro')
+    }
+
+    if (billing === 'success') {
+      setBillingStatus('success')
+    } else if (billing === 'cancelled') {
+      setBillingStatus('cancelled')
+    }
+  }, [])
+
   const installApp = async () => {
     if (!deferredInstallPrompt) return
 
@@ -240,6 +261,30 @@ function ModernApp() {
 
     if (choice?.outcome === 'accepted') {
       setDeferredInstallPrompt(null)
+    }
+  }
+
+  const startProCheckout = async () => {
+    if (!user?.uid || !user?.email) {
+      throw new Error('Please sign in with an email-backed account first')
+    }
+
+    setIsStartingCheckout(true)
+
+    try {
+      const session = await createProCheckoutSession({
+        userId: user.uid,
+        email: user.email,
+        name: user.displayName || user.email
+      })
+
+      if (!session.checkoutUrl) {
+        throw new Error('Missing PayMongo checkout URL')
+      }
+
+      window.location.href = session.checkoutUrl
+    } finally {
+      setIsStartingCheckout(false)
     }
   }
 
@@ -834,6 +879,18 @@ function ModernApp() {
                 </div>
               </div>
 
+              {billingStatus === 'success' && !isPro && (
+                <div className="status-pill accent" style={{ marginTop: '1rem' }}>
+                  Payment was submitted. We&apos;re waiting for PayMongo webhook confirmation before Pro is applied to your account.
+                </div>
+              )}
+
+              {billingStatus === 'cancelled' && !isPro && (
+                <div className="status-pill warning" style={{ marginTop: '1rem' }}>
+                  Checkout was cancelled before payment completed.
+                </div>
+              )}
+
               <div className="layout-preference-list layout-preference-list--two-up">
                 <div className="layout-preference-card active">
                   <div className="layout-preference-top">
@@ -867,8 +924,29 @@ function ModernApp() {
               </div>
 
               {!isPro && (
-                <div style={{ marginTop: '1rem' }} className="card-subtitle">
-                  Pro is temporarily managed outside the app. Add the <code>pro</code> tag or set the plan to <code>pro</code> on this user in Firestore when you want to enable premium features.
+                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                  <div className="card-subtitle">
+                    PayMongo checkout is now connected for Pro purchases. Your account will be upgraded after PayMongo sends a successful payment webhook back to Pitaka.
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={async () => {
+                        try {
+                          await startProCheckout()
+                        } catch (checkoutError) {
+                          alert(checkoutError.message || 'Failed to start PayMongo checkout.')
+                        }
+                      }}
+                      disabled={isStartingCheckout}
+                    >
+                      {isStartingCheckout ? 'Opening PayMongo...' : 'Continue to PayMongo'}
+                    </button>
+                  </div>
+                  <div className="card-subtitle">
+                    If you still want to manage access manually, you can keep using the <code>pro</code> tag or set the plan to <code>pro</code> directly in Firestore.
+                  </div>
                 </div>
               )}
 
