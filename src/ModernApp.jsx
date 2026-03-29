@@ -10,6 +10,7 @@ import ExpenseForm from './components/ExpenseForm'
 import TransferForm from './components/TransferForm'
 import WalletForm from './components/WalletForm'
 import CategoryForm from './components/CategoryForm'
+import SubscriptionForm from './components/SubscriptionForm'
 import SavingsForm from './components/SavingsForm'
 import AddToSavingsForm from './components/AddToSavingsForm'
 import TransfersTable from './components/TransfersTable'
@@ -17,6 +18,7 @@ import IncomeTable from './components/IncomeTable'
 import ExpenseTable from './components/ExpenseTable'
 import WalletsTable from './components/WalletsTable'
 import CategoryTable from './components/CategoryTable'
+import SubscriptionsTable from './components/SubscriptionsTable'
 import InvestmentForm from './components/InvestmentForm'
 import InvestmentsTable from './components/InvestmentsTable'
 import {
@@ -87,6 +89,7 @@ function ModernApp() {
     editingExpense,
     editingSavings,
     editingCategory,
+    editingSubscription,
     totalIncome,
     totalExpenses,
     totalSavings,
@@ -95,6 +98,7 @@ function ModernApp() {
     filteredIncomes,
     filteredExpenses,
     categories,
+    subscriptions,
     loading: budgetLoading,
     error,
     syncState,
@@ -104,10 +108,12 @@ function ModernApp() {
     addExpense,
     addSavings,
     addCategory,
+    addSubscription,
     deleteIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
+    deleteSubscription,
     editIncome,
     updateIncome,
     editExpense,
@@ -115,7 +121,9 @@ function ModernApp() {
     editSavings,
     updateSavings,
     editCategory,
+    editSubscription,
     updateCategory,
+    updateSubscription,
     addToSavingsGoal,
     walletBalances,
     addWallet,
@@ -308,6 +316,11 @@ function ModernApp() {
     openBottomSheet('addCategory')
   }
 
+  const openSubscriptionSheet = (subscription = null) => {
+    editSubscription(subscription)
+    openBottomSheet('addSubscription')
+  }
+
   const featuredSavings = [...savings]
     .map((goal) => {
       const currentAmount = parseFloat(goal.currentAmount || 0)
@@ -479,6 +492,13 @@ function ModernApp() {
         >
           <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
           <div>Categories</div>
+        </button>
+        <button
+          className={`sidebar-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`}
+          onClick={() => setCurrentView('subscriptions')}
+        >
+          <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
+          <div>Subscriptions</div>
         </button>
         {!isPro && (
           <button
@@ -909,13 +929,89 @@ function ModernApp() {
           </div>
         )
 
+      case 'subscriptions':
+        return isPro ? (
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Recurring Expenses',
+              title: 'Subscriptions',
+              description: 'Automatically log routine charges like streaming, apps, memberships, and other recurring bills.',
+              stats: [
+                { label: 'Active Plans', value: subscriptions.length },
+                { label: 'Category', value: 'Subscription' }
+              ]
+            })}
+
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><ExpenseIcon size={18} /> Auto-Logged Subscriptions</h3>
+                  <p className="card-subtitle">Each due date creates an expense automatically using the selected wallet and the Subscription category.</p>
+                </div>
+                <button
+                  onClick={() => openSubscriptionSheet()}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                >
+                  + Add Subscription
+                </button>
+              </div>
+              <SubscriptionsTable
+                subscriptions={subscriptions}
+                wallets={walletBalances}
+                onEditSubscription={openSubscriptionSheet}
+                onDeleteSubscription={deleteSubscription}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Recurring Expenses',
+              title: 'Subscriptions',
+              description: 'Auto-log recurring charges like streaming services and memberships with a Pro plan.',
+              stats: [
+                { label: 'Current Plan', value: 'Basic' },
+                { label: 'Feature Access', value: 'Pro only' }
+              ]
+            })}
+
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><ExpenseIcon size={18} /> Pro Required</h3>
+                  <p className="card-subtitle">Subscriptions automatically create expenses on their due dates and are available on Pitaka Pro.</p>
+                </div>
+              </div>
+              <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setCurrentView('settings')}
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                  onClick={() => setCurrentView('pro')}
+                >
+                  View Pro Access
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+
       case 'pro':
         return (
           <div className="mobile-content page-shell">
             {renderPageIntro({
               eyebrow: 'Membership',
               title: 'Pitaka Pro',
-              description: 'Unlock full currency support and investment tracking from one simple upgrade page.',
+              description: 'Unlock subscription auto-logging, full currency support, and investment tracking from one upgrade page.',
               stats: [
                 { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Currency Access', value: isPro ? 'All Supported' : 'PHP + USD' }
@@ -928,8 +1024,8 @@ function ModernApp() {
                   <h3 className="card-title"><TrendUpIcon size={18} /> Pitaka Pro</h3>
                   <p className="card-subtitle">
                     {isPro
-                      ? 'Your account already has Pro access and can use every supported currency.'
-                      : 'Upgrade with PayMongo to unlock full currency access, investment tracking, and future premium features.'}
+                      ? 'Your account already has Pro access, including subscription auto-logging, investment tracking, and every supported currency.'
+                      : 'Upgrade with PayMongo to unlock subscription auto-logging, full currency access, investment tracking, and future premium features.'}
                   </p>
                 </div>
                 <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
@@ -949,14 +1045,59 @@ function ModernApp() {
                 </div>
               )}
 
+              <section className="plan-comparison-card">
+                <div className="card-header">
+                  <div>
+                    <h4 className="card-title"><ChartIcon size={18} /> Basic vs Pro</h4>
+                    <p className="card-subtitle">See exactly what changes when you upgrade.</p>
+                  </div>
+                </div>
+
+                <div className="plan-comparison-grid">
+                  <div className={`plan-tier-card ${!isPro ? 'is-active' : ''}`}>
+                    <div className="plan-tier-header">
+                      <span className="plan-tier-name">Basic</span>
+                      <span className="plan-tier-badge">Current for free users</span>
+                    </div>
+                    <div className="plan-checklist">
+                      <div className="plan-checklist-item is-included">Manual income, expense, savings, and transfer tracking</div>
+                      <div className="plan-checklist-item is-included">Category and account management</div>
+                      <div className="plan-checklist-item is-included">PHP and USD currency support</div>
+                      <div className="plan-checklist-item is-locked">Subscription auto expense logging</div>
+                      <div className="plan-checklist-item is-locked">Investment tracking</div>
+                    </div>
+                  </div>
+
+                  <div className={`plan-tier-card plan-tier-card--pro ${isPro ? 'is-active' : ''}`}>
+                    <div className="plan-tier-header">
+                      <span className="plan-tier-name">Pro</span>
+                      <span className="plan-tier-badge">One-time upgrade</span>
+                    </div>
+                    <div className="plan-checklist">
+                      <div className="plan-checklist-item is-included">Everything in Basic</div>
+                      <div className="plan-checklist-item is-included">Auto-log subscriptions on weekly, monthly, yearly, or custom intervals</div>
+                      <div className="plan-checklist-item is-included">Investment tracking alongside your budget</div>
+                      <div className="plan-checklist-item is-included">All supported currencies across wallets, goals, and investments</div>
+                      <div className="plan-checklist-item is-included">Future Pro-only features included</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {!isPro && (
                 <section className="pro-purchase-card">
                   <div className="pro-purchase-copy">
                     <span className="eyebrow">One-Time Upgrade</span>
                     <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
                     <p className="pro-purchase-text">
-                      Get full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
+                      Get recurring subscription auto-logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
                     </p>
+                    <div className="plan-checklist" style={{ marginTop: '1rem' }}>
+                      <div className="plan-checklist-item is-included">Auto-log subscription expenses on weekly, monthly, yearly, or custom intervals</div>
+                      <div className="plan-checklist-item is-included">Track investments in the same workspace as your budgets</div>
+                      <div className="plan-checklist-item is-included">Unlock all supported currencies across wallets, goals, and investments</div>
+                      <div className="plan-checklist-item is-included">Keep access permanently with a one-time upgrade</div>
+                    </div>
                     <div className="pro-purchase-price-row">
                       <div className="pro-purchase-price-block">
                         <div className="pro-purchase-price">{proPriceLabel}</div>
@@ -1077,6 +1218,14 @@ function ModernApp() {
               <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+                <button
+                  onClick={() => setCurrentView(isPro ? 'subscriptions' : 'pro')}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <ExpenseIcon size={16} /> {isPro ? 'Manage Subscriptions' : 'Subscriptions (Pro)'}
+                </button>
+
                 <button
                   onClick={() => setCurrentView('categories')}
                   className="btn btn-secondary"
@@ -1273,6 +1422,49 @@ function ModernApp() {
             }}
             onCancelEdit={() => { editCategory(null); closeBottomSheet() }}
           />
+        )
+
+      case 'addSubscription':
+        return isPro ? (
+          <SubscriptionForm
+            onAddSubscription={async (subscription) => {
+              await addSubscription(subscription)
+              closeBottomSheet()
+            }}
+            editingSubscription={editingSubscription}
+            onUpdateSubscription={async (subscription) => {
+              await updateSubscription(subscription)
+              closeBottomSheet()
+            }}
+            onCancelEdit={() => {
+              editSubscription(null)
+              closeBottomSheet()
+            }}
+            wallets={walletBalances}
+          />
+        ) : (
+          <div className="form-container">
+            <h3 className="card-title"><ExpenseIcon size={18} /> Pro Required</h3>
+            <p className="card-subtitle" style={{ marginTop: '0.75rem' }}>
+              Subscription auto-logging is part of Pitaka Pro.
+            </p>
+            <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
+              <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeBottomSheet}>
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  closeBottomSheet()
+                  setCurrentView('pro')
+                }}
+              >
+                View Pro Access
+              </button>
+            </div>
+          </div>
         )
 
       case 'addInvestment':
@@ -1676,6 +1868,15 @@ function ModernApp() {
           >
             <TrendUpIcon className="quick-action-icon" size={16} /> New Goal
           </button>
+          <button
+            className="quick-action-btn"
+            onClick={() => {
+              if (isPro) openSubscriptionSheet()
+              else setCurrentView('pro')
+            }}
+          >
+            <ExpenseIcon className="quick-action-icon" size={16} /> {isPro ? 'New Subscription' : 'Subscriptions Pro'}
+          </button>
         </div>
       </div>
 
@@ -1713,7 +1914,7 @@ function ModernApp() {
           <div>Wealth</div>
         </button>
         <button
-          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
+          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
         >
           <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>

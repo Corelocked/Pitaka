@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useFirebase } from './useFirebase'
-import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService } from '../services/firebaseService'
+import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService, subscriptionService } from '../services/firebaseService'
 
 export function useBudget() {
-  const { user, loading: authLoading } = useFirebase()
+  const { user, loading: authLoading, isPro } = useFirebase()
   const [incomes, setIncomes] = useState([])
   const [expenses, setExpenses] = useState([])
   const [savings, setSavings] = useState([])
   const [categories, setCategories] = useState([])
   const [wallets, setWallets] = useState([])
+  const [subscriptions, setSubscriptions] = useState([])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [editingIncome, setEditingIncome] = useState(null)
@@ -16,6 +17,7 @@ export function useBudget() {
   const [editingSavings, setEditingSavings] = useState(null)
   const [editingCategory, setEditingCategory] = useState(null)
   const [editingWallet, setEditingWallet] = useState(null)
+  const [editingSubscription, setEditingSubscription] = useState(null)
   const [timePeriod, setTimePeriod] = useState('monthly') // 'monthly' or 'yearly'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -25,6 +27,7 @@ export function useBudget() {
     hasPendingWrites: false,
     isFromCache: false
   })
+  const processingSubscriptionsRef = useRef(new Set())
 
   const normalizeCategoryName = useCallback((value) => (
     String(value || '').trim().toLowerCase()
@@ -163,6 +166,21 @@ export function useBudget() {
           if (isMounted) setInvestments([])
         }
 
+        let unsubscribeSubscriptions
+        try {
+          unsubscribeSubscriptions = subscriptionService.subscribeToSubscriptions(
+            user.uid,
+            (subscriptionsData) => {
+              if (isMounted) setSubscriptions(subscriptionsData || [])
+            },
+            (metadata) => updateSyncState('subscriptions', metadata)
+          )
+        } catch (err) {
+          console.error('Error setting up subscriptions subscription:', err)
+          unsubscribeSubscriptions = () => {}
+          if (isMounted) setSubscriptions([])
+        }
+
         if (isMounted) {
           setLoading(false)
         }
@@ -175,6 +193,7 @@ export function useBudget() {
           unsubscribeWallets()
           unsubscribeTransfers && typeof unsubscribeTransfers === 'function' && unsubscribeTransfers()
           unsubscribeInvestments && typeof unsubscribeInvestments === 'function' && unsubscribeInvestments()
+          unsubscribeSubscriptions && typeof unsubscribeSubscriptions === 'function' && unsubscribeSubscriptions()
         }
       } catch (err) {
         if (isMounted) {
@@ -207,10 +226,12 @@ export function useBudget() {
       setExpenses([])
       setSavings([])
       setCategories([])
+      setSubscriptions([])
       setEditingIncome(null)
       setEditingExpense(null)
       setEditingSavings(null)
       setEditingCategory(null)
+      setEditingSubscription(null)
       setError(null)
       setSyncState({
         hasPendingWrites: false,
@@ -380,6 +401,20 @@ export function useBudget() {
     }
   }, [categories, normalizeCategoryName, user])
 
+  const ensureSubscriptionCategory = useCallback(async () => {
+    const subscriptionCategoryName = 'subscription'
+    const existingCategory = categories.some((category) => (
+      normalizeCategoryName(category.name) === subscriptionCategoryName
+    ))
+
+    if (!existingCategory && user) {
+      await categoryService.addCategory({
+        name: 'Subscription',
+        description: 'Recurring memberships and services'
+      }, user.uid)
+    }
+  }, [categories, normalizeCategoryName, user])
+
   const addWallet = useCallback(async (wallet) => {
     if (!user) return
 
@@ -511,6 +546,170 @@ export function useBudget() {
       throw err
     }
   }, [categories, expenses, normalizeCategoryName])
+
+  const addSubscription = useCallback(async (subscription) => {
+    if (!user) return
+
+    try {
+      setError(null)
+      if (!isPro) {
+        throw new Error('Subscriptions are part of Pitaka Pro')
+      }
+      await ensureSubscriptionCategory()
+      await subscriptionService.addSubscription({
+        ...subscription,
+        category: 'Subscription',
+        lastLoggedDate: null
+      }, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [ensureSubscriptionCategory, isPro, user])
+
+  const editSubscription = useCallback((subscription) => {
+    setEditingSubscription(subscription)
+  }, [])
+
+  const updateSubscription = useCallback(async (updatedSubscription) => {
+    try {
+      setError(null)
+      if (!isPro) {
+        throw new Error('Subscriptions are part of Pitaka Pro')
+      }
+      await ensureSubscriptionCategory()
+      const { id, ...updates } = updatedSubscription
+      await subscriptionService.updateSubscription(id, {
+        ...updates,
+        category: 'Subscription'
+      })
+      setEditingSubscription(null)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [ensureSubscriptionCategory, isPro])
+
+  const deleteSubscription = useCallback(async (id) => {
+    try {
+      setError(null)
+      await subscriptionService.deleteSubscription(id)
+      setEditingSubscription((current) => (current?.id === id ? null : current))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const normalizeDateKey = useCallback((dateValue) => {
+    const date = new Date(`${dateValue}T00:00:00`)
+    return Number.isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
+  }, [])
+
+  const addDays = useCallback((dateValue, days) => {
+    const nextDate = new Date(`${dateValue}T00:00:00`)
+    nextDate.setDate(nextDate.getDate() + days)
+    return nextDate.toISOString().split('T')[0]
+  }, [])
+
+  const addMonths = useCallback((dateValue, months) => {
+    const baseDate = new Date(`${dateValue}T00:00:00`)
+    const day = baseDate.getDate()
+    const target = new Date(baseDate)
+    target.setMonth(target.getMonth() + months, 1)
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    target.setDate(Math.min(day, lastDay))
+    return target.toISOString().split('T')[0]
+  }, [])
+
+  const nextSubscriptionDate = useCallback((subscription, currentDate) => {
+    switch (subscription.intervalType) {
+      case 'weekly':
+        return addDays(currentDate, 7)
+      case 'yearly':
+        return addMonths(currentDate, 12)
+      case 'custom':
+        return addDays(currentDate, Math.max(parseInt(subscription.customIntervalDays || 0, 10), 1))
+      case 'monthly':
+      default:
+        return addMonths(currentDate, 1)
+    }
+  }, [addDays, addMonths])
+
+  useEffect(() => {
+    if (!user || !isPro || subscriptions.length === 0) {
+      return
+    }
+
+    const todayKey = new Date().toISOString().split('T')[0]
+
+    subscriptions.forEach((subscription) => {
+      if (!subscription?.id || subscription.isActive === false) {
+        return
+      }
+
+      if (processingSubscriptionsRef.current.has(subscription.id)) {
+        return
+      }
+
+      const firstDate = normalizeDateKey(subscription.startDate)
+      if (!firstDate || firstDate > todayKey) {
+        return
+      }
+
+      const existingExpenseKeys = new Set(
+        expenses
+          .filter((expense) => expense.subscriptionId === subscription.id)
+          .map((expense) => normalizeDateKey(expense.date))
+          .filter(Boolean)
+      )
+
+      const pendingDates = []
+      let cursor = firstDate
+
+      while (cursor && cursor <= todayKey) {
+        if (!existingExpenseKeys.has(cursor)) {
+          pendingDates.push(cursor)
+        }
+        cursor = nextSubscriptionDate(subscription, cursor)
+      }
+
+      if (pendingDates.length === 0) {
+        return
+      }
+
+      processingSubscriptionsRef.current.add(subscription.id)
+
+      Promise.resolve()
+        .then(async () => {
+          await ensureSubscriptionCategory()
+
+          for (const dueDate of pendingDates) {
+            await expenseService.addExpense({
+              description: subscription.name,
+              category: 'Subscription',
+              amount: parseFloat(subscription.amount || 0),
+              date: dueDate,
+              walletId: subscription.walletId || null,
+              currency: subscription.currency || null,
+              subscriptionId: subscription.id,
+              isAutoGenerated: true
+            }, user.uid)
+          }
+
+          await subscriptionService.updateSubscription(subscription.id, {
+            lastLoggedDate: pendingDates[pendingDates.length - 1]
+          })
+        })
+        .catch((err) => {
+          console.error('Failed to process subscription expenses:', err)
+          setError(err.message)
+        })
+        .finally(() => {
+          processingSubscriptionsRef.current.delete(subscription.id)
+        })
+    })
+  }, [ensureSubscriptionCategory, expenses, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
 
   // Transfer operations
   const addTransfer = useCallback(async (transfer) => {
@@ -693,6 +892,7 @@ export function useBudget() {
     savings,
     categories,
     wallets,
+    subscriptions,
     transfers,
     investments,
     walletBalances,
@@ -704,6 +904,7 @@ export function useBudget() {
     editingSavings,
     editingCategory,
     editingWallet,
+    editingSubscription,
     timePeriod,
     filteredIncomes,
     filteredExpenses,
@@ -726,6 +927,7 @@ export function useBudget() {
     addSavings,
     addCategory,
     addWallet,
+    addSubscription,
     addTransfer,
     addInvestment,
     deleteIncome,
@@ -733,6 +935,7 @@ export function useBudget() {
     deleteSavings,
     deleteCategory,
     deleteWallet,
+    deleteSubscription,
     deleteTransfer,
     deleteInvestment,
     editIncome,
@@ -745,7 +948,9 @@ export function useBudget() {
     editCategory,
     updateCategory,
     editWallet,
+    editSubscription,
     updateWallet,
+    updateSubscription,
     updateTransfer,
     updateInvestment,
     exportToCSV

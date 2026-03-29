@@ -21,6 +21,7 @@ const COLLECTION_NAMES = {
   WALLETS: 'wallets',
   TRANSFERS: 'transfers',
   INVESTMENTS: 'investments',
+  SUBSCRIPTIONS: 'subscriptions',
   USERS: 'users'
 }
 
@@ -341,6 +342,42 @@ export const investmentService = {
 
   deleteInvestment: async (investmentId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.INVESTMENTS, investmentId))
+  }
+}
+
+export const subscriptionService = {
+  subscribeToSubscriptions: (userId, callback, metadataCallback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.SUBSCRIPTIONS),
+      where('userId', '==', userId),
+      orderBy('name', 'asc')
+    )
+
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
+      console.error('Subscriptions snapshot error:', err)
+      try { callback([]) } catch { /* swallow */ }
+    })
+  },
+
+  addSubscription: async (subscription, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.SUBSCRIPTIONS), {
+      ...subscription,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  updateSubscription: async (subscriptionId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.SUBSCRIPTIONS, subscriptionId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  deleteSubscription: async (subscriptionId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.SUBSCRIPTIONS, subscriptionId))
   }
 }
 

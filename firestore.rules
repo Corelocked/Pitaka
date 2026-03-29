@@ -56,6 +56,13 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
+    // Subscriptions collection — track recurring expenses per user
+    match /subscriptions/{subscriptionId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     // User profiles — each signed-in user can read and manage only their own profile document
     match /users/{userId} {
       allow get: if request.auth != null && request.auth.uid == userId;

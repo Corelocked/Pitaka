@@ -2766,6 +2766,77 @@ body[data-theme='light'] .pro-purchase-meta-label {
   color: var(--text-primary);
 }
 
+.plan-comparison-card {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.plan-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.plan-tier-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.plan-tier-card--pro {
+  background: linear-gradient(135deg, rgba(24, 84, 52, 0.12), rgba(176, 141, 87, 0.12));
+  border-color: rgba(var(--gold-rgb), 0.24);
+}
+
+.plan-tier-card.is-active {
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.18);
+}
+
+.plan-tier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.plan-tier-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.plan-tier-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+body[data-theme='dark'] .plan-tier-card {
+  background: rgba(31, 36, 31, 0.92);
+  border-color: #333833;
+}
+
+body[data-theme='dark'] .plan-tier-card--pro {
+  background: linear-gradient(135deg, rgba(31, 106, 57, 0.18), rgba(176, 141, 87, 0.16));
+  border-color: rgba(176, 141, 87, 0.34);
+}
+
+body[data-theme='dark'] .plan-tier-card.is-active {
+  box-shadow: 0 0 0 2px rgba(176, 141, 87, 0.18);
+}
+
+@media (max-width: 720px) {
+  .plan-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pro-purchase-card {
   display: grid;
   gap: 1rem;
