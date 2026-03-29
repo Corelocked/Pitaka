@@ -26,7 +26,7 @@ export function FirebaseProvider({ children }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       clearTimeout(authTimeout) // Clear the timeout since we got a response
-      
+
       if (user) {
         setUser(user)
         setError(null)
@@ -36,6 +36,8 @@ export function FirebaseProvider({ children }) {
           unsubscribeProfile?.()
           unsubscribeProfile = userProfileService.subscribeToUserProfile(user.uid, (profile) => {
             setUserProfile(profile)
+            // Log userProfile changes for debugging
+            console.log('[FirebaseContext] userProfile updated:', profile)
           })
         } catch (err) {
           console.error('Failed to initialize user profile:', err)
@@ -48,6 +50,9 @@ export function FirebaseProvider({ children }) {
         setUserProfile(null)
       }
       setLoading(false)
+      // Log user and userProfile for debugging
+      console.log('[FirebaseContext] user:', user)
+      console.log('[FirebaseContext] userProfile:', userProfile)
     })
 
     return () => {
