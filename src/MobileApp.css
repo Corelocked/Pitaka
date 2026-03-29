@@ -1907,6 +1907,7 @@ html {
   display: grid;
   gap: 0.75rem;
   align-content: start;
+  justify-content: stretch;
 }
 
 .page-intro-stat {
@@ -3032,7 +3033,8 @@ body[data-theme='light'] .pro-purchase-meta-label {
   }
 
   .page-intro-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    justify-content: end;
   }
 
   .page-section-grid {

@@ -859,7 +859,7 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Membership',
               title: 'Pitaka Pro',
-              description: 'Manage your membership tier and unlock the premium feature set from a dedicated workspace.',
+              description: 'Unlock full currency support and investment tracking from one simple upgrade page.',
               stats: [
                 { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Currency Access', value: isPro ? 'All Supported' : 'PHP + USD' }
@@ -896,10 +896,10 @@ function ModernApp() {
               {!isPro && (
                 <section className="pro-purchase-card">
                   <div className="pro-purchase-copy">
-                    <span className="eyebrow">Upgrade Access</span>
+                    <span className="eyebrow">One-Time Upgrade</span>
                     <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
                     <p className="pro-purchase-text">
-                      Pitaka Pro is a <strong>one-time payment</strong>—no subscription, no recurring fees. Get full currency support, investment tracking, and future premium tools through a hosted PayMongo checkout.
+                      Get full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
                     </p>
                     <div className="pro-purchase-price-row">
                       <div className="pro-purchase-price-block">
@@ -943,64 +943,6 @@ function ModernApp() {
                 </section>
               )}
 
-              <div className="layout-preference-list layout-preference-list--two-up">
-                <div className="layout-preference-card active">
-                  <div className="layout-preference-top">
-                    <span className="layout-preference-name">Basic</span>
-                    <span className="layout-preference-state">Included</span>
-                  </div>
-                  <div className="plan-checklist">
-                    <div className="plan-checklist-item is-included">PHP currency support</div>
-                    <div className="plan-checklist-item is-included">USD currency support</div>
-                    <div className="plan-checklist-item is-locked">All other currencies</div>
-                    <div className="plan-checklist-item is-included">Savings goals</div>
-                    <div className="plan-checklist-item is-locked">Investment tracking</div>
-                    <div className="plan-checklist-item is-locked">Future Pro-only upgrades</div>
-                  </div>
-                </div>
-
-                <div className={`layout-preference-card ${isPro ? 'active' : ''}`}>
-                  <div className="layout-preference-top">
-                    <span className="layout-preference-name">Pro</span>
-                    <span className="layout-preference-state">{isPro ? 'Unlocked' : 'Upgrade'}</span>
-                  </div>
-                  <div className="plan-checklist">
-                    <div className="plan-checklist-item is-included">PHP currency support</div>
-                    <div className="plan-checklist-item is-included">USD currency support</div>
-                    <div className="plan-checklist-item is-included">All supported currencies</div>
-                    <div className="plan-checklist-item is-included">Savings goals</div>
-                    <div className="plan-checklist-item is-included">Investment tracking</div>
-                    <div className="plan-checklist-item is-included">Future Pro-only upgrades</div>
-                  </div>
-                </div>
-              </div>
-
-              {!isPro && (
-                <div className="pro-flow-notes">
-                  <div className="pro-flow-note">
-                    <span className="pro-flow-step">1</span>
-                    <div>
-                      <strong>Checkout on PayMongo</strong>
-                      <div className="card-subtitle">Users are redirected to PayMongo to complete the payment securely.</div>
-                    </div>
-                  </div>
-                  <div className="pro-flow-note">
-                    <span className="pro-flow-step">2</span>
-                    <div>
-                      <strong>Webhook confirms payment</strong>
-                      <div className="card-subtitle">Pitaka waits for <code>checkout_session.payment.paid</code> before upgrading the account.</div>
-                    </div>
-                  </div>
-                  <div className="pro-flow-note">
-                    <span className="pro-flow-step">3</span>
-                    <div>
-                      <strong>Pro unlocks automatically</strong>
-                      <div className="card-subtitle">The user profile is updated to <code>plan: pro</code> with the <code>pro</code> tag after confirmation.</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {isPro && userProfile && (
                 <div style={{ marginTop: '1rem' }} className="card-subtitle">
                   Pro tag stored on this user profile{userProfile.email ? ` for ${userProfile.email}` : ''}.
@@ -1016,11 +958,10 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Controls & Tools',
               title: 'More',
-              description: 'Reach advanced sections, workspace controls, and data tools from one clean mobile hub.',
+              description: 'Adjust your workspace layout, theme, and data tools from one place.',
               stats: [
-                { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'Light' },
-                { label: 'Plan', value: isPro ? 'Pro' : 'Basic' }
+                { label: 'Layout', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Editorial' }
               ]
             })}
 
@@ -1130,23 +1071,6 @@ function ModernApp() {
                 >
                   <TemplateIcon size={16} /> Download Import Template
                 </button>
-
-                <div style={{
-                  marginTop: '12px',
-                  padding: '16px',
-                  background: 'var(--card-background)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '12px'
-                }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '8px' }}>
-                    About Import/Export
-                  </h4>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                    Export creates an Excel-compatible CSV file with all your data. 
-                    Import allows you to bulk add data from a CSV file. 
-                    Download the template to see the required format.
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -1169,34 +1093,6 @@ function ModernApp() {
               </div>
             )}
 
-            <div className="card page-hero-card" style={{ marginTop: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
-                <button
-                  onClick={() => openBottomSheet('addCategory')}
-                  className="btn btn-primary"
-                  style={{ fontSize: '1.5rem', padding: '8px 16px' }}
-                >
-                  +
-                </button>
-              </div>
-              <CategoryTable
-                categories={categories}
-                onEdit={(category) => {
-                  editCategory(category)
-                  openBottomSheet('addCategory')
-                }}
-                onDelete={async (id) => {
-                  const ok = await confirm({
-                    title: 'Delete Category',
-                    description: 'Are you sure you want to delete this category? This action cannot be undone.',
-                    confirmText: 'Delete',
-                    cancelText: 'Cancel'
-                  })
-                  if (ok) deleteCategory(id)
-                }}
-              />
-            </div>
           </div>
         )
       default:
