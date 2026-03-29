@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { TransferIcon } from './Icons'
 import './Form.css'
 import { formatCurrency, getWalletCurrency } from '../utils/currency'
+import { getLocalDateInputValue } from '../utils/date'
 
 function TransferForm({ onAddTransfer, wallets }) {
   const [fromWalletId, setFromWalletId] = useState('')
   const [toWalletId, setToWalletId] = useState('')
   const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(getLocalDateInputValue())
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
 
@@ -62,7 +63,7 @@ function TransferForm({ onAddTransfer, wallets }) {
       // Reset form
       setAmount('')
       setNotes('')
-      setDate(new Date().toISOString().split('T')[0])
+      setDate(getLocalDateInputValue())
     } catch (err) {
       console.error('Transfer error:', err)
       setError(err.message || 'Failed to add transfer')

@@ -3,7 +3,7 @@ import DataTable from './DataTable'
 import { useConfirm } from '../contexts/useConfirm'
 import { formatCurrency, getWalletCurrency } from '../utils/currency'
 
-export default function WalletsTable({ wallets = [], balances = [], onEditWallet, onDeleteWallet }) {
+export default function WalletsTable({ wallets = [], balances = [], onEditWallet, onDeleteWallet, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
   const typeLabel = (wallet) => {
     switch (wallet.accountType) {
@@ -77,6 +77,8 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
           <p>No wallets yet</p>
         </div>
       )}
+      selectable={selectable}
+      onBulkDelete={onBulkDelete}
       onUpdateRow={() => {}}
     />
   )

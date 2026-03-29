@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
+import { getLocalDateInputValue } from '../utils/date'
 
 function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [], wallets = [] }) {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(getLocalDateInputValue())
   const [walletId, setWalletId] = useState('')
 
   const selectedWallet = wallets.find((wallet) => wallet.id === walletId)
@@ -46,7 +47,7 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
     setDescription('')
     setCategory('')
     setAmount('')
-    setDate(new Date().toISOString().split('T')[0])
+    setDate(getLocalDateInputValue())
     onCancelEdit()
   }
 

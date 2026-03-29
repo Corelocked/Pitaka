@@ -3,7 +3,7 @@ import DataTable from './DataTable'
 import { useConfirm } from '../contexts/useConfirm'
 import { FolderIcon } from './Icons'
 
-export default function CategoryTable({ categories = [], onDeleteCategory, onEditCategory, onDelete, onEdit }) {
+export default function CategoryTable({ categories = [], onDeleteCategory, onEditCategory, onDelete, onEdit, selectable = false, onBulkDelete }) {
   const confirm = useConfirm()
   const editHandlerProp = onEditCategory || onEdit
   const deleteHandlerProp = onDeleteCategory || onDelete
@@ -39,11 +39,19 @@ export default function CategoryTable({ categories = [], onDeleteCategory, onEdi
   ]
 
   return (
-    <DataTable tableClassName="table table--categories" columns={columns} data={categories} rowKey={r => r.id} emptyState={
-      <div className="empty-state">
-        <div className="icon"><FolderIcon size={22} /></div>
-        <p>No categories yet</p>
-      </div>
-    } />
+    <DataTable
+      tableClassName="table table--categories"
+      columns={columns}
+      data={categories}
+      rowKey={r => r.id}
+      emptyState={(
+        <div className="empty-state">
+          <div className="icon"><FolderIcon size={22} /></div>
+          <p>No categories yet</p>
+        </div>
+      )}
+      selectable={selectable}
+      onBulkDelete={onBulkDelete}
+    />
   )
 }

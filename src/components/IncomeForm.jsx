@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
+import { getLocalDateInputValue } from '../utils/date'
 
 function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, wallets = [] }) {
   const [source, setSource] = useState('')
   const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(getLocalDateInputValue())
   const [walletId, setWalletId] = useState('')
   const [message, setMessage] = useState('')
 
@@ -16,7 +17,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
     if (editingIncome) {
       setSource(editingIncome.source || '')
       setAmount((editingIncome.amount != null) ? String(editingIncome.amount) : '')
-      setDate(editingIncome.date || new Date().toISOString().split('T')[0])
+      setDate(editingIncome.date || getLocalDateInputValue())
       setWalletId(editingIncome.walletId || '')
     }
   }, [editingIncome])
@@ -51,7 +52,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
   const handleCancel = () => {
     setSource('')
     setAmount('')
-    setDate(new Date().toISOString().split('T')[0])
+    setDate(getLocalDateInputValue())
     setWalletId('')
     if (typeof onCancelEdit === 'function') onCancelEdit()
   }

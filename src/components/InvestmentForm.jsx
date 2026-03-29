@@ -4,6 +4,7 @@ import { TrendUpIcon } from './Icons'
 import { DEFAULT_CURRENCY, formatCurrency, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
 import { useFirebase } from '../hooks/useFirebase'
 import './Form.css'
+import { getLocalDateInputValue } from '../utils/date'
 
 function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment, onCancelEdit }) {
   const { isPro } = useFirebase()
@@ -14,7 +15,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
   const [quantity, setQuantity] = useState('')
   const [purchasePrice, setPurchasePrice] = useState('')
   const [currentValue, setCurrentValue] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0])
+  const [purchaseDate, setPurchaseDate] = useState(getLocalDateInputValue())
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
 
@@ -28,7 +29,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
       setQuantity(editingInvestment.quantity || '')
       setPurchasePrice(editingInvestment.purchasePrice || '')
       setCurrentValue(editingInvestment.currentValue || '')
-      setPurchaseDate(editingInvestment.purchaseDate || new Date().toISOString().split('T')[0])
+      setPurchaseDate(editingInvestment.purchaseDate || getLocalDateInputValue())
       setNotes(editingInvestment.notes || '')
     } else {
       // Reset form
@@ -39,7 +40,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
       setQuantity('')
       setPurchasePrice('')
       setCurrentValue('')
-      setPurchaseDate(new Date().toISOString().split('T')[0])
+      setPurchaseDate(getLocalDateInputValue())
       setNotes('')
     }
   }, [editingInvestment])

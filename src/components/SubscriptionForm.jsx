@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
+import { getLocalDateInputValue } from '../utils/date'
 
 const INTERVAL_OPTIONS = [
   { value: 'weekly', label: 'Weekly' },
@@ -16,10 +17,11 @@ export default function SubscriptionForm({
   editingSubscription,
   wallets = []
 }) {
+  const todayDate = getLocalDateInputValue()
   const [name, setName] = useState('')
   const [walletId, setWalletId] = useState('')
   const [amount, setAmount] = useState('')
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
+  const [startDate, setStartDate] = useState(todayDate)
   const [intervalType, setIntervalType] = useState('monthly')
   const [customIntervalDays, setCustomIntervalDays] = useState('30')
 
@@ -28,7 +30,7 @@ export default function SubscriptionForm({
       setName(editingSubscription.name || '')
       setWalletId(editingSubscription.walletId || '')
       setAmount(String(editingSubscription.amount ?? ''))
-      setStartDate(editingSubscription.startDate || new Date().toISOString().split('T')[0])
+      setStartDate(editingSubscription.startDate || todayDate)
       setIntervalType(editingSubscription.intervalType || 'monthly')
       setCustomIntervalDays(String(editingSubscription.customIntervalDays || 30))
       return
@@ -37,10 +39,10 @@ export default function SubscriptionForm({
     setName('')
     setWalletId('')
     setAmount('')
-    setStartDate(new Date().toISOString().split('T')[0])
+    setStartDate(todayDate)
     setIntervalType('monthly')
     setCustomIntervalDays('30')
-  }, [editingSubscription])
+  }, [editingSubscription, todayDate])
 
   const selectedWallet = useMemo(
     () => wallets.find((wallet) => wallet.id === walletId),
@@ -53,6 +55,11 @@ export default function SubscriptionForm({
     event.preventDefault()
 
     if (!name.trim() || !walletId || !amount || !startDate) {
+      return
+    }
+
+    if (startDate < todayDate) {
+      try { alert('First charge date cannot be in the past.') } catch { /* ignore */ }
       return
     }
 
@@ -135,6 +142,7 @@ export default function SubscriptionForm({
           type="date"
           value={startDate}
           onChange={(event) => setStartDate(event.target.value)}
+          min={todayDate}
           required
         />
       </div>

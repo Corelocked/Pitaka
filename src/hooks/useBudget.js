@@ -1,6 +1,14 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useFirebase } from './useFirebase'
 import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService, subscriptionService } from '../services/firebaseService'
+
+function formatLocalDateKey(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 export function useBudget() {
   const { user, loading: authLoading, isPro } = useFirebase()
@@ -27,7 +35,6 @@ export function useBudget() {
     hasPendingWrites: false,
     isFromCache: false
   })
-  const processingSubscriptionsRef = useRef(new Set())
 
   const normalizeCategoryName = useCallback((value) => (
     String(value || '').trim().toLowerCase()
@@ -547,69 +554,16 @@ export function useBudget() {
     }
   }, [categories, expenses, normalizeCategoryName])
 
-  const addSubscription = useCallback(async (subscription) => {
-    if (!user) return
-
-    try {
-      setError(null)
-      if (!isPro) {
-        throw new Error('Subscriptions are part of Pitaka Pro')
-      }
-      await ensureSubscriptionCategory()
-      await subscriptionService.addSubscription({
-        ...subscription,
-        category: 'Subscription',
-        lastLoggedDate: null
-      }, user.uid)
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [ensureSubscriptionCategory, isPro, user])
-
-  const editSubscription = useCallback((subscription) => {
-    setEditingSubscription(subscription)
-  }, [])
-
-  const updateSubscription = useCallback(async (updatedSubscription) => {
-    try {
-      setError(null)
-      if (!isPro) {
-        throw new Error('Subscriptions are part of Pitaka Pro')
-      }
-      await ensureSubscriptionCategory()
-      const { id, ...updates } = updatedSubscription
-      await subscriptionService.updateSubscription(id, {
-        ...updates,
-        category: 'Subscription'
-      })
-      setEditingSubscription(null)
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [ensureSubscriptionCategory, isPro])
-
-  const deleteSubscription = useCallback(async (id) => {
-    try {
-      setError(null)
-      await subscriptionService.deleteSubscription(id)
-      setEditingSubscription((current) => (current?.id === id ? null : current))
-    } catch (err) {
-      setError(err.message)
-      throw err
-    }
-  }, [])
-
   const normalizeDateKey = useCallback((dateValue) => {
+    if (!dateValue) return null
     const date = new Date(`${dateValue}T00:00:00`)
-    return Number.isNaN(date.getTime()) ? null : date.toISOString().split('T')[0]
+    return formatLocalDateKey(date)
   }, [])
 
   const addDays = useCallback((dateValue, days) => {
     const nextDate = new Date(`${dateValue}T00:00:00`)
     nextDate.setDate(nextDate.getDate() + days)
-    return nextDate.toISOString().split('T')[0]
+    return formatLocalDateKey(nextDate)
   }, [])
 
   const addMonths = useCallback((dateValue, months) => {
@@ -619,7 +573,7 @@ export function useBudget() {
     target.setMonth(target.getMonth() + months, 1)
     const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
     target.setDate(Math.min(day, lastDay))
-    return target.toISOString().split('T')[0]
+    return formatLocalDateKey(target)
   }, [])
 
   const nextSubscriptionDate = useCallback((subscription, currentDate) => {
@@ -636,80 +590,144 @@ export function useBudget() {
     }
   }, [addDays, addMonths])
 
-  useEffect(() => {
-    if (!user || !isPro || subscriptions.length === 0) {
-      return
+  const getFirstFutureRunDate = useCallback((subscription, afterDateKey) => {
+    const firstDate = normalizeDateKey(subscription.startDate)
+    if (!firstDate) return null
+    if (firstDate > afterDateKey) return firstDate
+
+    let nextRunDate = firstDate
+    while (nextRunDate && nextRunDate <= afterDateKey) {
+      nextRunDate = nextSubscriptionDate(subscription, nextRunDate)
     }
 
-    const todayKey = new Date().toISOString().split('T')[0]
+    return nextRunDate
+  }, [nextSubscriptionDate, normalizeDateKey])
 
-    subscriptions.forEach((subscription) => {
-      if (!subscription?.id || subscription.isActive === false) {
-        return
+  const addSubscription = useCallback(async (subscription) => {
+    if (!user) return
+
+    try {
+      setError(null)
+      if (!isPro) {
+        throw new Error('Subscriptions are part of Pitaka Pro')
       }
+      await ensureSubscriptionCategory()
+      const nextRunDate = normalizeDateKey(subscription.startDate)
 
-      if (processingSubscriptionsRef.current.has(subscription.id)) {
-        return
+      await subscriptionService.addSubscription({
+        ...subscription,
+        category: 'Subscription',
+        lastPostedDate: null,
+        nextRunDate
+      }, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [ensureSubscriptionCategory, isPro, normalizeDateKey, user])
+
+  const editSubscription = useCallback((subscription) => {
+    setEditingSubscription(subscription)
+  }, [])
+
+  const updateSubscription = useCallback(async (updatedSubscription) => {
+    try {
+      setError(null)
+      if (!isPro) {
+        throw new Error('Subscriptions are part of Pitaka Pro')
       }
-
-      const firstDate = normalizeDateKey(subscription.startDate)
-      if (!firstDate || firstDate > todayKey) {
-        return
-      }
-
-      const existingExpenseKeys = new Set(
-        expenses
-          .filter((expense) => expense.subscriptionId === subscription.id)
-          .map((expense) => normalizeDateKey(expense.date))
-          .filter(Boolean)
+      await ensureSubscriptionCategory()
+      const { id, ...updates } = updatedSubscription
+      const scheduleChanged = (
+        editingSubscription?.startDate !== updates.startDate ||
+        editingSubscription?.intervalType !== updates.intervalType ||
+        Number(editingSubscription?.customIntervalDays || 0) !== Number(updates.customIntervalDays || 0)
       )
+      const nextRunDate = scheduleChanged
+        ? normalizeDateKey(updates.startDate)
+        : undefined
+      await subscriptionService.updateSubscription(id, {
+        ...updates,
+        category: 'Subscription',
+        ...(scheduleChanged
+          ? {
+              lastPostedDate: null,
+              nextRunDate
+            }
+          : {})
+      })
+      setEditingSubscription(null)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [editingSubscription, ensureSubscriptionCategory, isPro, normalizeDateKey])
 
-      const pendingDates = []
-      let cursor = firstDate
+  const deleteSubscription = useCallback(async (id) => {
+    try {
+      setError(null)
+      await subscriptionService.deleteSubscription(id)
+      setEditingSubscription((current) => (current?.id === id ? null : current))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
 
-      while (cursor && cursor <= todayKey) {
-        if (!existingExpenseKeys.has(cursor)) {
-          pendingDates.push(cursor)
-        }
-        cursor = nextSubscriptionDate(subscription, cursor)
-      }
+  const postSubscriptionBill = useCallback(async (subscriptionId) => {
+    if (!user) {
+      throw new Error('Please sign in to post a bill')
+    }
 
-      if (pendingDates.length === 0) {
-        return
-      }
+    const subscription = subscriptions.find((entry) => entry.id === subscriptionId)
 
-      processingSubscriptionsRef.current.add(subscription.id)
+    if (!subscription) {
+      throw new Error('Subscription not found')
+    }
 
-      Promise.resolve()
-        .then(async () => {
-          await ensureSubscriptionCategory()
+    const dueDate = normalizeDateKey(subscription.nextRunDate || subscription.startDate)
 
-          for (const dueDate of pendingDates) {
-            await expenseService.addExpense({
-              description: subscription.name,
-              category: 'Subscription',
-              amount: parseFloat(subscription.amount || 0),
-              date: dueDate,
-              walletId: subscription.walletId || null,
-              currency: subscription.currency || null,
-              subscriptionId: subscription.id,
-              isAutoGenerated: true
-            }, user.uid)
-          }
+    if (!dueDate) {
+      throw new Error('Subscription is missing a valid due date')
+    }
 
-          await subscriptionService.updateSubscription(subscription.id, {
-            lastLoggedDate: pendingDates[pendingDates.length - 1]
-          })
-        })
-        .catch((err) => {
-          console.error('Failed to process subscription expenses:', err)
-          setError(err.message)
-        })
-        .finally(() => {
-          processingSubscriptionsRef.current.delete(subscription.id)
-        })
-    })
-  }, [ensureSubscriptionCategory, expenses, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
+    const alreadyPosted = expenses.some((expense) => (
+      expense.subscriptionId === subscriptionId &&
+      normalizeDateKey(expense.date) === dueDate
+    ))
+
+    if (alreadyPosted) {
+      throw new Error('This bill has already been posted')
+    }
+
+    try {
+      setError(null)
+      await ensureSubscriptionCategory()
+      await expenseService.addExpense({
+        description: subscription.name,
+        category: 'Subscription',
+        amount: parseFloat(subscription.amount || 0),
+        date: dueDate,
+        walletId: subscription.walletId || null,
+        currency: subscription.currency || null,
+        subscriptionId: subscription.id,
+        isAutoGenerated: true,
+        postingSource: 'manual-post-bill'
+      }, user.uid)
+
+      await subscriptionService.updateSubscription(subscription.id, {
+        lastPostedDate: dueDate,
+        nextRunDate: nextSubscriptionDate(subscription, dueDate)
+      })
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [ensureSubscriptionCategory, expenses, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
+
+  // Subscriptions are currently schedule-only reminders.
+  // They power upcoming-bills views but do not auto-create expenses or
+  // mutate wallet balances from the client.
 
   // Transfer operations
   const addTransfer = useCallback(async (transfer) => {
@@ -777,12 +795,18 @@ export function useBudget() {
     }
   }, [])
 
+  const visibleExpenses = useMemo(() => (
+    expenses.filter((expense) => (
+      !expense?.subscriptionId || expense?.postingSource === 'manual-post-bill'
+    ))
+  ), [expenses])
+
   const filteredIncomes = incomes.filter(inc => {
     const date = new Date(inc.date)
     return timePeriod === 'yearly' ? date.getFullYear() === selectedYear : (date.getMonth() === selectedMonth && date.getFullYear() === selectedYear)
   })
 
-  const filteredExpenses = expenses.filter(exp => {
+  const filteredExpenses = visibleExpenses.filter(exp => {
     const date = new Date(exp.date)
     return timePeriod === 'yearly' ? date.getFullYear() === selectedYear : (date.getMonth() === selectedMonth && date.getFullYear() === selectedYear)
   })
@@ -799,7 +823,7 @@ export function useBudget() {
   // ensures categories with zero spending still appear with total 0.
   const expenseCategoryNames = [
     ...(categories || []).map(c => c.name),
-    ...expenses.map(exp => exp.category).filter(Boolean)
+    ...visibleExpenses.map(exp => exp.category).filter(Boolean)
   ]
   const expenseCategories = [...new Set(expenseCategoryNames)]
 
@@ -819,7 +843,7 @@ export function useBudget() {
       if (!i.walletId) return
       map[i.walletId] = (map[i.walletId] || 0) + parseFloat(i.amount || 0)
     })
-    expenses.forEach(e => {
+    visibleExpenses.forEach(e => {
       if (!e.walletId) return
       map[e.walletId] = (map[e.walletId] || 0) - parseFloat(e.amount || 0)
     })
@@ -833,7 +857,7 @@ export function useBudget() {
       }
     })
     return wallets.map(w => ({ ...w, balance: map[w.id] || 0 }))
-  }, [wallets, incomes, expenses, transfers])
+  }, [wallets, incomes, visibleExpenses, transfers])
 
   const creditCardSummaries = useMemo(() => {
     return walletBalances
@@ -888,7 +912,7 @@ export function useBudget() {
   return {
     // State
     incomes,
-    expenses,
+    expenses: visibleExpenses,
     savings,
     categories,
     wallets,
@@ -928,6 +952,7 @@ export function useBudget() {
     addCategory,
     addWallet,
     addSubscription,
+    postSubscriptionBill,
     addTransfer,
     addInvestment,
     deleteIncome,

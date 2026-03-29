@@ -14,7 +14,9 @@ export default function SubscriptionsTable({
   subscriptions = [],
   wallets = [],
   onEditSubscription,
-  onDeleteSubscription
+  onDeleteSubscription,
+  selectable = false,
+  onBulkDelete
 }) {
   const confirm = useConfirm()
   const walletNameById = (walletId) => wallets.find((wallet) => wallet.id === walletId)?.name || 'Unknown wallet'
@@ -33,7 +35,7 @@ export default function SubscriptionsTable({
           onClick={async () => {
             const ok = await confirm({
               title: 'Delete subscription',
-              description: `Delete subscription "${row.name}"? Future expenses will stop auto-logging.`,
+              description: `Delete subscription "${row.name}"? It will no longer appear in Upcoming Bills.`,
               confirmText: 'Delete',
               cancelText: 'Cancel'
             })
@@ -61,6 +63,8 @@ export default function SubscriptionsTable({
           <p>No subscriptions yet</p>
         </div>
       )}
+      selectable={selectable}
+      onBulkDelete={onBulkDelete}
     />
   )
 }

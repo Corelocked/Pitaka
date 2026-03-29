@@ -31,10 +31,12 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Ignore registration failures so the app still boots normally.
-    })
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+      .catch(() => {
+        // Ignore cleanup failures so the app still boots normally.
+      })
   })
 }
