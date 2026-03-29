@@ -267,14 +267,14 @@
   gap: 8px;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--gray-800);
+  color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .card-subtitle {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   margin: 4px 0 0 0;
 }
 
@@ -398,10 +398,10 @@
   display: flex;
   align-items: center;
   padding: 16px;
-  background: white;
+  background: var(--card-background);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-100);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all var(--transition-base);
   position: relative;
@@ -475,7 +475,7 @@
 .transaction-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--text-primary);
   margin: 0 0 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -485,7 +485,7 @@
 
 .transaction-subtitle {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--text-secondary);
   margin: 0;
   font-weight: 500;
 }
@@ -510,7 +510,7 @@
 
 /* Forms - Mobile Optimized */
 .mobile-form {
-  background: white;
+  background: var(--card-background);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -524,7 +524,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
@@ -536,8 +536,8 @@
   border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 500;
-  color: var(--gray-800);
-  background: white;
+  color: var(--text-primary);
+  background: var(--card-background);
   transition: all var(--transition-base);
   -webkit-appearance: none;
   appearance: none;
@@ -698,7 +698,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--card-background);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: 8px 24px 24px;
   max-height: 85vh;
