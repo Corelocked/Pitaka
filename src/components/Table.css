@@ -20,6 +20,23 @@
   min-width: 760px;
   color: var(--text-primary);
   font-size: 14px;
+  --table-head-bg: #f2f7f6;
+  --table-head-text: #36535a;
+  --table-head-border: #dbe3ee;
+  --table-cell-border: #edf2f7;
+  --table-row-even-bg: #f5faf9;
+  --table-row-hover-bg: #eaf6f4;
+  --table-bulk-toolbar-bg: #eaf6f4;
+  --table-bulk-toolbar-border: #cbe6e1;
+  --table-button-bg: #ffffff;
+  --table-button-border: #cfd8dc;
+  --table-button-hover-bg: #f8fafc;
+  --table-page-info: #36535a;
+  --table-empty-bg: rgba(245, 243, 242, 0.82);
+  --table-stacked-row-bg: #ffffff;
+  --table-stacked-row-border: var(--border-color);
+  --table-stacked-cell-border: #dbe3e1;
+  --table-stacked-label: #4d6664;
 }
 
 /* Allow tables inside the page cards to shrink to their container
@@ -54,13 +71,13 @@
   position: sticky;
   top: 0;
   z-index: 6;
-  background: #f2f7f6;
-  color: #36535a;
+  background: var(--table-head-bg);
+  color: var(--table-head-text);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-bottom: 1px solid #dbe3ee;
+  border-bottom: 1px solid var(--table-head-border);
 }
 
 .data-table th,
@@ -69,7 +86,7 @@
 .table td {
   padding: 12px 14px;
   vertical-align: middle;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--table-cell-border);
 }
 
 .data-table tbody td,
@@ -80,12 +97,12 @@
 
 .data-table tbody tr:nth-child(even),
 .table tbody tr:nth-child(even) {
-  background: #f5faf9;
+  background: var(--table-row-even-bg);
 }
 
 .data-table tbody tr:hover,
 .table tbody tr:hover {
-  background: #eaf6f4;
+  background: var(--table-row-hover-bg);
 }
 
 .data-table td.amount,
@@ -237,15 +254,15 @@
   margin: 0 0 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #eaf6f4;
-  border: 1px solid #cbe6e1;
+  background: var(--table-bulk-toolbar-bg);
+  border: 1px solid var(--table-bulk-toolbar-border);
 }
 
 .btn {
   padding: 7px 11px;
   border-radius: 8px;
-  border: 1px solid #cfd8dc;
-  background: #ffffff;
+  border: 1px solid var(--table-button-border);
+  background: var(--table-button-bg);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 13px;
@@ -253,7 +270,7 @@
 }
 
 .btn:hover {
-  background: #f8fafc;
+  background: var(--table-button-hover-bg);
 }
 
 .btn.danger {
@@ -282,16 +299,16 @@
 }
 
 .page-info {
-  color: #36535a;
+  color: var(--table-page-info);
   font-size: 13px;
   font-weight: 600;
 }
 
 .page-size select {
   padding: 7px 10px;
-  border: 1px solid #cfd8dc;
+  border: 1px solid var(--table-button-border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--table-button-bg);
   color: var(--text-primary);
 }
 
@@ -300,7 +317,7 @@
   color: var(--text-secondary);
   padding: 32px 16px;
   border-radius: 18px;
-  background: rgba(245, 243, 242, 0.82);
+  background: var(--table-empty-bg);
   min-height: 140px;
   display: flex;
   flex-direction: column;
@@ -370,6 +387,27 @@
   width: 16px;
   height: 16px;
   margin: 0;
+}
+
+body[data-theme='dark'] .data-table,
+body[data-theme='dark'] .table {
+  --table-head-bg: rgba(255, 255, 255, 0.06);
+  --table-head-text: #d9c9aa;
+  --table-head-border: rgba(255, 255, 255, 0.08);
+  --table-cell-border: rgba(255, 255, 255, 0.06);
+  --table-row-even-bg: rgba(255, 255, 255, 0.02);
+  --table-row-hover-bg: rgba(176, 141, 87, 0.08);
+  --table-bulk-toolbar-bg: rgba(255, 255, 255, 0.04);
+  --table-bulk-toolbar-border: rgba(255, 255, 255, 0.06);
+  --table-button-bg: #1d2420;
+  --table-button-border: rgba(255, 255, 255, 0.06);
+  --table-button-hover-bg: #244c31;
+  --table-page-info: var(--text-secondary);
+  --table-empty-bg: rgba(255, 255, 255, 0.03);
+  --table-stacked-row-bg: rgba(255, 255, 255, 0.04);
+  --table-stacked-row-border: rgba(255, 255, 255, 0.08);
+  --table-stacked-cell-border: rgba(255, 255, 255, 0.08);
+  --table-stacked-label: #6f8982;
 }
 
 @media (max-width: 900px) {
@@ -484,14 +522,14 @@
   .table tr {
     margin-bottom: 10px;
     padding: 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--table-stacked-row-border);
     border-radius: 10px;
-    background: #ffffff;
+    background: var(--table-stacked-row-bg);
   }
 
   .data-table td,
   .table td {
-    border-bottom: 1px dashed #dbe3e1;
+    border-bottom: 1px dashed var(--table-stacked-cell-border);
     padding: 8px 6px;
   }
 
@@ -513,7 +551,7 @@
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: #4d6664;
+    color: var(--table-stacked-label);
     margin-bottom: 4px;
   }
 
