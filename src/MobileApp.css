@@ -525,6 +525,10 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+body[data-theme='dark'] .form-label {
+  color: var(--text-secondary);
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
@@ -537,7 +541,21 @@
   font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
-  background: var(--card-background);
+  background: var(--background-color);
+  border: 1.5px solid var(--border-color);
+}
+
+body[data-theme='dark'] .form-input,
+body[data-theme='dark'] .form-select {
+  background: #181d1a;
+  color: #f3f6f2;
+  border: 1.5px solid #2a2e27;
+    color: var(--text-muted);
+  }
+
+  body[data-theme='dark'] .form-input::placeholder,
+  body[data-theme='dark'] .form-select::placeholder {
+    color: #b0b5a8;
   transition: all var(--transition-base);
   -webkit-appearance: none;
   appearance: none;
@@ -699,6 +717,7 @@
   left: 0;
   right: 0;
   background: var(--card-background);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: 8px 24px 24px;
   max-height: 85vh;
