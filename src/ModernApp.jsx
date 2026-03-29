@@ -1102,7 +1102,10 @@ function ModernApp() {
                 <div className={`page-table-card-body ${filteredIncomes.length === 0 ? 'page-table-card-body--empty' : ''}`}>
                   <IncomeTable
                     incomes={filteredIncomes}
-                    onEditIncome={editIncome}
+                    onEditIncome={(income) => {
+                      editIncome(income)
+                      openBottomSheet('addIncome')
+                    }}
                     onDeleteIncome={deleteIncome}
                     wallets={walletBalances}
                     selectable
@@ -1121,7 +1124,10 @@ function ModernApp() {
                 <div className={`page-table-card-body ${filteredExpenses.length === 0 ? 'page-table-card-body--empty' : ''}`}>
                   <ExpenseTable
                     expenses={filteredExpenses}
-                    onEditExpense={editExpense}
+                    onEditExpense={(expense) => {
+                      editExpense(expense)
+                      openBottomSheet('addExpense')
+                    }}
                     onDeleteExpense={deleteExpense}
                     wallets={walletBalances}
                     selectable
