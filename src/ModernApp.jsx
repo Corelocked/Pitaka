@@ -1027,55 +1027,6 @@ function ModernApp() {
             <div className="card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><SettingsIcon size={18} /> Explore More</h3>
-                  <p className="card-subtitle">Open dedicated sections for membership, category structure, and workspace settings.</p>
-                </div>
-              </div>
-
-              <div className="layout-preference-list">
-                <button
-                  type="button"
-                  className="layout-preference-card"
-                  onClick={() => setCurrentView('categories')}
-                >
-                  <div className="layout-preference-top">
-                    <span className="layout-preference-name">Categories</span>
-                    <span className="layout-preference-state">Open</span>
-                  </div>
-                  <div className="layout-preference-description">
-                    Manage the labels behind your expense insights and reporting structure.
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  className={`layout-preference-card ${isPro ? 'active' : ''}`}
-                  onClick={() => setCurrentView('pro')}
-                >
-                  <div className="layout-preference-top">
-                    <span className="layout-preference-name">Pitaka Pro</span>
-                    <span className="layout-preference-state">{isPro ? 'Active' : 'Open'}</span>
-                  </div>
-                  <div className="layout-preference-description">
-                    Review your plan, unlock premium currencies, and manage Pro access.
-                  </div>
-                </button>
-
-                <div className="layout-preference-card active">
-                  <div className="layout-preference-top">
-                    <span className="layout-preference-name">Workspace</span>
-                    <span className="layout-preference-state">Here</span>
-                  </div>
-                  <div className="layout-preference-description">
-                    Adjust dashboard layout, theme preference, install state, and data tools from this page.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <div>
                   <h3 className="card-title"><HomeIcon size={18} /> Dashboard Layout</h3>
                   <p className="card-subtitle">Choose how the home view organizes your financial overview.</p>
                 </div>
