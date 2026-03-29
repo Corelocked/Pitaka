@@ -238,6 +238,20 @@ function Dashboard({
     return wallet ? wallet.name : 'Unknown'
   }
 
+  const getAccountPillLabel = (wallet) => {
+    if (wallet.accountType === 'credit') {
+      return wallet.balance >= 0 ? 'Available' : 'Card balance'
+    }
+
+    if (wallet.accountType === 'bank') return 'Bank'
+    if (wallet.accountType === 'savings') return 'Savings'
+    if (wallet.accountType === 'investment') return 'Investments'
+    if (wallet.accountType === 'cash') return 'Cash'
+    if (wallet.accountType === 'other') return 'Other'
+
+    return wallet.balance >= 0 ? 'Available' : 'Overdrawn'
+  }
+
   const renderWidgetEmptyState = (message = 'No data available yet.') => (
     <div className="dashboard-widget-empty">
       <div className="dashboard-widget-empty-title">No data available</div>
@@ -624,7 +638,7 @@ function Dashboard({
             >
               <div className="account-card-meta">
                 <div className="account-name">{wallet.name}</div>
-                <div className="account-pill">{wallet.balance >= 0 ? 'Liquid' : 'Overdrawn'}</div>
+                <div className="account-pill">{getAccountPillLabel(wallet)}</div>
               </div>
               <div className="account-balance">{formatCurrency(parseFloat(wallet.balance || 0), getWalletCurrency(wallet))}</div>
             </div>
