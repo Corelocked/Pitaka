@@ -32,15 +32,13 @@ function Dashboard({
   isDesktopEditMode = false,
   onMoveMobileWidget,
   onMoveDesktopTile,
-  onResizeDesktopTile,
-  onPostSubscriptionBill
+  onResizeDesktopTile
 }) {
   const [draggedTileId, setDraggedTileId] = useState(null)
   const [draggedMobileWidgetId, setDraggedMobileWidgetId] = useState(null)
   const [mobileDropTargetId, setMobileDropTargetId] = useState(null)
   const [mobileDropEdge, setMobileDropEdge] = useState('before')
   const [mobileDragPreview, setMobileDragPreview] = useState(null)
-  const [postingSubscriptionId, setPostingSubscriptionId] = useState(null)
   const draggedMobileWidgetIdRef = useRef(null)
   const mobileAutoScrollFrameRef = useRef(null)
   const mobileAutoScrollVelocityRef = useRef(0)
@@ -187,7 +185,7 @@ function Dashboard({
     return subscriptions
       .filter((subscription) => subscription?.id && subscription.isActive !== false)
       .map((subscription) => {
-        let dueDate = normalizeDateKey(subscription.nextRunDate || subscription.startDate)
+        let dueDate = normalizeDateKey(subscription.nextDueDate || subscription.nextRunDate || subscription.startDate)
 
         if (!dueDate) return null
 
@@ -210,28 +208,13 @@ function Dashboard({
           dueLabel: due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           dayDiff,
           amountLabel: formatCurrency(parseFloat(subscription.amount || 0), subscription.currency || getWalletCurrency(wallet) || DEFAULT_CURRENCY),
-          walletName: wallet?.name || 'No wallet',
-          canPostNow: dayDiff <= 0
+          walletName: wallet?.name || 'No wallet'
         }
       })
       .filter(Boolean)
       .sort((a, b) => a.dayDiff - b.dayDiff || new Date(a.dueDate) - new Date(b.dueDate))
       .slice(0, 5)
   }, [subscriptions, walletBalances])
-
-  const handlePostSubscriptionBill = async (billId) => {
-    if (!onPostSubscriptionBill || postingSubscriptionId) return
-
-    try {
-      setPostingSubscriptionId(billId)
-      await onPostSubscriptionBill(billId)
-    } catch (err) {
-      console.error('Failed to post subscription bill:', err)
-      try { alert(err?.message || 'Failed to post bill') } catch { /* ignore */ }
-    } finally {
-      setPostingSubscriptionId(null)
-    }
-  }
 
   const getWalletName = (walletId) => {
     const wallet = walletBalances.find((entry) => entry.id === walletId)
@@ -888,14 +871,6 @@ function Dashboard({
                   <div>-{bill.amountLabel}</div>
                   <div className="transaction-subtitle">{bill.dueLabel}</div>
                 </div>
-                <button
-                  type="button"
-                  className={`btn ${bill.canPostNow ? 'btn-primary' : 'btn-secondary'} dashboard-bill-post-btn`}
-                  onClick={() => handlePostSubscriptionBill(bill.id)}
-                  disabled={postingSubscriptionId === bill.id || !bill.canPostNow}
-                >
-                  {postingSubscriptionId === bill.id ? 'Confirming...' : bill.canPostNow ? 'Confirm bill' : 'Not due'}
-                </button>
               </div>
             </div>
           ))}

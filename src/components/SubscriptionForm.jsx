@@ -17,11 +17,10 @@ export default function SubscriptionForm({
   editingSubscription,
   wallets = []
 }) {
-  const todayDate = getLocalDateInputValue()
   const [name, setName] = useState('')
   const [walletId, setWalletId] = useState('')
   const [amount, setAmount] = useState('')
-  const [startDate, setStartDate] = useState(todayDate)
+  const [startDate, setStartDate] = useState(getLocalDateInputValue())
   const [intervalType, setIntervalType] = useState('monthly')
   const [customIntervalDays, setCustomIntervalDays] = useState('30')
 
@@ -30,7 +29,7 @@ export default function SubscriptionForm({
       setName(editingSubscription.name || '')
       setWalletId(editingSubscription.walletId || '')
       setAmount(String(editingSubscription.amount ?? ''))
-      setStartDate(editingSubscription.startDate || todayDate)
+      setStartDate(editingSubscription.startDate || getLocalDateInputValue())
       setIntervalType(editingSubscription.intervalType || 'monthly')
       setCustomIntervalDays(String(editingSubscription.customIntervalDays || 30))
       return
@@ -39,10 +38,10 @@ export default function SubscriptionForm({
     setName('')
     setWalletId('')
     setAmount('')
-    setStartDate(todayDate)
+    setStartDate(getLocalDateInputValue())
     setIntervalType('monthly')
     setCustomIntervalDays('30')
-  }, [editingSubscription, todayDate])
+  }, [editingSubscription])
 
   const selectedWallet = useMemo(
     () => wallets.find((wallet) => wallet.id === walletId),
@@ -55,11 +54,6 @@ export default function SubscriptionForm({
     event.preventDefault()
 
     if (!name.trim() || !walletId || !amount || !startDate) {
-      return
-    }
-
-    if (startDate < todayDate) {
-      try { alert('First charge date cannot be in the past.') } catch { /* ignore */ }
       return
     }
 
@@ -142,7 +136,6 @@ export default function SubscriptionForm({
           type="date"
           value={startDate}
           onChange={(event) => setStartDate(event.target.value)}
-          min={todayDate}
           required
         />
       </div>

@@ -362,7 +362,6 @@ function ModernApp() {
     addSavings,
     addCategory,
     addSubscription,
-    postSubscriptionBill,
     deleteIncome,
     deleteExpense,
     deleteSavings,
@@ -1063,7 +1062,6 @@ function ModernApp() {
             transfers={transfers}
             subscriptions={subscriptions}
             isPro={isPro}
-            onPostSubscriptionBill={postSubscriptionBill}
             expensesByCategory={expensesByCategory}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
@@ -1436,7 +1434,7 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Recurring Expenses',
               title: 'Subscriptions',
-              description: 'Track recurring charges, see what is due next, and confirm each bill when you are ready to record it.',
+              description: 'Track recurring charges, monitor what is due next, and let each bill deduct automatically on schedule.',
               stats: [
                 { label: 'Active Plans', value: subscriptions.length },
                 { label: 'Category', value: 'Subscription' }
@@ -1447,7 +1445,7 @@ function ModernApp() {
               <div className="card-header">
                 <div>
                   <h3 className="card-title"><ExpenseIcon size={18} /> Subscription Schedule</h3>
-                  <p className="card-subtitle">Manage recurring bills, then confirm each charge when it is time to record it.</p>
+                  <p className="card-subtitle">Manage recurring bills and let each due date log itself automatically into your expenses.</p>
                 </div>
                 <button
                   onClick={() => openSubscriptionSheet()}
@@ -1472,7 +1470,7 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Recurring Expenses',
               title: 'Subscriptions',
-              description: 'Track recurring charges with upcoming-bill reminders and confirm each deduction when you are ready.',
+              description: 'Track recurring charges with upcoming-bill visibility and automatic deductions on their due dates.',
               stats: [
                 { label: 'Current Plan', value: 'Basic' },
                 { label: 'Feature Access', value: 'Pro only' }
@@ -1483,7 +1481,7 @@ function ModernApp() {
               <div className="card-header">
                 <div>
                   <h3 className="card-title"><ExpenseIcon size={18} /> Pro Required</h3>
-                  <p className="card-subtitle">Subscriptions, upcoming bill reminders, and bill confirmation are available on Pitaka Pro.</p>
+                  <p className="card-subtitle">Subscriptions, upcoming bill tracking, and automatic recurring deductions are available on Pitaka Pro.</p>
                 </div>
               </div>
               <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
@@ -1514,7 +1512,7 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Membership',
               title: 'Pitaka Pro',
-              description: 'Unlock subscriptions, full currency support, and investment tracking from one upgrade page.',
+              description: 'Unlock automatic subscription logging, full currency support, and investment tracking from one upgrade page.',
               stats: [
                 { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Currency Access', value: isPro ? 'All Supported' : 'PHP + USD' }
@@ -1527,8 +1525,8 @@ function ModernApp() {
                   <h3 className="card-title"><TrendUpIcon size={18} /> Pitaka Pro</h3>
                   <p className="card-subtitle">
                     {isPro
-                      ? 'Your account already has Pro access, including subscriptions, investment tracking, and every supported currency.'
-                      : 'Upgrade with PayMongo to unlock subscriptions, full currency access, investment tracking, and future premium features.'}
+                      ? 'Your account already has Pro access, including automatic subscription logging, investment tracking, and every supported currency.'
+                      : 'Upgrade with PayMongo to unlock automatic subscription logging, full currency access, investment tracking, and future premium features.'}
                   </p>
                 </div>
                 <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
@@ -1565,7 +1563,7 @@ function ModernApp() {
                       <div className="plan-checklist-item is-included">Manual income, expense, savings, and transfer tracking</div>
                       <div className="plan-checklist-item is-included">Category and account management</div>
                       <div className="plan-checklist-item is-included">PHP and USD currency support</div>
-                      <div className="plan-checklist-item is-locked">Upcoming bill reminders and bill confirmation</div>
+                      <div className="plan-checklist-item is-locked">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-locked">Investment tracking</div>
                     </div>
                   </div>
@@ -1577,7 +1575,7 @@ function ModernApp() {
                     </div>
                     <div className="plan-checklist">
                       <div className="plan-checklist-item is-included">Everything in Basic</div>
-                      <div className="plan-checklist-item is-included">Upcoming bill reminders with manual confirmation</div>
+                      <div className="plan-checklist-item is-included">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-included">Investment tracking alongside your budget</div>
                       <div className="plan-checklist-item is-included">All supported currencies across wallets, goals, and investments</div>
                       <div className="plan-checklist-item is-included">Future Pro-only features included</div>
@@ -1592,7 +1590,7 @@ function ModernApp() {
                     <span className="eyebrow">One-Time Upgrade</span>
                     <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
                     <p className="pro-purchase-text">
-                      Get subscriptions, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
+                      Get automatic subscription logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
                     </p>
                     <div className="pro-purchase-price-row">
                       <div className="pro-purchase-price-block">
@@ -1942,7 +1940,7 @@ function ModernApp() {
           <div className="form-container">
             <h3 className="card-title"><ExpenseIcon size={18} /> Pro Required</h3>
             <p className="card-subtitle" style={{ marginTop: '0.75rem' }}>
-              Subscription reminders and bill confirmation are part of Pitaka Pro.
+              Automatic subscription logging and upcoming bill tracking are part of Pitaka Pro.
             </p>
             <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
               <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeBottomSheet}>
