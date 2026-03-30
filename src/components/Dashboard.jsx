@@ -226,6 +226,7 @@ function Dashboard({
       return wallet.balance >= 0 ? 'Available' : 'Card balance'
     }
 
+    if (wallet.accountType === 'ewallet') return 'E-Wallet'
     if (wallet.accountType === 'bank') return 'Bank'
     if (wallet.accountType === 'savings') return 'Savings'
     if (wallet.accountType === 'investment') return 'Investments'
@@ -233,6 +234,28 @@ function Dashboard({
     if (wallet.accountType === 'other') return 'Other'
 
     return wallet.balance >= 0 ? 'Available' : 'Overdrawn'
+  }
+
+  const getAccountCardClassName = (wallet) => {
+    const toneClass = wallet.colorTheme && wallet.colorTheme !== 'auto'
+      ? `account-card--tone-${wallet.colorTheme}`
+      : (
+          wallet.accountType === 'bank'
+            ? 'bank'
+            : wallet.accountType === 'credit'
+              ? 'credit'
+              : wallet.accountType === 'ewallet'
+                ? 'ewallet'
+                : wallet.accountType === 'savings'
+                  ? 'savings'
+                  : wallet.accountType === 'investment'
+                    ? 'investment'
+                    : wallet.accountType === 'other'
+                      ? 'other'
+                      : 'cash'
+        )
+
+    return `account-card ${toneClass}`
   }
 
   const renderWidgetEmptyState = (message = 'No data available yet.') => (
@@ -617,7 +640,7 @@ function Dashboard({
           {walletBalances.slice(0, 6).map((wallet) => (
             <div
               key={wallet.id}
-              className={`account-card ${wallet.accountType === 'bank' ? 'bank' : wallet.accountType === 'credit' ? 'credit' : 'cash'}`}
+              className={getAccountCardClassName(wallet)}
             >
               <div className="account-card-meta">
                 <div className="account-name">{wallet.name}</div>

@@ -816,6 +816,50 @@ body[data-theme='dark'] .form-select {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
+.account-card.ewallet {
+  background: linear-gradient(135deg, #34d399 0%, #14b8a6 100%);
+}
+
+.account-card.savings {
+  background: linear-gradient(135deg, #0ea5a4 0%, #2dd4bf 100%);
+}
+
+.account-card.investment {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.account-card.other {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+}
+
+.account-card--tone-moss {
+  background: linear-gradient(135deg, #4d7b57 0%, #7ca38a 100%);
+}
+
+.account-card--tone-sea {
+  background: linear-gradient(135deg, #3d7b78 0%, #69a7a0 100%);
+}
+
+.account-card--tone-sky {
+  background: linear-gradient(135deg, #537a99 0%, #7ea3bf 100%);
+}
+
+.account-card--tone-plum {
+  background: linear-gradient(135deg, #6d5a88 0%, #9680af 100%);
+}
+
+.account-card--tone-amber {
+  background: linear-gradient(135deg, #8d6b3d 0%, #b28c59 100%);
+}
+
+.account-card--tone-rose {
+  background: linear-gradient(135deg, #8b5a67 0%, #b07c89 100%);
+}
+
+.account-card--tone-slate {
+  background: linear-gradient(135deg, #586472 0%, #8391a0 100%);
+}
+
 .account-card.bank {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
@@ -4371,6 +4415,72 @@ body[data-theme='dark'] .account-card.cash {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
     linear-gradient(135deg, #1a4729 0%, #2c5a3a 100%);
+}
+
+body[data-theme='dark'] .account-card.ewallet {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #0f4f43 0%, #1f6a61 100%);
+}
+
+body[data-theme='dark'] .account-card.savings {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #0f5c56 0%, #167c72 100%);
+}
+
+body[data-theme='dark'] .account-card.investment {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #3f3c7a 0%, #5f4b8b 100%);
+}
+
+body[data-theme='dark'] .account-card.other {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #49525d 0%, #64707d 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-moss {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #35563b 0%, #4f7560 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-sea {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #2f5b59 0%, #4d7f79 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-sky {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #3f5c72 0%, #5d7f99 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-plum {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #4d4369 0%, #705f90 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-amber {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #5d4b2d 0%, #7f6740 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-rose {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #5f3f4a 0%, #845b66 100%);
+}
+
+body[data-theme='dark'] .account-card--tone-slate {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
+    linear-gradient(135deg, #424d59 0%, #5d6a78 100%);
 }
 
 body[data-theme='dark'] .account-card.bank {

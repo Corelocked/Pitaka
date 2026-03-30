@@ -8,6 +8,7 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
   const typeLabel = (wallet) => {
     switch (wallet.accountType) {
       case 'credit': return 'Credit Card'
+      case 'ewallet': return 'E-Wallet'
       case 'bank': return 'Bank'
       case 'savings': return 'Savings'
       case 'investment': return 'Investment'

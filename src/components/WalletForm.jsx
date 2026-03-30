@@ -4,11 +4,22 @@ import './Form.css'
 import { DEFAULT_CURRENCY, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
 import { useFirebase } from '../hooks/useFirebase'
 
+const ACCOUNT_TYPE_DEFAULT_THEMES = {
+  cash: 'auto-cash',
+  ewallet: 'auto-ewallet',
+  bank: 'auto-bank',
+  credit: 'auto-credit',
+  investment: 'auto-investment',
+  savings: 'auto-savings',
+  other: 'auto-other'
+}
+
 function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }) {
   const { isPro } = useFirebase()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [accountType, setAccountType] = useState('cash')
+  const [colorTheme, setColorTheme] = useState('auto')
   const [startingBalance, setStartingBalance] = useState('')
   const [creditLimit, setCreditLimit] = useState('')
   const [creditAlertPercent, setCreditAlertPercent] = useState('80')
@@ -21,6 +32,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setName(editingWallet.name || '')
       setDescription(editingWallet.description || '')
       setAccountType(editingWallet.accountType || 'cash')
+      setColorTheme(editingWallet.colorTheme || 'auto')
       setStartingBalance(editingWallet.startingBalance || '')
       setCreditLimit(editingWallet.creditLimit || '')
       setCreditAlertPercent(editingWallet.creditAlertPercent || '80')
@@ -30,6 +42,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setName('')
       setDescription('')
       setAccountType('cash')
+      setColorTheme('auto')
       setStartingBalance('')
       setCreditLimit('')
       setCreditAlertPercent('80')
@@ -56,6 +69,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         name: name.trim(),
         description: description.trim(),
         accountType,
+        colorTheme,
         startingBalance: parseFloat(startingBalance) || 0,
         creditLimit: accountType === 'credit' ? (parseFloat(creditLimit) || 0) : null,
         creditAlertPercent: accountType === 'credit' ? (parseFloat(creditAlertPercent) || 80) : null,
@@ -70,6 +84,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         setName('')
         setDescription('')
         setAccountType('cash')
+        setColorTheme('auto')
         setStartingBalance('')
         setCreditLimit('')
         setCreditAlertPercent('80')
@@ -83,13 +98,25 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
 
   const accountTypes = [
     { value: 'cash', label: 'Cash', color: '#43e97b' },
+    { value: 'ewallet', label: 'E-Wallet', color: '#22c55e' },
     { value: 'bank', label: 'Bank Account', color: '#4facfe' },
     { value: 'credit', label: 'Credit Card', color: '#fa709a' },
     { value: 'investment', label: 'Investment Account', color: '#0f766e' },
     { value: 'savings', label: 'Savings Account', color: '#11998e' },
     { value: 'other', label: 'Other', color: '#9ca3af' }
   ]
+  const colorThemes = [
+    { value: 'auto', label: 'Auto by type', previewClass: ACCOUNT_TYPE_DEFAULT_THEMES[accountType] || 'auto-cash' },
+    { value: 'moss', label: 'Moss', previewClass: 'moss' },
+    { value: 'sea', label: 'Sea', previewClass: 'sea' },
+    { value: 'sky', label: 'Sky', previewClass: 'sky' },
+    { value: 'plum', label: 'Plum', previewClass: 'plum' },
+    { value: 'amber', label: 'Amber', previewClass: 'amber' },
+    { value: 'rose', label: 'Rose', previewClass: 'rose' },
+    { value: 'slate', label: 'Slate', previewClass: 'slate' }
+  ]
   const availableCurrencies = getAllowedCurrencies(isPro, editingWallet?.currency)
+  const selectedColorTheme = colorThemes.find((theme) => theme.value === colorTheme) || colorThemes[0]
 
   return (
     <div className="form-container">
@@ -155,6 +182,34 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
               Basic accounts can use `PHP` and `USD`. Upgrade to Pro to unlock more currencies.
             </small>
           )}
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Card Color</label>
+          <div className="wallet-color-picker" role="listbox" aria-label="Card color">
+            {colorThemes.map((theme) => (
+              <button
+                key={theme.value}
+                type="button"
+                className={`wallet-color-option ${colorTheme === theme.value ? 'active' : ''}`}
+                onClick={() => setColorTheme(theme.value)}
+                aria-pressed={colorTheme === theme.value}
+              >
+                <span className={`wallet-color-option-swatch wallet-color-option-swatch--${theme.previewClass}`} />
+                <span className="wallet-color-option-label">{theme.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className={`wallet-color-preview wallet-color-preview--${selectedColorTheme.previewClass}`}>
+            <div className="wallet-color-preview-name">{name.trim() || 'Account preview'}</div>
+            <div className="wallet-color-preview-meta">
+              <span>{accountTypes.find((type) => type.value === accountType)?.label || 'Account'}</span>
+              <span>{currency}</span>
+            </div>
+          </div>
+          <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+            Choose from Pitaka&apos;s toned-down palette or keep the default color for this account type.
+          </small>
         </div>
 
         <div className="form-group">
