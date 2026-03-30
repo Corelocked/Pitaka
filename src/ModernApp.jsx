@@ -1,26 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useContext } from 'react'
+import { Suspense, lazy, useContext, useEffect, useState } from 'react'
 import { FirebaseContext } from './contexts/FirebaseContext'
 import { useConfirm } from './contexts/useConfirm'
 import { useBudget } from './hooks/useBudget'
-import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
-import IncomeForm from './components/IncomeForm'
-import ExpenseForm from './components/ExpenseForm'
-import TransferForm from './components/TransferForm'
-import WalletForm from './components/WalletForm'
-import CategoryForm from './components/CategoryForm'
-import SubscriptionForm from './components/SubscriptionForm'
-import SavingsForm from './components/SavingsForm'
-import AddToSavingsForm from './components/AddToSavingsForm'
 import TransfersTable from './components/TransfersTable'
-import IncomeTable from './components/IncomeTable'
-import ExpenseTable from './components/ExpenseTable'
-import WalletsTable from './components/WalletsTable'
-import CategoryTable from './components/CategoryTable'
-import SubscriptionsTable from './components/SubscriptionsTable'
-import InvestmentForm from './components/InvestmentForm'
-import InvestmentsTable from './components/InvestmentsTable'
 import {
   ActivityIcon,
   CategoryIcon,
@@ -42,7 +25,23 @@ import {
 import { exportToExcel, importFromExcel, downloadImportTemplate } from './utils/excelUtils'
 import { createProCheckoutSession } from './services/billingService'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCurrency } from './utils/currency'
-import './MobileApp.css'
+
+const Auth = lazy(() => import('./components/Auth'))
+const IncomeForm = lazy(() => import('./components/IncomeForm'))
+const ExpenseForm = lazy(() => import('./components/ExpenseForm'))
+const TransferForm = lazy(() => import('./components/TransferForm'))
+const WalletForm = lazy(() => import('./components/WalletForm'))
+const CategoryForm = lazy(() => import('./components/CategoryForm'))
+const SubscriptionForm = lazy(() => import('./components/SubscriptionForm'))
+const SavingsForm = lazy(() => import('./components/SavingsForm'))
+const AddToSavingsForm = lazy(() => import('./components/AddToSavingsForm'))
+const IncomeTable = lazy(() => import('./components/IncomeTable'))
+const ExpenseTable = lazy(() => import('./components/ExpenseTable'))
+const WalletsTable = lazy(() => import('./components/WalletsTable'))
+const CategoryTable = lazy(() => import('./components/CategoryTable'))
+const SubscriptionsTable = lazy(() => import('./components/SubscriptionsTable'))
+const InvestmentForm = lazy(() => import('./components/InvestmentForm'))
+const InvestmentsTable = lazy(() => import('./components/InvestmentsTable'))
 
 const DASHBOARD_LAYOUTS = [
   {
@@ -331,6 +330,19 @@ const THEME_OPTIONS = [
 const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 50000)
 const PRO_PRICE_CURRENCY = String(import.meta.env.VITE_PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase()
 const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_METHOD_LABEL || 'QRPh')
+
+function SectionFallback({ label = 'Loading section...' }) {
+  return (
+    <div className="card page-hero-card" aria-live="polite">
+      <div className="card-header">
+        <div>
+          <h3 className="card-title">{label}</h3>
+          <p className="card-subtitle">Preparing the next view.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user, userProfile, isPro } = useContext(FirebaseContext)
@@ -1042,7 +1054,11 @@ function ModernApp() {
 
   // Show auth screen if not authenticated
   if (!isAuthenticated) {
-    return <Auth />
+    return (
+      <Suspense fallback={<SectionFallback label="Loading sign in..." />}>
+        <Auth />
+      </Suspense>
+    )
   }
 
   // Show loading screen
@@ -1449,7 +1465,7 @@ function ModernApp() {
       case 'subscriptions':
         return isPro ? (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
+              {renderPageIntro({
               eyebrow: 'Recurring Expenses',
               title: 'Subscriptions',
               description: 'Track recurring charges, monitor what is due next, and let each bill deduct automatically on schedule.',
@@ -2470,7 +2486,9 @@ function ModernApp() {
       </div>
 
       {/* Main Content */}
-      {renderView()}
+      <Suspense fallback={<SectionFallback label="Loading view..." />}>
+        {renderView()}
+      </Suspense>
 
       {/* Bottom Navigation */}
       <div className="bottom-nav">
@@ -2529,7 +2547,9 @@ function ModernApp() {
       />
       <div className={`bottom-sheet ${showBottomSheet ? 'open' : ''}`}>
         <div className="bottom-sheet-handle" />
-        {renderBottomSheetContent()}
+        <Suspense fallback={<SectionFallback label="Loading tools..." />}>
+          {renderBottomSheetContent()}
+        </Suspense>
       </div>
     </div>
   )

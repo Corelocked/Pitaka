@@ -55,7 +55,7 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
       sortValue: r => creditMetrics(r).utilization
     },
     { key: 'balance', header: 'Balance', className: 'col-balance', width: '140px', render: r => formatCurrency(r.balance || 0, getWalletCurrency(r)), sortable: true },
-    { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '120px', render: r => (
+    { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: r => (
       <>
         <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => { onEditWallet && onEditWallet(r) }}>Edit</button>
         <button className="delete-btn" title="Delete" aria-label="Delete" onClick={async () => { const ok = await confirm({ title: 'Delete wallet', description: `Delete wallet "${r.name}"? This cannot be undone.`, confirmText: 'Delete', cancelText: 'Cancel' }); if (ok) onDeleteWallet && onDeleteWallet(r.id) }}>Delete</button>

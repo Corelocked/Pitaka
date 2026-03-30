@@ -27,7 +27,7 @@ export default function SubscriptionsTable({
     { key: 'amount', header: 'Amount', className: 'amount', width: '120px', render: (row) => `${row.currency || ''} ${Number(row.amount || 0).toFixed(2)}`, sortable: true, sortValue: (row) => Number(row.amount || 0) },
     { key: 'startDate', header: 'First Charge', className: 'col-date', width: '140px', render: (row) => row.startDate, sortable: true },
     { key: 'interval', header: 'Interval', className: 'col-interval', width: '140px', render: (row) => formatInterval(row), sortable: true, sortValue: (row) => formatInterval(row) },
-    { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '120px', render: (row) => (
+    { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: (row) => (
       <>
         <button className="edit-btn" onClick={() => onEditSubscription?.(row)}>Edit</button>
         <button

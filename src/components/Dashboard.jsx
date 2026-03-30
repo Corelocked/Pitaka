@@ -7,7 +7,6 @@ import {
   TrendUpIcon,
   WalletIcon
 } from './Icons'
-import '../MobileApp.css'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, getWalletCurrency, summarizeByCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
 

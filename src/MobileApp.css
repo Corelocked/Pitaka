@@ -2084,6 +2084,15 @@ html {
   gap: 0.35rem;
 }
 
+/* Let the browser defer offscreen layout and paint work for dashboard-heavy sections,
+   but avoid table cards because sticky columns and horizontal scrolling can mis-measure. */
+.dashboard-desktop-tile,
+.dashboard-mobile-widget,
+.bottom-sheet .form-container {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px;
+}
+
 .page-table-card-body {
   min-width: 0;
 }
