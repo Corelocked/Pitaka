@@ -667,16 +667,20 @@ function Dashboard({
           {cashflowTrendRows.map((row) => (
             <div key={row.id} className="dashboard-cashflow-trend-column">
               <div className="dashboard-cashflow-trend-stage">
-                <div
-                  className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--income"
-                  style={{ height: `${row.incomeHeight}%` }}
-                  title={`Income: ${formatCurrency(row.income, incomeSummary[0]?.currency || DEFAULT_CURRENCY)}`}
-                />
-                <div
-                  className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--expense"
-                  style={{ height: `${row.expenseHeight}%` }}
-                  title={`Expenses: ${formatCurrency(row.expenses, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}
-                />
+                {row.income > 0 ? (
+                  <div
+                    className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--income"
+                    style={{ height: `${row.incomeHeight}%` }}
+                    title={`Income: ${formatCurrency(row.income, incomeSummary[0]?.currency || DEFAULT_CURRENCY)}`}
+                  />
+                ) : null}
+                {row.expenses > 0 ? (
+                  <div
+                    className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--expense"
+                    style={{ height: `${row.expenseHeight}%` }}
+                    title={`Expenses: ${formatCurrency(row.expenses, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}
+                  />
+                ) : null}
               </div>
               <div className="dashboard-cashflow-trend-meta">
                 <span className="dashboard-cashflow-label">{row.label}</span>
@@ -731,10 +735,12 @@ function Dashboard({
           {weeklySpendingRows.map((row) => (
             <div key={row.id} className="dashboard-column-chart-item">
               <div className="dashboard-column-chart-stage">
-                <div
-                  className="dashboard-column-chart-bar"
-                  style={{ height: `${row.height}%` }}
-                />
+                {row.amount > 0 ? (
+                  <div
+                    className="dashboard-column-chart-bar"
+                    style={{ height: `${row.height}%` }}
+                  />
+                ) : null}
               </div>
               <div className="dashboard-column-chart-label">{row.label}</div>
               <div className="dashboard-column-chart-value">
@@ -765,10 +771,12 @@ function Dashboard({
           {expenseTrendRows.map((row) => (
             <div key={row.id} className="dashboard-column-chart-item">
               <div className="dashboard-column-chart-stage">
-                <div
-                  className="dashboard-column-chart-bar"
-                  style={{ height: `${row.height}%` }}
-                />
+                {row.amount > 0 ? (
+                  <div
+                    className="dashboard-column-chart-bar"
+                    style={{ height: `${row.height}%` }}
+                  />
+                ) : null}
               </div>
               <div className="dashboard-column-chart-label">{row.label}</div>
               <div className="dashboard-column-chart-value">

@@ -976,6 +976,24 @@ function ModernApp() {
 
           {currentView === 'dashboard' && isDesktopDashboardEditMode && (
             <div className="sidebar-visualizer-list">
+              <button
+                type="button"
+                className={`sidebar-visualizer-item ${dashboardCustomization.showHero ? 'active' : ''}`}
+                onClick={() => toggleDashboardArea('showHero')}
+              >
+                <span>Hero Summary</span>
+                <span>{dashboardCustomization.showHero ? 'Shown' : 'Hidden'}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-visualizer-item ${dashboardCustomization.showMetrics ? 'active' : ''}`}
+                onClick={() => toggleDashboardArea('showMetrics')}
+              >
+                <span>Metric Cards</span>
+                <span>{dashboardCustomization.showMetrics ? 'Shown' : 'Hidden'}</span>
+              </button>
+
               {availableDashboardWidgets.map((widget) => {
                 const isHidden = dashboardCustomization.hiddenSectionIds.includes(widget.id)
                 return (
