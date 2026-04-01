@@ -11,6 +11,14 @@ function TransfersTable({ transfers, wallets, onDelete }) {
     return wallet ? wallet.name : 'Unknown'
   }
 
+  const getTransferLabel = (transfer) => {
+    const sourceName = getWalletName(transfer.fromWalletId)
+    if (transfer.toSavingsId) {
+      return `${sourceName} → ${transfer.savingsGoalName || 'Savings Goal'}`
+    }
+    return `${sourceName} → ${getWalletName(transfer.toWalletId)}`
+  }
+
   const handleDelete = async (transfer) => {
     const currency = transfer.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === transfer.fromWalletId)) || DEFAULT_CURRENCY
     const ok = await confirm({
@@ -52,7 +60,7 @@ function TransfersTable({ transfers, wallets, onDelete }) {
             </div>
             <div className="transaction-details">
               <div className="transaction-title">
-                {getWalletName(transfer.fromWalletId)} → {getWalletName(transfer.toWalletId)}
+                {getTransferLabel(transfer)}
               </div>
               <div className="transaction-subtitle">
                 {new Date(transfer.date).toLocaleDateString('en-US', { 

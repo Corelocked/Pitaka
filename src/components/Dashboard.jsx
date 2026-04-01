@@ -220,6 +220,14 @@ function Dashboard({
     return wallet ? wallet.name : 'Unknown'
   }
 
+  const getTransferLabel = (transfer) => {
+    const sourceName = getWalletName(transfer.fromWalletId)
+    if (transfer.toSavingsId) {
+      return `${sourceName} → ${transfer.savingsGoalName || 'Savings Goal'}`
+    }
+    return `${sourceName} → ${getWalletName(transfer.toWalletId)}`
+  }
+
   const getAccountPillLabel = (wallet) => {
     if (wallet.accountType === 'credit') {
       return wallet.balance >= 0 ? 'Available' : 'Card balance'
@@ -581,11 +589,12 @@ function Dashboard({
                     ? transaction.source
                     : transaction.type === 'expense'
                       ? transaction.description
-                      : `${getWalletName(transaction.fromWalletId)} → ${getWalletName(transaction.toWalletId)}`}
+                      : getTransferLabel(transaction)}
                 </div>
                 <div className="transaction-subtitle">
                   {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   {transaction.category && ` • ${transaction.category}`}
+                  {transaction.type === 'transfer' && transaction.notes && ` • ${transaction.notes}`}
                 </div>
               </div>
               <div className={`transaction-amount ${transaction.type}`}>

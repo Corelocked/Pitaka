@@ -365,23 +365,88 @@ export function useBudget() {
     }
   }, [])
 
-  const addToSavingsGoal = useCallback(async (savingsId, amount) => {
+  const addToSavingsGoal = useCallback(async (savingsId, amount, options = {}) => {
     const goal = savings.find((entry) => entry.id === savingsId)
+    const numericAmount = parseFloat(amount || 0)
+    const sourceWalletId = options?.fromWalletId || ''
+    const fundingDate = options?.date || formatLocalDateKey(new Date())
+    const notes = options?.notes || ''
 
     if (!goal) {
       throw new Error('Savings goal not found')
     }
 
+    if (!(numericAmount > 0)) {
+      throw new Error('Please enter a valid amount')
+    }
+
+    const goalCurrency = goal.currency || 'PHP'
+
+    if (!sourceWalletId) {
+      await savingsService.updateSavings(savingsId, {
+        currentAmount: parseFloat(goal.currentAmount || 0) + numericAmount
+      })
+      return
+    }
+
+    const sourceWallet = wallets.find((wallet) => wallet.id === sourceWalletId)
+
+    if (!sourceWallet) {
+      throw new Error('Source account not found')
+    }
+
+    if ((sourceWallet.currency || 'PHP') !== goalCurrency) {
+      throw new Error('Account and savings goal currencies must match')
+    }
+
+    const computedSourceBalance = (
+      parseFloat(sourceWallet.startingBalance || 0) +
+      incomes
+        .filter((income) => income.walletId === sourceWalletId)
+        .reduce((sum, income) => sum + parseFloat(income.amount || 0), 0) -
+      expenses
+        .filter((expense) => (
+          expense.walletId === sourceWalletId &&
+          (
+            !expense?.subscriptionId ||
+            expense?.postingSource === 'manual-post-bill' ||
+            expense?.postingSource === 'auto-next-due'
+          )
+        ))
+        .reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0) -
+      transfers
+        .filter((transfer) => transfer.fromWalletId === sourceWalletId)
+        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0) +
+      transfers
+        .filter((transfer) => transfer.toWalletId === sourceWalletId)
+        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0)
+    )
+
+    if (sourceWallet.accountType !== 'credit' && computedSourceBalance < numericAmount) {
+      throw new Error('Not enough funds in the selected account')
+    }
+
     try {
       setError(null)
+      await transferService.addTransfer({
+        fromWalletId: sourceWalletId,
+        toSavingsId: savingsId,
+        savingsGoalName: goal.goal || 'Savings Goal',
+        amount: numericAmount,
+        currency: goalCurrency,
+        date: fundingDate,
+        notes,
+        transferKind: 'walletToSavings'
+      }, user.uid)
+
       await savingsService.updateSavings(savingsId, {
-        currentAmount: parseFloat(goal.currentAmount || 0) + parseFloat(amount || 0)
+        currentAmount: parseFloat(goal.currentAmount || 0) + numericAmount
       })
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [savings])
+  }, [savings, user, wallets, incomes, expenses, transfers])
 
   const addCategory = useCallback(async (category) => {
     if (!user) return

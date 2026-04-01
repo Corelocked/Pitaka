@@ -1927,9 +1927,10 @@ function ModernApp() {
             <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
             <AddToSavingsForm
               savings={savings}
+              wallets={walletBalances}
               initialSelectedId={savings[0]?.id}
-              onAddToSavings={async (savingsId, amount) => {
-                await addToSavingsGoal(savingsId, amount)
+              onAddToSavings={async (savingsId, amount, options) => {
+                await addToSavingsGoal(savingsId, amount, options)
                 closeBottomSheet()
               }}
             />
@@ -2128,9 +2129,10 @@ function ModernApp() {
               <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
               <AddToSavingsForm
                 savings={savings}
+                wallets={walletBalances}
                 initialSelectedId={bottomSheetContent.savingsId}
-                onAddToSavings={async (savingsId, amount) => {
-                  await addToSavingsGoal(savingsId, amount)
+                onAddToSavings={async (savingsId, amount, options) => {
+                  await addToSavingsGoal(savingsId, amount, options)
                   closeBottomSheet()
                 }}
               />
