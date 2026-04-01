@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:android": "npm run build && npx cap sync android",
+    "apk:debug": "npm run build:android && cd android && gradlew.bat assembleDebug",
+    "apk:release": "npm run build:android && cd android && gradlew.bat assembleRelease",
+    "cap:sync": "npx cap sync",
+    "android:open": "npx cap open android",
     "lint": "eslint .",
     "preview": "vite preview",
     "payments:dev": "node --env-file=server/payments/.env server/payments/index.js",
@@ -13,6 +18,10 @@
     "webhooks:test": "node server/webhooks/test-normalizers.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "express": "^5.1.0",

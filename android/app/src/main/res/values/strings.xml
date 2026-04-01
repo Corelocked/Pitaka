@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pitaka</string>
+    <string name="title_activity_main">Pitaka</string>
+    <string name="package_name">com.pitaka.budgetbook</string>
+    <string name="custom_url_scheme">com.pitaka.budgetbook</string>
+    <string name="widget_income_description">Shows this month\'s income summary and top inflow sources.</string>
+    <string name="widget_expense_description">Shows this month\'s expense summary and top categories.</string>
+    <string name="widget_recent_transactions_description">Shows the latest posted transactions from the dashboard.</string>
+    <string name="widget_account_allocation_description">Shows total balance and how funds are distributed across accounts.</string>
+    <string name="widget_savings_goals_description">Shows savings totals and progress across current goals.</string>
+    <string name="widget_quick_actions_description">Open Pitaka directly into income, expense, transfer, goal, and subscription actions.</string>
+    <string name="widget_connect_subtitle">Open Pitaka to refresh widget data</string>
+    <string name="widget_ready_subtitle">Dashboard snapshot ready</string>
+    <string name="widget_meta_default">Tap to open Pitaka</string>
+    <string name="google_web_client_id"></string>
+</resources>

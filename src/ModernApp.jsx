@@ -1,7 +1,9 @@
 import { Suspense, lazy, useContext, useEffect, useState } from 'react'
+import { App as CapacitorApp } from '@capacitor/app'
 import { FirebaseContext } from './contexts/FirebaseContext'
 import { useConfirm } from './contexts/useConfirm'
 import { useBudget } from './hooks/useBudget'
+import { useDashboardWidgets } from './hooks/useDashboardWidgets'
 import Dashboard from './components/Dashboard'
 import TransfersTable from './components/TransfersTable'
 import {
@@ -472,6 +474,67 @@ function ModernApp() {
     : dashboardLayout
   const availableDashboardWidgets = DASHBOARD_WIDGET_LIBRARY.filter((widget) => !widget.requiresPro || isPro)
 
+  const storePendingQuickAction = (action) => {
+    if (typeof window === 'undefined' || !action) return
+    window.localStorage.setItem('pitaka.pendingQuickAction', action)
+  }
+
+  const consumePendingQuickAction = () => {
+    if (typeof window === 'undefined') return null
+    const action = window.localStorage.getItem('pitaka.pendingQuickAction')
+    if (action) {
+      window.localStorage.removeItem('pitaka.pendingQuickAction')
+    }
+    return action
+  }
+
+  const handleQuickAction = (action) => {
+    if (!action) return
+
+    if (!isAuthenticated) {
+      storePendingQuickAction(action)
+      return
+    }
+
+    setCurrentView('dashboard')
+
+    switch (action) {
+      case 'income':
+        openBottomSheet('addIncome')
+        break
+      case 'expense':
+        openBottomSheet('addExpense')
+        break
+      case 'transfer':
+        openBottomSheet('addTransfer')
+        break
+      case 'goal':
+        openBottomSheet('addSavings')
+        break
+      case 'subscription':
+        if (isPro) {
+          openSubscriptionSheet()
+        } else {
+          setCurrentView('pro')
+        }
+        break
+      default:
+        break
+    }
+  }
+
+  useDashboardWidgets({
+    isAuthenticated,
+    selectedMonth,
+    selectedYear,
+    filteredIncomes,
+    filteredExpenses,
+    transfers,
+    walletBalances,
+    savings,
+    expensesByCategory
+  })
+
   const persistDashboardCustomization = (nextCustomization) => {
     if (!user?.uid) return
 
@@ -697,6 +760,7 @@ function ModernApp() {
     const params = new URLSearchParams(window.location.search)
     const view = params.get('view')
     const billing = params.get('billing')
+    const quickAction = params.get('quickAction')
 
     if (view === 'pro') {
       setCurrentView('pro')
@@ -707,7 +771,52 @@ function ModernApp() {
     } else if (billing === 'cancelled') {
       setBillingStatus('cancelled')
     }
+
+    if (quickAction) {
+      handleQuickAction(quickAction)
+    }
   }, [])
+
+  useEffect(() => {
+    let removeListener = null
+
+    CapacitorApp.getLaunchUrl()
+      .then((result) => {
+        const url = result?.url
+        if (!url) return
+        try {
+          const parsed = new URL(url)
+          handleQuickAction(parsed.searchParams.get('quickAction'))
+        } catch {
+          // ignore malformed deep links
+        }
+      })
+      .catch(() => {})
+
+    CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      if (!url) return
+      try {
+        const parsed = new URL(url)
+        handleQuickAction(parsed.searchParams.get('quickAction'))
+      } catch {
+        // ignore malformed deep links
+      }
+    }).then((listener) => {
+      removeListener = listener
+    }).catch(() => {})
+
+    return () => {
+      removeListener?.remove?.()
+    }
+  }, [isAuthenticated, isPro])
+
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) return
+    const pendingAction = consumePendingQuickAction()
+    if (pendingAction) {
+      handleQuickAction(pendingAction)
+    }
+  }, [isAuthenticated, authLoading, isPro])
 
   const installApp = async () => {
     if (!deferredInstallPrompt) return
