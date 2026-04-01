@@ -1,10 +1,12 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { Capacitor, registerPlugin } from '@capacitor/core'
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, signInWithCredential } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getAuthErrorMessage } from '../utils/authErrors'
 import { userProfileService } from '../services/firebaseService'
 
 const FirebaseContext = createContext()
+const NativeGoogleAuth = registerPlugin('NativeGoogleAuth')
 
 export function FirebaseProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -96,6 +98,9 @@ export function FirebaseProvider({ children }) {
     try {
       setError(null)
       await signOut(auth)
+      if (Capacitor.getPlatform() === 'android') {
+        await NativeGoogleAuth.signOut().catch(() => {})
+      }
     } catch (err) {
       console.error('Auth logout error:', err)
       const msg = getAuthErrorMessage(err)
@@ -108,8 +113,14 @@ export function FirebaseProvider({ children }) {
     try {
       setError(null)
       setLoading(true)
-      const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
+      if (Capacitor.getPlatform() === 'android') {
+        const { idToken } = await NativeGoogleAuth.signIn()
+        const credential = GoogleAuthProvider.credential(idToken)
+        await signInWithCredential(auth, credential)
+      } else {
+        const provider = new GoogleAuthProvider()
+        await signInWithPopup(auth, provider)
+      }
     } catch (err) {
       console.error('Auth googleSignIn error:', err)
       const msg = getAuthErrorMessage(err)

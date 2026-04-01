@@ -31,3 +31,19 @@ server/payments/.env
 
 # Secret keys
 server/keys/
+
+.fake
+.gradle-local/
+
+# Android local machine files
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+
+# Android/Firebase secrets
+android/app/google-services.json
+
+# Native build outputs
+*.apk
+*.aab
