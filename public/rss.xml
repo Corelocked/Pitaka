@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Pitaka Blog</title>
+    <link>https://pitaka-sigma.vercel.app/blogs</link>
+    <description>Personal finance tips, budgeting strategies, and money management insights from Pitaka.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Apr 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>How to Create a Budget That Actually Works</title>
+      <link>https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</link>
+      <guid>https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</guid>
+      <pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Learn proven budgeting techniques and strategies to take control of your finances, build wealth, and achieve your financial goals.</description>
+      <category>Budgeting</category>
+    </item>
+
+    <item>
+      <title>7 Proven Ways to Increase Your Savings Rate This Year</title>
+      <link>https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</link>
+      <guid>https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</guid>
+      <pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Actionable strategies to save more money without sacrificing your lifestyle or financial freedom.</description>
+      <category>Saving Tips</category>
+    </item>
+
+    <item>
+      <title>Track Your Spending Like a Pro: The Complete Guide</title>
+      <link>https://pitaka-sigma.vercel.app/blogs/track-spending-guide</link>
+      <guid>https://pitaka-sigma.vercel.app/blogs/track-spending-guide</guid>
+      <pubDate>Sat, 21 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Master personal finance tracking with proven techniques, tools, and strategies used by successful savers.</description>
+      <category>Finance Tracking</category>
+    </item>
+
+    <item>
+      <title>10 Mistakes Everyone Makes with Investments (and How to Fix Them)</title>
+      <link>https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</link>
+      <guid>https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</guid>
+      <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Learn the most common investment mistakes and practical strategies to avoid them on your path to wealth.</description>
+      <category>Investing</category>
+    </item>
+
+    <item>
+      <title>Emergency Fund 101: How Much, Where, and Why It Matters</title>
+      <link>https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</link>
+      <guid>https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</guid>
+      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
+      <description>Build financial security with a proper emergency fund strategy that protects you from life's unexpected costs.</description>
+      <category>Financial Security</category>
+    </item>
+  </channel>
+</rss>

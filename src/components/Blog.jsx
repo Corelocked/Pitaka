@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react'
 import './Blog.css'
+import {
+  applySeo,
+  removeStructuredData,
+  setArticleMetadata,
+  setStructuredData
+} from '../utils/seo'
 
 const BLOG_POSTS = [
   {
@@ -647,6 +653,88 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
     document.body.dataset.theme = 'dark'
     document.documentElement.style.colorScheme = 'dark'
   }, [])
+
+  useEffect(() => {
+    if (selectedPost) {
+      applySeo({
+        title: `${selectedPost.title} | Pitaka Blog`,
+        description: selectedPost.excerpt,
+        path: `/blogs/${selectedPost.slug}`,
+        keywords: `pitaka blog, ${selectedPost.category.toLowerCase()}, personal finance tips, budgeting`,
+        type: 'article'
+      })
+
+      setArticleMetadata({
+        publishedTime: selectedPost.date,
+        modifiedTime: selectedPost.date,
+        section: selectedPost.category
+      })
+
+      setStructuredData('pitaka-blog-schema', {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: selectedPost.title,
+        description: selectedPost.excerpt,
+        datePublished: selectedPost.date,
+        dateModified: selectedPost.date,
+        articleSection: selectedPost.category,
+        author: {
+          '@type': 'Organization',
+          name: 'Pitaka'
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Pitaka',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://pitaka-sigma.vercel.app/pitaka-logo.png'
+          }
+        },
+        mainEntityOfPage: `https://pitaka-sigma.vercel.app/blogs/${selectedPost.slug}`,
+        wordCount: String(selectedPost.content.split(/\s+/).filter(Boolean).length)
+      })
+
+      return () => {
+        removeStructuredData('pitaka-blog-schema')
+      }
+    }
+
+    applySeo({
+      title: 'Pitaka Blog - Personal Finance Tips, Budgeting, and Savings Guides',
+      description: 'Read practical personal finance guides from Pitaka. Learn budgeting, saving, investing, and money habits that improve your financial life.',
+      path: '/blogs',
+      keywords: 'pitaka blog, budget tips, savings guide, investing basics, personal finance articles',
+      type: 'website'
+    })
+
+    setArticleMetadata({
+      publishedTime: null,
+      modifiedTime: null,
+      section: null
+    })
+
+    setStructuredData('pitaka-blog-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      name: 'Pitaka Blog',
+      description: 'Personal finance tips, budgeting strategies, and money management insights.',
+      url: 'https://pitaka-sigma.vercel.app/blogs',
+      publisher: {
+        '@type': 'Organization',
+        name: 'Pitaka'
+      },
+      blogPost: BLOG_POSTS.map((post) => ({
+        '@type': 'BlogPosting',
+        headline: post.title,
+        datePublished: post.date,
+        url: `https://pitaka-sigma.vercel.app/blogs/${post.slug}`
+      }))
+    })
+
+    return () => {
+      removeStructuredData('pitaka-blog-schema')
+    }
+  }, [selectedPost])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined

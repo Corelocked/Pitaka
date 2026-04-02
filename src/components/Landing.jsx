@@ -2,6 +2,7 @@ import './Landing.css'
 import { useState, useEffect } from 'react'
 import Auth from './Auth'
 import Blog from './Blog'
+import { applySeo, removeStructuredData, setStructuredData } from '../utils/seo'
 import { 
   ExpenseIcon, 
   IncomeIcon, 
@@ -21,12 +22,29 @@ export default function Landing() {
     document.body.dataset.theme = 'dark'
     document.documentElement.style.colorScheme = 'dark'
 
+    applySeo({
+      title: 'Pitaka - Personal Finance & Budget Tracker App',
+      description: 'Track expenses, plan budgets, and grow savings with Pitaka. A modern personal finance app for web, iOS, and Android.',
+      path: '/',
+      keywords: 'budget app, personal finance app, expense tracker, savings tracker, money management app',
+      type: 'website'
+    })
+
+    setStructuredData('pitaka-website-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Pitaka',
+      url: 'https://pitaka-sigma.vercel.app/',
+      description: 'Personal finance tracker for budgeting, expenses, savings, and investments.'
+    })
+
     return () => {
       // Restore previous theme on unmount
       if (previousTheme) {
         document.body.dataset.theme = previousTheme
         document.documentElement.style.colorScheme = previousTheme
       }
+      removeStructuredData('pitaka-website-schema')
     }
   }, [])
 
