@@ -352,6 +352,9 @@ function SectionFallback({ label = 'Loading section...' }) {
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user, userProfile, isPro } = useContext(FirebaseContext)
   const confirm = useConfirm()
+  const [currentView, setCurrentView] = useState('dashboard')
+  const shouldLoadSubscriptions = isPro && ['dashboard', 'subscriptions'].includes(currentView)
+  const shouldLoadInvestments = isPro && ['wealth', 'investments', 'settings'].includes(currentView)
   const {
     selectedMonth,
     selectedYear,
@@ -410,9 +413,11 @@ function ModernApp() {
     incomes,
     expenses,
     wallets
-  } = useBudget()
+  } = useBudget({
+    enableInvestments: shouldLoadInvestments,
+    enableSubscriptions: shouldLoadSubscriptions
+  })
 
-  const [currentView, setCurrentView] = useState('dashboard')
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [bottomSheetContent, setBottomSheetContent] = useState(null)
   const [isDesktopDashboardEditMode, setIsDesktopDashboardEditMode] = useState(false)
