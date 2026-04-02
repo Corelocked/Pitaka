@@ -1244,7 +1244,12 @@ function ModernApp() {
   if (!isAuthenticated) {
     const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
     const showPublicBlog = !isNativeMobileApp
-      && (normalizedPublicPath === '/blogs' || normalizedPublicPath.startsWith('/blogs/'))
+      && (
+        normalizedPublicPath === '/blog'
+        || normalizedPublicPath.startsWith('/blog/')
+        || normalizedPublicPath === '/blogs'
+        || normalizedPublicPath.startsWith('/blogs/')
+      )
 
     return (
       <Suspense fallback={<SectionFallback label="Loading..." />}>

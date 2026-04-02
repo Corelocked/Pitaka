@@ -504,17 +504,25 @@ const getCurrentPath = () => {
   return (window.location.pathname || '/').replace(/\/+$/, '') || '/'
 }
 
+const BLOG_ROUTE_BASES = ['/blog', '/blogs']
+
+const getBlogPathBase = (path = getCurrentPath()) => {
+  const match = BLOG_ROUTE_BASES.find((base) => path === base || path.startsWith(`${base}/`))
+  return match || '/blogs'
+}
+
 const getSlugFromPath = () => {
   const currentPath = getCurrentPath()
-  if (!currentPath.startsWith('/blogs/')) return null
-  const rawSlug = currentPath.slice('/blogs/'.length)
+  const pathBase = getBlogPathBase(currentPath)
+  if (!currentPath.startsWith(`${pathBase}/`)) return null
+  const rawSlug = currentPath.slice(`${pathBase}/`.length)
   const decodedSlug = decodeURIComponent(rawSlug)
   return getPostFromSlug(decodedSlug) ? decodedSlug : null
 }
 
 const isBlogsPathRoute = () => {
   const currentPath = getCurrentPath()
-  return currentPath === '/blogs' || currentPath.startsWith('/blogs/')
+  return BLOG_ROUTE_BASES.some((base) => currentPath === base || currentPath.startsWith(`${base}/`))
 }
 
 const getInitialBlogSlug = () => {
@@ -618,10 +626,11 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
     if (typeof window === 'undefined') return undefined
 
     const usesBlogsPathRoute = isBlogsPathRoute()
+    const pathBase = getBlogPathBase()
 
     if (!selectedSlug) {
       if (usesBlogsPathRoute) {
-        window.history.replaceState(null, '', '/blogs')
+        window.history.replaceState(null, '', pathBase)
       } else {
         window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
       }
@@ -629,7 +638,7 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
     }
 
     const nextUrl = usesBlogsPathRoute
-      ? `/blogs/${selectedSlug}`
+      ? `${pathBase}/${selectedSlug}`
       : `${window.location.pathname}${window.location.search}#blog/${selectedSlug}`
     window.history.replaceState(null, '', nextUrl)
   }, [selectedSlug])
