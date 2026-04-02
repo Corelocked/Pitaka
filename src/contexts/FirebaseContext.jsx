@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react'
 import { Capacitor, registerPlugin } from '@capacitor/core'
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, signInWithCredential } from 'firebase/auth'
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth'
 import { auth } from '../firebase'
 import { getAuthErrorMessage } from '../utils/authErrors'
 import { userProfileService } from '../services/firebaseService'

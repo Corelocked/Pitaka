@@ -42,18 +42,19 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
       <div className="auth-card">
         <div className="auth-header">
           <h1>Create Account</h1>
-          <p>Join Pitaka to manage your finances</p>
+          <p>Start managing your finances</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {(formError || error) && <div className="auth-error">{formError || error}</div>}
 
-          <div className="form-group">
+          <div className="auth-group">
             <label htmlFor="email">Email</label>
             <input
               id="email"
+              className="auth-input"
               type="email"
-              placeholder="Enter your email"
+              placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -61,12 +62,13 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-group">
             <label htmlFor="password">Password</label>
             <input
               id="password"
+              className="auth-input"
               type="password"
-              placeholder="Create a password"
+              placeholder="At least 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -75,17 +77,17 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               id="confirmPassword"
+              className={`auth-input ${!passwordsMatch && confirmPassword ? 'error' : ''}`}
               type="password"
               placeholder="Confirm your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={loading}
-              className={!passwordsMatch && confirmPassword ? 'error' : ''}
             />
             {!passwordsMatch && confirmPassword && (
               <span className="password-error">Passwords do not match</span>
@@ -97,7 +99,7 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
           </button>
         </form>
 
-        <div className="auth-footer">
+        <div className="auth-switch">
           <p>Already have an account? <button onClick={onSwitchToLogin} className="auth-link">Sign In</button></p>
         </div>
       </div>

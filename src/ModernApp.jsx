@@ -1,5 +1,6 @@
 import { Suspense, lazy, useContext, useEffect, useState } from 'react'
 import { App as CapacitorApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
 import { FirebaseContext } from './contexts/FirebaseContext'
 import { useConfirm } from './contexts/useConfirm'
 import { useBudget } from './hooks/useBudget'
@@ -29,6 +30,8 @@ import { createProCheckoutSession } from './services/billingService'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCurrency } from './utils/currency'
 
 const Auth = lazy(() => import('./components/Auth'))
+const Landing = lazy(() => import('./components/Landing'))
+const Blog = lazy(() => import('./components/Blog'))
 const IncomeForm = lazy(() => import('./components/IncomeForm'))
 const ExpenseForm = lazy(() => import('./components/ExpenseForm'))
 const TransferForm = lazy(() => import('./components/TransferForm'))
@@ -352,6 +355,11 @@ function SectionFallback({ label = 'Loading section...' }) {
 function ModernApp() {
   const { isAuthenticated, loading: authLoading, logout, user, userProfile, isPro } = useContext(FirebaseContext)
   const confirm = useConfirm()
+  const isNativeMobileApp = Capacitor.getPlatform() === 'ios' || Capacitor.getPlatform() === 'android'
+  const [publicPath, setPublicPath] = useState(() => {
+    if (typeof window === 'undefined') return '/'
+    return window.location.pathname || '/'
+  })
   const [currentView, setCurrentView] = useState('dashboard')
   const shouldLoadSubscriptions = isPro && ['dashboard', 'subscriptions'].includes(currentView)
   const shouldLoadInvestments = isPro && ['wealth', 'investments', 'settings'].includes(currentView)
@@ -786,6 +794,28 @@ function ModernApp() {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const handleLocationChange = () => {
+      setPublicPath(window.location.pathname || '/')
+    }
+
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
+  }, [])
+
+  const openPublicRoute = (nextPath) => {
+    if (typeof window === 'undefined') return
+    window.history.pushState(null, '', nextPath)
+    setPublicPath(nextPath)
+  }
+
+  useEffect(() => {
     let removeListener = null
 
     CapacitorApp.getLaunchUrl()
@@ -1191,15 +1221,6 @@ function ModernApp() {
     </div>
   )
 
-  // Show auth screen if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <Suspense fallback={<SectionFallback label="Loading sign in..." />}>
-        <Auth />
-      </Suspense>
-    )
-  }
-
   // Show loading screen
   if (authLoading || budgetLoading) {
     return (
@@ -1216,6 +1237,23 @@ function ModernApp() {
         <div className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }}></div>
         <div style={{ fontSize: '18px', fontWeight: 600 }}>Loading Pitaka...</div>
       </div>
+    )
+  }
+
+  // Show auth screen only after Firebase has finished resolving the session
+  if (!isAuthenticated) {
+    const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
+    const showPublicBlog = !isNativeMobileApp
+      && (normalizedPublicPath === '/blogs' || normalizedPublicPath.startsWith('/blogs/'))
+
+    return (
+      <Suspense fallback={<SectionFallback label="Loading..." />}>
+        {isNativeMobileApp
+          ? <Auth />
+          : showPublicBlog
+            ? <Blog onBackToLanding={() => openPublicRoute('/')} />
+            : <Landing />}
+      </Suspense>
     )
   }
 

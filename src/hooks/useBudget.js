@@ -150,6 +150,7 @@ export function useBudget(options = {}) {
   // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
     if (!user || authLoading || !isAppActive) {
+      setLoading(false)
       return
     }
 
@@ -331,7 +332,7 @@ export function useBudget(options = {}) {
       isMounted = false
       cleanup?.then?.(fn => fn?.())
     }
-  }, [user, authLoading])
+  }, [user, authLoading, isPro, enableInvestments, enableSubscriptions, isAppActive])
 
   // Default category seeding disabled — creating starter categories automatically was removed per user preference.
   // If you want to re-enable this behavior later, restore the seeding logic or provide an opt-in UI.
