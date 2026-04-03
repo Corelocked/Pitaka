@@ -367,6 +367,7 @@ function ModernApp() {
   const [currentView, setCurrentView] = useState('dashboard')
   const shouldLoadSubscriptions = isPro && ['dashboard', 'subscriptions'].includes(currentView)
   const shouldLoadInvestments = isPro && ['wealth', 'investments', 'settings'].includes(currentView)
+  const shouldLoadRecurringIncomes = isPro && ['dashboard', 'recurring-income', 'settings'].includes(currentView)
   const {
     selectedMonth,
     selectedYear,
@@ -434,7 +435,8 @@ function ModernApp() {
     wallets
   } = useBudget({
     enableInvestments: shouldLoadInvestments,
-    enableSubscriptions: shouldLoadSubscriptions
+    enableSubscriptions: shouldLoadSubscriptions,
+    enableRecurringIncomes: shouldLoadRecurringIncomes
   })
 
   const [showBottomSheet, setShowBottomSheet] = useState(false)
@@ -1138,13 +1140,15 @@ function ModernApp() {
             <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
             <div>Subscriptions</div>
           </button>
-          <button
-            className={`sidebar-nav-item ${currentView === 'recurring-income' ? 'active' : ''}`}
-            onClick={() => setCurrentView('recurring-income')}
-          >
-            <div className="sidebar-nav-icon"><IncomeIcon size={20} /></div>
-            <div>Recurring Income</div>
-          </button>
+          {isPro && (
+            <button
+              className={`sidebar-nav-item ${currentView === 'recurring-income' ? 'active' : ''}`}
+              onClick={() => setCurrentView('recurring-income')}
+            >
+              <div className="sidebar-nav-icon"><IncomeIcon size={20} /></div>
+              <div>Recurring Income</div>
+            </button>
+          )}
           <button
             className={`sidebar-nav-item ${currentView === 'android-app' ? 'active' : ''}`}
             onClick={() => setCurrentView('android-app')}
@@ -1630,7 +1634,7 @@ function ModernApp() {
         )
 
       case 'recurring-income':
-        return (
+        return isPro ? (
           <div className="mobile-content page-shell">
             {renderPageIntro({
               eyebrow: 'Recurring Cashflow',
@@ -1667,6 +1671,19 @@ function ModernApp() {
                 selectable
                 onBulkDelete={(rows) => deleteMany(rows, deleteRecurringIncome)}
               />
+            </div>
+          </div>
+        ) : (
+          <div className="mobile-content page-shell">
+            <div className="card" style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <h2 style={{ marginBottom: '16px' }}>Recurring Income</h2>
+              <p style={{ marginBottom: '24px', opacity: 0.7 }}>This feature is exclusively available to Pro subscribers.</p>
+              <button
+                onClick={() => setCurrentView('pro')}
+                className="btn btn-primary"
+              >
+                Upgrade to Pro
+              </button>
             </div>
           </div>
         )
@@ -1803,7 +1820,7 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Membership',
               title: 'Pitaka Pro',
-              description: 'Unlock the Android app, automatic subscriptions, full currency support, and investment tracking from one upgrade page.',
+              description: 'Unlock the Android app, recurring income automation, automatic subscriptions, full currency support, and investment tracking from one upgrade page.',
               stats: [
                 { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
                 { label: 'Android Access', value: isPro ? 'Included' : 'Pro only' }
@@ -1816,8 +1833,8 @@ function ModernApp() {
                   <h3 className="card-title"><TrendUpIcon size={18} /> Pitaka Pro</h3>
                   <p className="card-subtitle">
                     {isPro
-                      ? 'Your account already has Pro access, including Android app distribution access, automatic subscription logging, investment tracking, and every supported currency.'
-                      : 'Upgrade with PayMongo to unlock Android app access, automatic subscription logging, full currency access, investment tracking, and future premium features.'}
+                      ? 'Your account already has Pro access, including Android app distribution access, recurring income automation, automatic subscription logging, investment tracking, and every supported currency.'
+                      : 'Upgrade with PayMongo to unlock Android app access, recurring income automation, automatic subscription logging, full currency access, investment tracking, and future premium features.'}
                   </p>
                 </div>
                 <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
@@ -1854,6 +1871,7 @@ function ModernApp() {
                       <div className="plan-checklist-item is-included">Manual income, expense, savings, and transfer tracking</div>
                       <div className="plan-checklist-item is-included">Category and account management</div>
                       <div className="plan-checklist-item is-included">PHP and USD currency support</div>
+                      <div className="plan-checklist-item is-locked">Recurring income automation with next-due tracking</div>
                       <div className="plan-checklist-item is-locked">Android app download and Firebase App Distribution access</div>
                       <div className="plan-checklist-item is-locked">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-locked">Investment tracking</div>
@@ -1867,6 +1885,7 @@ function ModernApp() {
                     </div>
                     <div className="plan-checklist">
                       <div className="plan-checklist-item is-included">Everything in Basic</div>
+                      <div className="plan-checklist-item is-included">Recurring income automation with next-due tracking</div>
                       <div className="plan-checklist-item is-included">Android app download through Firebase App Distribution</div>
                       <div className="plan-checklist-item is-included">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-included">Investment tracking alongside your budget</div>
@@ -1939,7 +1958,7 @@ function ModernApp() {
                     <span className="eyebrow">One-Time Upgrade</span>
                     <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
                     <p className="pro-purchase-text">
-                      Get Android app access, automatic subscription logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
+                      Get recurring income automation, Android app access, automatic subscription logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
                     </p>
                     <div className="pro-purchase-price-row">
                       <div className="pro-purchase-price-block">
@@ -2183,13 +2202,23 @@ function ModernApp() {
                   <ExpenseIcon size={16} /> {isPro ? 'Manage Subscriptions' : 'Subscriptions (Pro)'}
                 </button>
 
-                <button
-                  onClick={() => setCurrentView('recurring-income')}
-                  className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
-                >
-                  <IncomeIcon size={16} /> Manage Recurring Income
-                </button>
+                {isPro ? (
+                  <button
+                    onClick={() => setCurrentView('recurring-income')}
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start' }}
+                  >
+                    <IncomeIcon size={16} /> Manage Recurring Income
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start', opacity: 0.5 }}
+                  >
+                    <IncomeIcon size={16} /> Recurring Income (Pro)
+                  </button>
+                )}
 
                 <button
                   onClick={() => setCurrentView('categories')}
@@ -2483,7 +2512,7 @@ function ModernApp() {
         )
 
       case 'addRecurringIncome':
-        return (
+        return isPro ? (
           <RecurringIncomeForm
             onAddRecurringIncome={async (recurringIncome) => {
               await addRecurringIncome(recurringIncome)
@@ -2500,6 +2529,19 @@ function ModernApp() {
             }}
             wallets={walletBalances}
           />
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p style={{ marginBottom: '16px' }}>Recurring Income is a Pro feature.</p>
+            <button
+              onClick={() => {
+                closeBottomSheet()
+                setCurrentView('pro')
+              }}
+              className="btn btn-primary"
+            >
+              Upgrade to Pro
+            </button>
+          </div>
         )
 
       case 'customizeMobileDashboard':

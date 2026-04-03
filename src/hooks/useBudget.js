@@ -405,7 +405,7 @@ export function useBudget(options = {}) {
   }, [user])
 
   const addRecurringIncome = useCallback(async (recurringIncome) => {
-    if (!user) return
+    if (!user || !enableRecurringIncomes) return
 
     try {
       setError(null)
@@ -444,6 +444,8 @@ export function useBudget(options = {}) {
   }, [])
 
   const deleteRecurringIncome = useCallback(async (id) => {
+    if (!enableRecurringIncomes) return
+
     try {
       setError(null)
       await recurringIncomeService.deleteRecurringIncome(id)
@@ -452,7 +454,7 @@ export function useBudget(options = {}) {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [enableRecurringIncomes])
 
   const deleteExpense = useCallback(async (id) => {
     try {
@@ -485,6 +487,8 @@ export function useBudget(options = {}) {
   }, [])
 
   const updateRecurringIncome = useCallback(async (updatedRecurringIncome) => {
+    if (!enableRecurringIncomes) return
+
     try {
       setError(null)
       const { id, ...updates } = updatedRecurringIncome
@@ -508,7 +512,7 @@ export function useBudget(options = {}) {
       setError(err.message)
       throw err
     }
-  }, [editingRecurringIncome, normalizeDateKey])
+  }, [editingRecurringIncome, normalizeDateKey, enableRecurringIncomes])
 
   const editExpense = useCallback((expense) => {
     setEditingExpense(expense)
@@ -1047,7 +1051,7 @@ export function useBudget(options = {}) {
   }, [ensureSubscriptionCategory, expenses, getCurrentDueDate, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
 
   useEffect(() => {
-    if (!user || recurringIncomes.length === 0) return
+    if (!user || recurringIncomes.length === 0 || !enableRecurringIncomes) return
 
     const todayKey = formatLocalDateKey(new Date())
 
@@ -1109,7 +1113,7 @@ export function useBudget(options = {}) {
           processingRecurringIncomesRef.current.delete(recurringIncome.id)
         })
     })
-  }, [getCurrentRecurringIncomeDueDate, incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user])
+  }, [getCurrentRecurringIncomeDueDate, incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user, enableRecurringIncomes])
 
   const addTransfer = useCallback(async (transfer) => {
     if (!user) return

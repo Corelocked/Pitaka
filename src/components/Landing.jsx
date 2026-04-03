@@ -77,6 +77,10 @@ const faqs = [
     answer: 'Yes. Core budgeting, tracking, and account management are available without a paid plan.'
   },
   {
+    question: 'What is Pitaka Pro?',
+    answer: 'Pitaka Pro is a one-time upgrade that unlocks quality-of-life features such as recurring income automation, subscription tracking, investment tracking, full currency support, and Android app access.'
+  },
+  {
     question: 'Is my data secure?',
     answer: 'Your data is authenticated per user account and stored with the app’s Firebase-backed setup.'
   },
@@ -140,11 +144,6 @@ export default function Landing() {
           url: 'https://pitaka-sigma.vercel.app/',
           image: 'https://pitaka-sigma.vercel.app/pitaka-social-share.png',
           description: 'Personal finance tracker for budgeting, expenses, savings, and investments.',
-          offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'USD'
-          },
           publisher: {
             '@id': 'https://pitaka-sigma.vercel.app/#organization'
           },
@@ -166,6 +165,14 @@ export default function Landing() {
               acceptedAnswer: {
                 '@type': 'Answer',
                 text: 'Yes. Core budgeting, tracking, and account management are available without a paid plan.'
+              }
+            },
+            {
+              '@type': 'Question',
+              name: 'What is Pitaka Pro?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Pitaka Pro is a one-time upgrade that unlocks quality-of-life features such as recurring income automation, subscription tracking, investment tracking, full currency support, and Android app access.'
               }
             },
             {
