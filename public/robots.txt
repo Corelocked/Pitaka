@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Allow: /manifest.webmanifest
 Allow: /sw.js
+Allow: /blogs
 Disallow: /admin
 Disallow: /.well-known
 
@@ -10,6 +11,7 @@ Crawl-delay: 1
 
 # Sitemaps
 Sitemap: https://pitaka-sigma.vercel.app/sitemap.xml
+Host: https://pitaka-sigma.vercel.app
 
 # Rules for specific bots
 User-agent: GPTBot

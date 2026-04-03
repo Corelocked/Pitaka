@@ -104,10 +104,10 @@ export default function Landing() {
     document.documentElement.style.colorScheme = 'dark'
 
     applySeo({
-      title: 'Pitaka - Personal Finance & Budget Tracker App',
-      description: 'Track expenses, plan budgets, and grow savings with Pitaka. A modern personal finance app for web, iOS, and Android.',
+      title: 'Pitaka - Budget Tracker, Expense Manager, and Personal Finance App',
+      description: 'Track expenses, manage income, monitor savings goals, and review investments with Pitaka. A personal finance and budget tracking app for web, Android, and iOS.',
       path: '/',
-      keywords: 'budget app, personal finance app, expense tracker, savings tracker, money management app',
+      keywords: 'budget tracker app, expense tracker app, personal finance app, money management app, income and expense tracker, savings goals app, investment tracker app, monthly budget planner, financial dashboard app, web and mobile budget app',
       type: 'website',
       imageAlt: 'Pitaka social share card for budgeting, expenses, savings, and investments'
     })

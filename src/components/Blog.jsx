@@ -1006,7 +1006,7 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
         title: `${selectedPost.title} | Pitaka Blog`,
         description: selectedPost.excerpt,
         path: `/blogs/${selectedPost.slug}`,
-        keywords: `pitaka blog, ${selectedPost.category.toLowerCase()}, personal finance tips, budgeting`,
+        keywords: `pitaka blog, ${selectedPost.category.toLowerCase()}, personal finance tips, budgeting guide, money management tips, expense tracking tips, savings strategy, financial planning basics`,
         type: 'article',
         imageAlt: `${selectedPost.title} article from the Pitaka blog`
       })
@@ -1081,7 +1081,7 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
       title: 'Pitaka Blog - Personal Finance Tips, Budgeting, and Savings Guides',
       description: 'Read practical personal finance guides from Pitaka. Learn budgeting, saving, investing, and money habits that improve your financial life.',
       path: '/blogs',
-      keywords: 'pitaka blog, budget tips, savings guide, investing basics, personal finance articles',
+      keywords: 'pitaka blog, budget tips, savings guide, investing basics, personal finance articles, money management tips, debt payoff strategies, emergency fund planning, monthly budget templates, financial literacy',
       type: 'website',
       imageAlt: 'Pitaka blog with personal finance guides and budgeting articles'
     })

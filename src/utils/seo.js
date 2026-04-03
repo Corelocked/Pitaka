@@ -3,6 +3,27 @@ const DEFAULT_SITE_NAME = 'Pitaka'
 const DEFAULT_LOCALE = 'en_US'
 const DEFAULT_TWITTER_CARD = 'summary_large_image'
 const DEFAULT_TWITTER_HANDLE = '@pitaka'
+const DEFAULT_KEYWORDS = [
+  'personal finance app',
+  'budget tracker',
+  'expense tracker',
+  'income tracker',
+  'savings goals',
+  'money management app',
+  'financial planning app',
+  'monthly budget planner',
+  'cash flow tracker',
+  'bill tracker',
+  'subscription tracker',
+  'investment tracker',
+  'net worth tracker',
+  'family budget app',
+  'daily expense tracker',
+  'budgeting app philippines',
+  'wallet and account tracker',
+  'personal finance dashboard',
+  'budget app for web and mobile'
+].join(', ')
 
 const ensureMetaTag = ({ name, property }) => {
   if (typeof document === 'undefined') return null
@@ -60,7 +81,7 @@ export const applySeo = ({
   path = '/',
   image = '/pitaka-social-share.png',
   imageAlt = 'Pitaka personal finance app',
-  keywords,
+  keywords = DEFAULT_KEYWORDS,
   robots = DEFAULT_ROBOTS,
   type = 'website',
   locale = DEFAULT_LOCALE,
