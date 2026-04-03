@@ -339,6 +339,7 @@ const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_
 const APP_DISTRIBUTION_INVITE_URL = String(
   import.meta.env.VITE_PITAKA_ANDROID_APP_LINK || 'https://appdistribution.firebase.dev/i/38bbfb06c25cca98'
 )
+const APP_DISTRIBUTION_INVITE_HINT = 'Private invite link hidden. Open it directly from this page.'
 
 function SectionFallback({ label = 'Loading section...' }) {
   return (
@@ -973,16 +974,6 @@ function ModernApp() {
     window.open(APP_DISTRIBUTION_INVITE_URL, '_blank', 'noopener,noreferrer')
   }
 
-  const copyAndroidAppInvite = async () => {
-    if (typeof window === 'undefined' || !window.navigator?.clipboard) return false
-    try {
-      await window.navigator.clipboard.writeText(APP_DISTRIBUTION_INVITE_URL)
-      return true
-    } catch {
-      return false
-    }
-  }
-
   const investmentValueSummary = formatCurrencySummary(
     summarizeByCurrency(
       investments,
@@ -1126,6 +1117,13 @@ function ModernApp() {
           >
             <div className="sidebar-nav-icon"><DownloadIcon size={20} /></div>
             <div>Android App</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'contact' ? 'active' : ''}`}
+            onClick={() => setCurrentView('contact')}
+          >
+            <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
+            <div>Contact Pitaka</div>
           </button>
           {!isPro && (
             <button
@@ -1965,7 +1963,7 @@ function ModernApp() {
                     <span className="plan-tier-badge">{isPro ? 'Ready to use' : 'Unlock with Pro'}</span>
                   </div>
                   <div className="card-subtitle" style={{ marginTop: '0.5rem', wordBreak: 'break-word' }}>
-                    {isPro ? APP_DISTRIBUTION_INVITE_URL : 'Upgrade to Pro to unlock the private Android app invite link.'}
+                    {isPro ? APP_DISTRIBUTION_INVITE_HINT : 'Upgrade to Pro to unlock the private Android app invite link.'}
                   </div>
                 </div>
               </div>
@@ -1980,17 +1978,6 @@ function ModernApp() {
                       style={{ flex: 1, minWidth: '220px' }}
                     >
                       Open Download Link
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={async () => {
-                        const copied = await copyAndroidAppInvite()
-                        alert(copied ? 'Invite link copied.' : 'Could not copy the link automatically.')
-                      }}
-                      style={{ flex: 1, minWidth: '220px' }}
-                    >
-                      Copy Invite Link
                     </button>
                   </>
                 ) : (
@@ -2035,7 +2022,7 @@ function ModernApp() {
               <div className="card-header">
                 <div>
                   <h3 className="card-title"><ActivityIcon size={18} /> Feedback Form</h3>
-                  <p className="card-subtitle">Use this page for bug reports, product suggestions, or general concerns.</p>
+                  <p className="card-subtitle">Use this page for bug reports, product suggestions, or general concerns. A concise subject and a clear reproduction note make follow-up much faster.</p>
                 </div>
               </div>
               <ContactForm />
@@ -2905,7 +2892,7 @@ function ModernApp() {
           <div>Wealth</div>
         </button>
         <button
-          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', 'android-app', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
+          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', 'android-app', 'contact', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
         >
           <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>

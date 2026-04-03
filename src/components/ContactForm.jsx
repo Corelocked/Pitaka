@@ -183,7 +183,7 @@ export default function ContactForm() {
       <div className="landing-contact-actions">
         <button
           type="submit"
-          className="landing-btn landing-btn-primary landing-contact-submit"
+          className="landing-contact-submit"
           disabled={isSubmitting || !isConfigured}
         >
           {isSubmitting ? 'Sending...' : 'Send Message'}
