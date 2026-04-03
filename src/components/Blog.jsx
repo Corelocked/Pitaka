@@ -495,6 +495,352 @@ Mark, 28:
 5. Track progress weekly
 
 Start today. Your future self will thank you.`
+  },
+  {
+    id: 6,
+    title: 'How to Budget With Irregular Income Without Falling Behind',
+    slug: 'how-to-budget-with-irregular-income',
+    excerpt: 'A practical budgeting system for freelancers, commission earners, and anyone whose paycheck changes month to month.',
+    category: 'Irregular Income',
+    date: '2026-04-03',
+    readTime: '8 min read',
+    featured: false,
+    content: `Budgeting with irregular income requires a different system. If your pay changes every month, the goal is stability first and optimization second.
+
+**Why Irregular Income Feels So Hard**
+Most budgeting advice assumes a fixed paycheck. Real life is messier for freelancers, self-employed workers, seasonal earners, commission roles, and side hustlers.
+
+The real problem is not only income volatility. It is timing:
+- Money arrives in uneven waves
+- Bills still arrive on a fixed calendar
+- A strong month can create false confidence
+- A weak month can trigger panic cuts
+
+**Step 1: Find Your Bare-Minimum Monthly Number**
+Start with the amount required to keep life operating:
+- Housing
+- Utilities
+- Groceries
+- Transportation
+- Insurance
+- Minimum debt payments
+
+This is your survival budget. Protect it first.
+
+**Step 2: Base Your Plan on Your Lowest Normal Month**
+Review the last 6 to 12 months and identify your lowest realistic income month. Do not use your best month as your benchmark.
+
+If you usually earn between 35,000 and 60,000, build your default budget around the lower reliable end. Treat anything above that as variable.
+
+**Step 3: Separate Income Into Three Jobs**
+Every deposit should be assigned immediately:
+- Core bills
+- Tax or obligations reserve
+- Buffer and future months
+
+This prevents good months from disappearing into random spending.
+
+**Step 4: Build a One-Month Income Buffer**
+The most useful goal for irregular earners is not a fancy spreadsheet. It is distance between when you earn and when you spend.
+
+Aim to use last month's income for this month's bills. That buffer reduces stress and lets you budget with actual cash instead of guesswork.
+
+**Step 5: Use Priority Tiers**
+Split expenses into clear levels:
+- Tier 1: essentials
+- Tier 2: important but flexible
+- Tier 3: optional lifestyle spending
+
+When income is light, cut Tier 3 first. When income is strong, fund future needs before lifestyle upgrades.
+
+**Step 6: Smooth Out Annual Costs**
+Irregular earners get hurt twice by annual expenses. The bill is large, and the timing is rarely convenient.
+
+Create sinking funds for:
+- taxes
+- software subscriptions
+- holidays
+- medical costs
+- equipment replacement
+
+Small monthly reserves prevent one surprise from wrecking a weak income month.
+
+**A Simple Monthly Workflow**
+1. Total all income received this month
+2. Fund next month's essentials first
+3. Top up reserves and sinking funds
+4. Decide how much can safely go to optional spending
+5. Roll remaining surplus into buffer
+
+**Mistakes To Avoid**
+- Budgeting from optimism instead of evidence
+- Treating strong months as permanent
+- Ignoring tax obligations
+- Waiting until month-end to allocate cash
+
+**Best Metric To Watch**
+Track this every month:
+- How many months of core expenses can current cash cover?
+
+That number tells you more than raw account balance.
+
+**Bottom Line**
+If income is irregular, your budget should be conservative, cash-based, and buffer-first. Stability is the product. Growth comes after that.`
+  },
+  {
+    id: 7,
+    title: 'Sinking Funds for Beginners: What They Are and How to Start',
+    slug: 'sinking-funds-for-beginners',
+    excerpt: 'Learn how sinking funds work, which categories to set up first, and how they reduce budget stress month after month.',
+    category: 'Sinking Funds',
+    date: '2026-04-03',
+    readTime: '7 min read',
+    featured: false,
+    content: `A sinking fund is money you set aside gradually for a future expense you know is coming. It is one of the simplest tools for making a budget feel realistic.
+
+**Why Sinking Funds Matter**
+Many expenses are not surprises. They are just irregular:
+- annual subscriptions
+- birthdays
+- holidays
+- car maintenance
+- school fees
+- travel
+
+If you ignore them, they feel like emergencies. If you fund them monthly, they become routine.
+
+**How Sinking Funds Work**
+Take a future cost and divide it by the number of months until it happens.
+
+Example:
+- Holiday budget: 12,000
+- Months until December: 8
+- Monthly sinking fund amount: 1,500
+
+That is it. You are turning large future spending into a smaller monthly line item.
+
+**Best Categories To Start With**
+Start with costs that are both predictable and painful:
+- car repairs
+- annual renewals
+- gifts
+- travel
+- medical reserves
+- home maintenance
+
+Do not create ten categories on day one. Start with three.
+
+**Where To Keep Sinking Funds**
+You can keep them:
+- in one savings account with tracking categories
+- across separate savings buckets
+- in your budgeting app as reserved balances
+
+The method matters less than visibility. You need to know what part of the money is already spoken for.
+
+**How Sinking Funds Change Your Budget**
+Without sinking funds:
+- a yearly bill feels sudden
+- discretionary spending looks bigger than it really is
+- cash flow gets distorted
+
+With sinking funds:
+- future costs are reflected earlier
+- your monthly plan becomes more honest
+- you stop raiding emergency savings for non-emergencies
+
+**Common Beginner Mistakes**
+- Making too many sinking funds at once
+- Not naming the fund clearly
+- Spending from the reserve for unrelated wants
+- Forgetting to refill after using it
+
+**Simple Setup Plan**
+1. List upcoming non-monthly expenses
+2. Estimate the amount for each one
+3. Pick your top three categories
+4. Divide each total by months remaining
+5. Automate the transfer if possible
+
+**How To Know It Is Working**
+You will notice one major change: fewer stressful months. Bills that used to feel disruptive start landing on prepared money.
+
+**Bottom Line**
+Sinking funds make a budget more truthful. They are not extra complexity. They are how you stop pretending irregular expenses do not exist.`
+  },
+  {
+    id: 8,
+    title: 'How to Track Shared Expenses With Your Partner Without the Drama',
+    slug: 'track-shared-expenses-with-partner',
+    excerpt: 'A practical system for splitting rent, groceries, and household spending while keeping expectations clear and resentment low.',
+    category: 'Shared Finances',
+    date: '2026-04-03',
+    readTime: '8 min read',
+    featured: false,
+    content: `Shared expenses get messy when the system is vague. The problem is usually not math. It is ambiguity.
+
+**What Usually Goes Wrong**
+Couples often run into the same issues:
+- one person pays first and forgets to log it
+- categories are inconsistent
+- reimbursements happen too late
+- one partner feels like they are carrying more of the load
+
+Clarity fixes most of this.
+
+**Step 1: Define What Counts As Shared**
+Do not assume. Decide explicitly.
+
+Common shared categories:
+- rent
+- utilities
+- groceries
+- internet
+- household supplies
+- pet expenses
+
+Common non-shared categories:
+- personal shopping
+- individual subscriptions
+- personal hobbies
+
+**Step 2: Choose a Split Method**
+Use one rule consistently:
+- 50/50 split
+- income-based split
+- category-specific split
+
+The best system is not the fairest in theory. It is the one both people can explain in one sentence.
+
+**Step 3: Use a Shared Logging Habit**
+Every shared purchase should capture:
+- who paid
+- what category it belongs to
+- whether reimbursement is required
+
+If this is not logged quickly, memory becomes the system, and memory is unreliable.
+
+**Step 4: Set a Reconciliation Schedule**
+Do not settle balances randomly.
+
+Good options:
+- weekly for tight budgets
+- biweekly for normal household flow
+- monthly for stable couples with a buffer
+
+Frequent review keeps resentment from compounding.
+
+**Step 5: Separate Shared Cash From Personal Cash**
+If possible, use:
+- a dedicated shared wallet or bank account
+- a single tracking category for partner reimbursement
+- clear tags for household purchases
+
+This makes household money easier to review without mixing everything together.
+
+**What To Discuss Up Front**
+- Which expenses are shared?
+- When do reimbursements happen?
+- What spending limit needs a heads-up first?
+- How do you handle one-off large purchases?
+
+Those decisions matter more than the tool.
+
+**Simple Review Template**
+During each check-in:
+1. review shared transactions
+2. confirm categories
+3. calculate who owes what
+4. transfer reimbursement
+5. reset for the next cycle
+
+**Red Flags In Shared Expense Systems**
+- one person always has to ask for repayment
+- spending is logged differently every week
+- surprise purchases keep showing up as shared
+- no one knows the current household total
+
+**Bottom Line**
+Shared expense tracking works best when it is explicit, repeatable, and boring. That is the point. The less emotional energy the system requires, the better it is working.`
+  },
+  {
+    id: 9,
+    title: 'Budgeting With Multiple Bank Accounts: A Simple System That Still Works',
+    slug: 'budgeting-with-multiple-bank-accounts',
+    excerpt: 'Use multiple bank accounts without losing control by assigning each account a job and tracking transfers intentionally.',
+    category: 'Cash Management',
+    date: '2026-04-03',
+    readTime: '7 min read',
+    featured: false,
+    content: `Multiple bank accounts can either create clarity or confusion. The difference is whether each account has a purpose.
+
+**Why People Use More Than One Account**
+Common reasons include:
+- separating bills from spending money
+- keeping savings harder to touch
+- using different banks for features or rates
+- organizing shared and personal finances
+
+The mistake is opening more accounts without assigning jobs.
+
+**Give Every Account One Clear Role**
+A simple setup might look like this:
+- Bills account
+- Daily spending account
+- Savings account
+- Sinking fund or reserve account
+
+If two accounts do the same thing, you are adding noise.
+
+**Track Transfers As Real Events**
+Many people lose visibility because transfers feel invisible. Money leaves one account and appears in another, but the movement is not reviewed.
+
+Track transfers with purpose:
+- payroll moved into bills
+- surplus moved to savings
+- sinking fund top-up
+- emergency transfer back to checking
+
+Transfers tell the story of your cash management.
+
+**Use One Primary Review Screen**
+Even if you keep multiple accounts, your budget should still answer:
+- total cash available
+- total reserved for bills
+- total reserved for goals
+- what is actually safe to spend
+
+Without that combined view, multiple accounts create false scarcity.
+
+**Best Practice: Match Accounts to Time Horizon**
+- This week: daily spending account
+- This month: bills account
+- This year: sinking funds and reserves
+- Long-term: savings and investments
+
+That structure makes decisions faster.
+
+**Common Problems**
+- forgetting scheduled transfers
+- duplicating savings categories across banks
+- treating account balance as spendable money
+- moving cash too often without a reason
+
+**A Simple Monthly Routine**
+1. confirm income landed
+2. fund bills account
+3. fund savings and sinking funds
+4. leave a planned amount in spending
+5. review transfers at month-end
+
+**When More Accounts Help**
+They help when they reduce mistakes, reduce temptation, or improve clarity.
+
+**When More Accounts Hurt**
+They hurt when they only make you feel organized without improving decisions.
+
+**Bottom Line**
+Multiple bank accounts can support a strong budget, but only if each account has a job and your tracker still gives you one unified view of the whole system.`
   }
 ]
 
@@ -661,37 +1007,69 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
         description: selectedPost.excerpt,
         path: `/blogs/${selectedPost.slug}`,
         keywords: `pitaka blog, ${selectedPost.category.toLowerCase()}, personal finance tips, budgeting`,
-        type: 'article'
+        type: 'article',
+        imageAlt: `${selectedPost.title} article from the Pitaka blog`
       })
 
       setArticleMetadata({
         publishedTime: selectedPost.date,
         modifiedTime: selectedPost.date,
-        section: selectedPost.category
+        section: selectedPost.category,
+        tag: selectedPost.category,
+        author: 'Pitaka'
       })
 
       setStructuredData('pitaka-blog-schema', {
         '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: selectedPost.title,
-        description: selectedPost.excerpt,
-        datePublished: selectedPost.date,
-        dateModified: selectedPost.date,
-        articleSection: selectedPost.category,
-        author: {
-          '@type': 'Organization',
-          name: 'Pitaka'
-        },
-        publisher: {
-          '@type': 'Organization',
-          name: 'Pitaka',
-          logo: {
-            '@type': 'ImageObject',
-            url: 'https://pitaka-sigma.vercel.app/pitaka-logo.png'
+        '@graph': [
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://pitaka-sigma.vercel.app/'
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Blog',
+                item: 'https://pitaka-sigma.vercel.app/blogs'
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: selectedPost.title,
+                item: `https://pitaka-sigma.vercel.app/blogs/${selectedPost.slug}`
+              }
+            ]
+          },
+          {
+            '@type': 'BlogPosting',
+            headline: selectedPost.title,
+            description: selectedPost.excerpt,
+            datePublished: selectedPost.date,
+            dateModified: selectedPost.date,
+            articleSection: selectedPost.category,
+            keywords: [selectedPost.category, 'personal finance', 'budgeting', 'money management'],
+            author: {
+              '@type': 'Organization',
+              name: 'Pitaka'
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Pitaka',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://pitaka-sigma.vercel.app/pitaka-logo.png'
+              }
+            },
+            image: 'https://pitaka-sigma.vercel.app/pitaka-social-share.png',
+            mainEntityOfPage: `https://pitaka-sigma.vercel.app/blogs/${selectedPost.slug}`,
+            wordCount: String(selectedPost.content.split(/\s+/).filter(Boolean).length)
           }
-        },
-        mainEntityOfPage: `https://pitaka-sigma.vercel.app/blogs/${selectedPost.slug}`,
-        wordCount: String(selectedPost.content.split(/\s+/).filter(Boolean).length)
+        ]
       })
 
       return () => {
@@ -704,7 +1082,8 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
       description: 'Read practical personal finance guides from Pitaka. Learn budgeting, saving, investing, and money habits that improve your financial life.',
       path: '/blogs',
       keywords: 'pitaka blog, budget tips, savings guide, investing basics, personal finance articles',
-      type: 'website'
+      type: 'website',
+      imageAlt: 'Pitaka blog with personal finance guides and budgeting articles'
     })
 
     setArticleMetadata({
@@ -715,20 +1094,49 @@ export default function Blog({ onSelectPost, onBackToLanding }) {
 
     setStructuredData('pitaka-blog-schema', {
       '@context': 'https://schema.org',
-      '@type': 'Blog',
-      name: 'Pitaka Blog',
-      description: 'Personal finance tips, budgeting strategies, and money management insights.',
-      url: 'https://pitaka-sigma.vercel.app/blogs',
-      publisher: {
-        '@type': 'Organization',
-        name: 'Pitaka'
-      },
-      blogPost: BLOG_POSTS.map((post) => ({
-        '@type': 'BlogPosting',
-        headline: post.title,
-        datePublished: post.date,
-        url: `https://pitaka-sigma.vercel.app/blogs/${post.slug}`
-      }))
+      '@graph': [
+        {
+          '@type': 'CollectionPage',
+          url: 'https://pitaka-sigma.vercel.app/blogs',
+          name: 'Pitaka Blog',
+          description: 'Personal finance tips, budgeting strategies, and money management insights.'
+        },
+        {
+          '@type': 'Blog',
+          name: 'Pitaka Blog',
+          description: 'Personal finance tips, budgeting strategies, and money management insights.',
+          url: 'https://pitaka-sigma.vercel.app/blogs',
+          publisher: {
+            '@type': 'Organization',
+            name: 'Pitaka'
+          },
+          blogPost: BLOG_POSTS.map((post) => ({
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.excerpt,
+            articleSection: post.category,
+            datePublished: post.date,
+            url: `https://pitaka-sigma.vercel.app/blogs/${post.slug}`
+          }))
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: 'https://pitaka-sigma.vercel.app/'
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Blog',
+              item: 'https://pitaka-sigma.vercel.app/blogs'
+            }
+          ]
+        }
+      ]
     })
 
     return () => {

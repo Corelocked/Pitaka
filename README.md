@@ -75,6 +75,27 @@ npm run dev
 
 The Vite dev server will start locally and serve the React app.
 
+### Configure EmailJS for the landing-page contact form
+
+Create a local `.env` file for Vite and add:
+
+```bash
+VITE_EMAILJS_SERVICE_ID=your_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_template_id
+VITE_EMAILJS_PUBLIC_KEY=your_public_key
+```
+
+The landing page contact form sends these template parameters to EmailJS:
+
+- `from_name`
+- `reply_to`
+- `topic`
+- `subject`
+- `message`
+- `app_name`
+
+Your EmailJS template should reference those variable names.
+
 ### Build for production
 
 ```bash

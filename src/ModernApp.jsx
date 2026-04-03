@@ -32,6 +32,7 @@ import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCur
 const Auth = lazy(() => import('./components/Auth'))
 const Landing = lazy(() => import('./components/Landing'))
 const Blog = lazy(() => import('./components/Blog'))
+const ContactForm = lazy(() => import('./components/ContactForm'))
 const IncomeForm = lazy(() => import('./components/IncomeForm'))
 const ExpenseForm = lazy(() => import('./components/ExpenseForm'))
 const TransferForm = lazy(() => import('./components/TransferForm'))
@@ -2017,6 +2018,31 @@ function ModernApp() {
           </div>
         )
 
+      case 'contact':
+        return (
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Support & Feedback',
+              title: 'Contact Pitaka',
+              description: 'Send feedback, feature requests, or concerns without leaving the app.',
+              stats: [
+                { label: 'Channel', value: 'EmailJS' },
+                { label: 'Response Type', value: 'Email' }
+              ]
+            })}
+
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><ActivityIcon size={18} /> Feedback Form</h3>
+                  <p className="card-subtitle">Use this page for bug reports, product suggestions, or general concerns.</p>
+                </div>
+              </div>
+              <ContactForm />
+            </div>
+          </div>
+        )
+
       case 'settings':
         return (
           <div className="mobile-content page-shell">
@@ -2108,6 +2134,14 @@ function ModernApp() {
                   style={{ justifyContent: 'flex-start' }}
                 >
                   <DownloadIcon size={16} /> {isPro ? 'Android App Download' : 'Android App (Pro)'}
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('contact')}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <ActivityIcon size={16} /> Contact Pitaka
                 </button>
 
                 <button

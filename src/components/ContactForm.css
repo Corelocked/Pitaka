@@ -1,0 +1,107 @@
+.landing-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.landing-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.landing-contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landing-contact-field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.landing-contact-field input,
+.landing-contact-field select,
+.landing-contact-field textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font: inherit;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.landing-contact-field input::placeholder,
+.landing-contact-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.landing-contact-field input:focus,
+.landing-contact-field select:focus,
+.landing-contact-field textarea:focus {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: rgba(176, 141, 87, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.landing-contact-field textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.landing-contact-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.landing-contact-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.landing-contact-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.landing-contact-status {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.landing-contact-status.success {
+  background: rgba(53, 164, 115, 0.16);
+  border: 1px solid rgba(53, 164, 115, 0.35);
+  color: #bbf7d0;
+}
+
+.landing-contact-status.error {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
+.landing-contact-honeypot {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .landing-contact-grid {
+    grid-template-columns: 1fr;
+  }
+}

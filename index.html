@@ -13,25 +13,28 @@
     <meta name="description" content="Pitaka - Smart personal finance tracker for budgeting, expense management, income tracking, and investment portfolio management. Track spending, analyze patterns, and achieve your financial goals." />
     <meta name="keywords" content="budget tracker, expense tracker, personal finance, money management, investment tracker, financial planning" />
     <meta name="author" content="Pitaka" />
+    <meta name="application-name" content="Pitaka" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <!-- Open Graph Meta Tags for Social Sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Pitaka - Personal Finance Tracker" />
     <meta property="og:description" content="Manage your money smarter. Track income, expenses, investments, and wallets in one place." />
-    <meta property="og:image" content="/pitaka-logo.png" />
+    <meta property="og:image" content="https://pitaka-sigma.vercel.app/pitaka-social-share.png" />
+    <meta property="og:image:alt" content="Pitaka social share image for the personal finance tracker and blog" />
     <meta property="og:url" content="https://pitaka-sigma.vercel.app/" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="Pitaka" />
     <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Pitaka - Personal Finance Tracker" />
     <meta name="twitter:description" content="Manage your money smarter. Track income, expenses, investments, and wallets in one place." />
-    <meta name="twitter:image" content="/pitaka-logo.png" />
+    <meta name="twitter:image" content="https://pitaka-sigma.vercel.app/pitaka-social-share.png" />
+    <meta name="twitter:image:alt" content="Pitaka social share image for the personal finance tracker and blog" />
     <meta name="twitter:site" content="@pitaka" />
+    <meta name="twitter:creator" content="@pitaka" />
     <!-- Additional SEO -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
-    <link rel="canonical" href="https://pitaka-sigma.vercel.app" />
+    <link rel="canonical" href="https://pitaka-sigma.vercel.app/" />
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -49,96 +52,37 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Pitaka",
-      "description": "Personal finance and budget tracking application for managing expenses, income, investments, and financial planning",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Web, Android, iOS",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150"
-      }
-    }
-    </script>
-    <!-- Pricing Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": "Pitaka Pro",
-      "description": "Premium features for advanced personal finance management",
-      "brand": {
-        "@type": "Brand",
-        "name": "Pitaka"
-      },
-      "offers": [
+      "@graph": [
         {
-          "@type": "Offer",
-          "priceCurrency": "USD",
-          "price": "0",
-          "priceValidUntil": "2026-12-31",
-          "availability": "https://schema.org/InStock",
-          "name": "Basic - Free"
+          "@type": "Organization",
+          "@id": "https://pitaka-sigma.vercel.app/#organization",
+          "name": "Pitaka",
+          "url": "https://pitaka-sigma.vercel.app/",
+          "logo": "https://pitaka-sigma.vercel.app/pitaka-logo.png"
         },
         {
-          "@type": "Offer",
-          "priceCurrency": "USD",
-          "price": "9.99",
-          "priceValidUntil": "2026-12-31",
-          "availability": "https://schema.org/InStock",
-          "name": "Pitaka Pro - Monthly",
-          "billingDuration": "P1M"
-        }
-      ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150"
-      }
-    }
-    </script>
-    <!-- FAQ Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is Pitaka free?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes! Pitaka is completely free with all core features included."
-          }
+          "@type": "WebSite",
+          "@id": "https://pitaka-sigma.vercel.app/#website",
+          "url": "https://pitaka-sigma.vercel.app/",
+          "name": "Pitaka",
+          "description": "Personal finance and budget tracking application for managing expenses, income, investments, and financial planning",
+          "publisher": {
+            "@id": "https://pitaka-sigma.vercel.app/#organization"
+          },
+          "inLanguage": "en"
         },
         {
-          "@type": "Question",
-          "name": "Is my data secure?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Your data is encrypted and stored securely. Only you can access your information."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use Pitaka on mobile?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Use Pitaka on web, iOS, or Android with full synchronization."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I export my data?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes, export all your data to CSV and Excel formats anytime."
+          "@type": "SoftwareApplication",
+          "name": "Pitaka",
+          "description": "Personal finance and budget tracking application for managing expenses, income, investments, and financial planning",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "Web, Android, iOS",
+          "url": "https://pitaka-sigma.vercel.app/",
+          "image": "https://pitaka-sigma.vercel.app/pitaka-social-share.png",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
           }
         }
       ]

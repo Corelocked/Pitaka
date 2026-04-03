@@ -1,4 +1,8 @@
 const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+const DEFAULT_SITE_NAME = 'Pitaka'
+const DEFAULT_LOCALE = 'en_US'
+const DEFAULT_TWITTER_CARD = 'summary_large_image'
+const DEFAULT_TWITTER_HANDLE = '@pitaka'
 
 const ensureMetaTag = ({ name, property }) => {
   if (typeof document === 'undefined') return null
@@ -54,10 +58,17 @@ export const applySeo = ({
   title,
   description,
   path = '/',
-  image = '/pitaka-logo.png',
+  image = '/pitaka-social-share.png',
+  imageAlt = 'Pitaka personal finance app',
   keywords,
   robots = DEFAULT_ROBOTS,
-  type = 'website'
+  type = 'website',
+  locale = DEFAULT_LOCALE,
+  siteName = DEFAULT_SITE_NAME,
+  author = DEFAULT_SITE_NAME,
+  twitterCard = DEFAULT_TWITTER_CARD,
+  twitterSite = DEFAULT_TWITTER_HANDLE,
+  twitterCreator = DEFAULT_TWITTER_HANDLE
 }) => {
   if (typeof document === 'undefined') return
 
@@ -73,24 +84,33 @@ export const applySeo = ({
   setMetaContent({ name: 'description' }, description)
   setMetaContent({ name: 'keywords' }, keywords)
   setMetaContent({ name: 'robots' }, robots)
+  setMetaContent({ name: 'author' }, author)
+  setMetaContent({ name: 'application-name' }, siteName)
 
   setMetaContent({ property: 'og:type' }, type)
   setMetaContent({ property: 'og:title' }, title)
   setMetaContent({ property: 'og:description' }, description)
   setMetaContent({ property: 'og:url' }, canonicalUrl)
   setMetaContent({ property: 'og:image' }, imageUrl)
-  setMetaContent({ property: 'og:site_name' }, 'Pitaka')
+  setMetaContent({ property: 'og:image:alt' }, imageAlt)
+  setMetaContent({ property: 'og:site_name' }, siteName)
+  setMetaContent({ property: 'og:locale' }, locale)
 
-  setMetaContent({ name: 'twitter:card' }, 'summary_large_image')
+  setMetaContent({ name: 'twitter:card' }, twitterCard)
   setMetaContent({ name: 'twitter:title' }, title)
   setMetaContent({ name: 'twitter:description' }, description)
   setMetaContent({ name: 'twitter:image' }, imageUrl)
+  setMetaContent({ name: 'twitter:image:alt' }, imageAlt)
+  setMetaContent({ name: 'twitter:site' }, twitterSite)
+  setMetaContent({ name: 'twitter:creator' }, twitterCreator)
 }
 
-export const setArticleMetadata = ({ publishedTime, modifiedTime, section }) => {
+export const setArticleMetadata = ({ publishedTime, modifiedTime, section, tag, author = DEFAULT_SITE_NAME }) => {
   setMetaContent({ property: 'article:published_time' }, publishedTime)
   setMetaContent({ property: 'article:modified_time' }, modifiedTime)
   setMetaContent({ property: 'article:section' }, section)
+  setMetaContent({ property: 'article:tag' }, tag)
+  setMetaContent({ property: 'article:author' }, author)
 }
 
 export const setStructuredData = (id, payload) => {
