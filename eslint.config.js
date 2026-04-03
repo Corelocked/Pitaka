@@ -5,7 +5,18 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist/**',
+    'build/**',
+    '.gradle-local/**',
+    '.vercel/**',
+    'android/**',
+    'ios/**',
+    'capacitor-cordova-android-plugins/**',
+    'android/**/build/**',
+    'android/app/src/main/assets/public/assets/**',
+    'ios/**/public/assets/**'
+  ]),
   {
     files: ['server/**/*.js', 'api/**/*.js'],
     languageOptions: {

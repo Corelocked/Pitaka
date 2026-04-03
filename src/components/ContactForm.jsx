@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import emailjs from '@emailjs/browser'
 import './ContactForm.css'
+import { FirebaseContext } from '../contexts/FirebaseContext'
 
 const EMAILJS_SERVICE_ID = String(import.meta.env.VITE_EMAILJS_SERVICE_ID || '')
 const EMAILJS_TEMPLATE_ID = String(import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '')
@@ -26,9 +27,32 @@ function isEmailJsConfigured() {
 }
 
 export default function ContactForm() {
+  const { user, userProfile } = useContext(FirebaseContext)
   const [formState, setFormState] = useState(INITIAL_FORM_STATE)
   const [submitState, setSubmitState] = useState({ type: 'idle', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const lockedIdentity = Boolean(user || userProfile)
+
+  useEffect(() => {
+    const nextName = String(
+      userProfile?.displayName ||
+      user?.displayName ||
+      ''
+    ).trim()
+    const nextEmail = String(
+      userProfile?.email ||
+      user?.email ||
+      ''
+    ).trim()
+
+    if (!nextName && !nextEmail) return
+
+    setFormState((current) => ({
+      ...current,
+      name: nextName || current.name,
+      email: nextEmail || current.email
+    }))
+  }, [user, userProfile])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -107,6 +131,8 @@ export default function ContactForm() {
             placeholder="Your name"
             autoComplete="name"
             required
+            readOnly={lockedIdentity}
+            disabled={lockedIdentity}
           />
         </div>
 
@@ -121,6 +147,8 @@ export default function ContactForm() {
             placeholder="you@example.com"
             autoComplete="email"
             required
+            readOnly={lockedIdentity}
+            disabled={lockedIdentity}
           />
         </div>
       </div>

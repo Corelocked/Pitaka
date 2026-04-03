@@ -1,6 +1,18 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useFirebase } from './useFirebase'
-import { incomeService, expenseService, savingsService, categoryService, walletService, transferService, investmentService, subscriptionService } from '../services/firebaseService'
+import {
+  incomeService,
+  recurringIncomeService,
+  expenseService,
+  savingsService,
+  categoryService,
+  budgetService,
+  walletService,
+  transferService,
+  investmentService,
+  subscriptionService
+} from '../services/firebaseService'
+import { summarizeByCurrency } from '../utils/currency'
 
 function formatLocalDateKey(date) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
@@ -14,29 +26,25 @@ function getSummaryCacheKey(userId, timePeriod, selectedYear, selectedMonth) {
   return `pitaka.summaryCache:${userId}:${timePeriod}:${selectedYear}:${selectedMonth}`
 }
 
+function getMonthKey(year, month) {
+  return `${year}-${String(month + 1).padStart(2, '0')}`
+}
+
 function resolveExpenseCategoryName(expense, categories = []) {
-  if (expense?.category) {
-    return expense.category
-  }
+  if (expense?.category) return expense.category
 
   if (expense?.categoryId) {
     const category = categories.find((entry) => entry.id === expense.categoryId)
-    if (category?.name) {
-      return category.name
-    }
+    if (category?.name) return category.name
   }
 
-  if (expense?.subscriptionId) {
-    return 'Subscription'
-  }
+  if (expense?.subscriptionId) return 'Subscription'
 
   return ''
 }
 
 function isVisibleManagedExpense(expense) {
-  if (!expense?.subscriptionId) {
-    return true
-  }
+  if (!expense?.subscriptionId) return true
 
   return (
     expense?.postingSource === 'manual-post-bill' ||
@@ -48,28 +56,37 @@ function isVisibleManagedExpense(expense) {
 export function useBudget(options = {}) {
   const {
     enableInvestments = true,
-    enableSubscriptions = true
+    enableSubscriptions = true,
+    enableRecurringIncomes = true,
+
   } = options
-  const { user, loading: authLoading, isPro } = useFirebase()
+
+  const { user, loading: authLoading, authResolved, isPro } = useFirebase()
   const [isAppActive, setIsAppActive] = useState(() => {
     if (typeof document === 'undefined') return true
     return document.visibilityState !== 'hidden'
   })
+  const [firestoreReady, setFirestoreReady] = useState(false)
+
   const [incomes, setIncomes] = useState([])
+  const [recurringIncomes, setRecurringIncomes] = useState([])
   const [expenses, setExpenses] = useState([])
   const [savings, setSavings] = useState([])
   const [categories, setCategories] = useState([])
+  const [budgets, setBudgets] = useState([])
   const [wallets, setWallets] = useState([])
   const [subscriptions, setSubscriptions] = useState([])
+
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [editingIncome, setEditingIncome] = useState(null)
+  const [editingRecurringIncome, setEditingRecurringIncome] = useState(null)
   const [editingExpense, setEditingExpense] = useState(null)
   const [editingSavings, setEditingSavings] = useState(null)
   const [editingCategory, setEditingCategory] = useState(null)
   const [editingWallet, setEditingWallet] = useState(null)
   const [editingSubscription, setEditingSubscription] = useState(null)
-  const [timePeriod, setTimePeriod] = useState('monthly') // 'monthly' or 'yearly'
+  const [timePeriod, setTimePeriod] = useState('monthly')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [transfers, setTransfers] = useState([])
@@ -80,19 +97,42 @@ export function useBudget(options = {}) {
   })
   const [cachedSummary, setCachedSummary] = useState(null)
   const processingSubscriptionsRef = useRef(new Set())
+  const processingRecurringIncomesRef = useRef(new Set())
+
+  const selectedMonthKey = useMemo(() => getMonthKey(selectedYear, selectedMonth), [selectedYear, selectedMonth])
 
   const normalizeCategoryName = useCallback((value) => (
     String(value || '').trim().toLowerCase()
   ), [])
 
+  const normalizeDateKey = useCallback((dateValue) => {
+    if (!dateValue) return null
+    const date = new Date(`${dateValue}T00:00:00`)
+    return formatLocalDateKey(date)
+  }, [])
+
+  const addDays = useCallback((dateValue, days) => {
+    const nextDate = new Date(`${dateValue}T00:00:00`)
+    nextDate.setDate(nextDate.getDate() + days)
+    return formatLocalDateKey(nextDate)
+  }, [])
+
+  const addMonths = useCallback((dateValue, months) => {
+    const baseDate = new Date(`${dateValue}T00:00:00`)
+    const day = baseDate.getDate()
+    const target = new Date(baseDate)
+    target.setDate(1)
+    target.setMonth(target.getMonth() + months)
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+    target.setDate(Math.min(day, lastDay))
+    return formatLocalDateKey(target)
+  }, [])
+
   const getCategoryIdByName = useCallback((categoryName) => {
     const normalizedName = normalizeCategoryName(categoryName)
     if (!normalizedName) return null
 
-    const category = categories.find((entry) => (
-      normalizeCategoryName(entry.name) === normalizedName
-    ))
-
+    const category = categories.find((entry) => normalizeCategoryName(entry.name) === normalizedName)
     return category?.id || null
   }, [categories, normalizeCategoryName])
 
@@ -105,7 +145,6 @@ export function useBudget(options = {}) {
     if (categoryId) {
       payload.categoryId = categoryId
     } else if (categoryName) {
-      // Keep legacy fallback only when we do not have a matching category id.
       payload.category = categoryName
     } else {
       payload.categoryId = null
@@ -116,9 +155,7 @@ export function useBudget(options = {}) {
   }, [getCategoryIdByName])
 
   useEffect(() => {
-    if (typeof document === 'undefined') {
-      return undefined
-    }
+    if (typeof document === 'undefined') return undefined
 
     const updateActivityState = () => {
       setIsAppActive(document.visibilityState !== 'hidden')
@@ -147,9 +184,39 @@ export function useBudget(options = {}) {
     }
   }, [user?.uid, timePeriod, selectedYear, selectedMonth])
 
-  // Subscribe to Firebase data when user is authenticated
   useEffect(() => {
-    if (!user || authLoading || !isAppActive) {
+    let cancelled = false
+
+    if (!authResolved || !user) {
+      setFirestoreReady(false)
+      return undefined
+    }
+
+    const warmUpFirestoreAuth = async () => {
+      try {
+        await user.getIdToken()
+        if (!cancelled) setFirestoreReady(true)
+      } catch (err) {
+        console.error('Failed to warm Firebase auth token for Firestore:', err)
+        if (!cancelled) setFirestoreReady(false)
+      }
+    }
+
+    setFirestoreReady(false)
+    warmUpFirestoreAuth()
+
+    return () => {
+      cancelled = true
+    }
+  }, [authResolved, user])
+
+  useEffect(() => {
+    if (!authResolved || authLoading) {
+      setLoading(true)
+      return
+    }
+
+    if (!user || !isAppActive || !firestoreReady) {
       setLoading(false)
       return
     }
@@ -176,147 +243,109 @@ export function useBudget(options = {}) {
       }
 
       try {
-        // Subscribe to incomes
         const unsubscribeIncomes = incomeService.subscribeToIncomes(
           user.uid,
-          (incomesData) => {
-            if (isMounted) {
-              setIncomes(incomesData)
-            }
-          },
+          (items) => { if (isMounted) setIncomes(items || []) },
           (metadata) => updateSyncState('incomes', metadata)
         )
 
-        // Subscribe to expenses
         const unsubscribeExpenses = expenseService.subscribeToExpenses(
           user.uid,
-          (expensesData) => {
-            if (isMounted) {
-              setExpenses(expensesData)
-            }
-          },
+          (items) => { if (isMounted) setExpenses(items || []) },
           (metadata) => updateSyncState('expenses', metadata)
         )
 
-        // Subscribe to savings
         const unsubscribeSavings = savingsService.subscribeToSavings(
           user.uid,
-          (savingsData) => {
-            if (isMounted) {
-              setSavings(savingsData)
-            }
-          },
+          (items) => { if (isMounted) setSavings(items || []) },
           (metadata) => updateSyncState('savings', metadata)
         )
 
-        // Subscribe to categories
-        let unsubscribeCategories
-        try {
-          unsubscribeCategories = categoryService.subscribeToCategories(
-            user.uid,
-            (categoriesData) => {
-              if (isMounted) {
-                setCategories(categoriesData || [])
-              }
-            },
-            (metadata) => updateSyncState('categories', metadata)
-          )
-        } catch (err) {
-          console.error('Error setting up categories subscription:', err)
-          unsubscribeCategories = () => {}
-          if (isMounted) {
-            setCategories([])
-          }
-        }
+        const unsubscribeCategories = categoryService.subscribeToCategories(
+          user.uid,
+          (items) => { if (isMounted) setCategories(items || []) },
+          (metadata) => updateSyncState('categories', metadata)
+        )
 
-        // Subscribe to wallets
-        let unsubscribeWallets
-        try {
-          unsubscribeWallets = walletService.subscribeToWallets(
-            user.uid,
-            (walletsData) => {
-              if (isMounted) {
-                setWallets(walletsData || [])
-              }
-            },
-            (metadata) => updateSyncState('wallets', metadata)
-          )
-        } catch (err) {
-          console.error('Error setting up wallets subscription:', err)
-          unsubscribeWallets = () => {}
-          if (isMounted) {
-            setWallets([])
-          }
-        }
+        const unsubscribeBudgets = budgetService.subscribeToBudgets(
+          user.uid,
+          selectedMonthKey,
+          (items) => {
+            if (isMounted) {
+              const sorted = [...(items || [])].sort((a, b) => String(a.categoryName || '').localeCompare(String(b.categoryName || '')))
+              setBudgets(sorted)
+            }
+          },
+          (metadata) => updateSyncState('budgets', metadata)
+        )
 
-        // Subscribe to transfers
-        let unsubscribeTransfers
-        try {
-          unsubscribeTransfers = transferService.subscribeToTransfers(
-            user.uid,
-            (transfersData) => {
-              if (isMounted) setTransfers(transfersData || [])
-            },
-            (metadata) => updateSyncState('transfers', metadata)
-          )
-        } catch (err) {
-          console.error('Error setting up transfers subscription:', err)
-          unsubscribeTransfers = () => {}
-          if (isMounted) setTransfers([])
-        }
+        const unsubscribeWallets = walletService.subscribeToWallets(
+          user.uid,
+          (items) => { if (isMounted) setWallets(items || []) },
+          (metadata) => updateSyncState('wallets', metadata)
+        )
+
+        const unsubscribeTransfers = transferService.subscribeToTransfers(
+          user.uid,
+          (items) => { if (isMounted) setTransfers(items || []) },
+          (metadata) => updateSyncState('transfers', metadata)
+        )
 
         let unsubscribeInvestments = () => {}
         let unsubscribeSubscriptions = () => {}
+        let unsubscribeRecurringIncomes = () => {}
+
 
         if (isPro && enableInvestments) {
-          try {
-            unsubscribeInvestments = investmentService.subscribeToInvestments(
-              user.uid,
-              (investmentsData) => {
-                if (isMounted) setInvestments(investmentsData || [])
-              },
-              (metadata) => updateSyncState('investments', metadata)
-            )
-          } catch (err) {
-            console.error('Error setting up investments subscription:', err)
-            unsubscribeInvestments = () => {}
-            if (isMounted) setInvestments([])
-          }
+          unsubscribeInvestments = investmentService.subscribeToInvestments(
+            user.uid,
+            (items) => { if (isMounted) setInvestments(items || []) },
+            (metadata) => updateSyncState('investments', metadata)
+          )
         } else if (isMounted) {
           setInvestments([])
         }
 
         if (isPro && enableSubscriptions) {
-          try {
-            unsubscribeSubscriptions = subscriptionService.subscribeToSubscriptions(
-              user.uid,
-              (subscriptionsData) => {
-                if (isMounted) setSubscriptions(subscriptionsData || [])
-              },
-              (metadata) => updateSyncState('subscriptions', metadata)
-            )
-          } catch (err) {
-            console.error('Error setting up subscriptions subscription:', err)
-            unsubscribeSubscriptions = () => {}
-            if (isMounted) setSubscriptions([])
-          }
+          unsubscribeSubscriptions = subscriptionService.subscribeToSubscriptions(
+            user.uid,
+            (items) => { if (isMounted) setSubscriptions(items || []) },
+            (metadata) => updateSyncState('subscriptions', metadata)
+          )
         } else if (isMounted) {
           setSubscriptions([])
         }
 
-        if (isMounted) {
-          setLoading(false)
+        if (enableRecurringIncomes) {
+          unsubscribeRecurringIncomes = recurringIncomeService.subscribeToRecurringIncomes(
+            user.uid,
+            (items) => {
+              if (isMounted) {
+                const sorted = [...(items || [])].sort((a, b) => String(a.source || '').localeCompare(String(b.source || '')))
+                setRecurringIncomes(sorted)
+              }
+            },
+            (metadata) => updateSyncState('recurringIncomes', metadata)
+          )
+        } else if (isMounted) {
+          setRecurringIncomes([])
         }
+
+
+
+        if (isMounted) setLoading(false)
 
         return () => {
           unsubscribeIncomes()
           unsubscribeExpenses()
           unsubscribeSavings()
           unsubscribeCategories()
+          unsubscribeBudgets()
           unsubscribeWallets()
-          unsubscribeTransfers && typeof unsubscribeTransfers === 'function' && unsubscribeTransfers()
-          unsubscribeInvestments && typeof unsubscribeInvestments === 'function' && unsubscribeInvestments()
-          unsubscribeSubscriptions && typeof unsubscribeSubscriptions === 'function' && unsubscribeSubscriptions()
+          unsubscribeTransfers()
+          unsubscribeInvestments()
+          unsubscribeSubscriptions()
+          unsubscribeRecurringIncomes()
         }
       } catch (err) {
         if (isMounted) {
@@ -330,30 +359,26 @@ export function useBudget(options = {}) {
 
     return () => {
       isMounted = false
-      cleanup?.then?.(fn => fn?.())
+      cleanup?.then?.((fn) => fn?.())
     }
-  }, [user, authLoading, isPro, enableInvestments, enableSubscriptions, isAppActive])
+}, [user, authLoading, authResolved, firestoreReady, isPro, enableInvestments, enableSubscriptions, enableRecurringIncomes, isAppActive, selectedMonthKey])
 
-  // Default category seeding disabled — creating starter categories automatically was removed per user preference.
-  // If you want to re-enable this behavior later, restore the seeding logic or provide an opt-in UI.
-  // No categories will be added automatically.
-
-
-  // Clear data when user becomes unauthenticated
   useEffect(() => {
+    if (!authResolved) return
+
     if (!user && !authLoading) {
-      // This effect intentionally clears local budget state after sign-out so stale user data
-      // never flashes in the next session.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIncomes([])
+      setRecurringIncomes([])
       setExpenses([])
       setSavings([])
       setCategories([])
+      setBudgets([])
       setWallets([])
       setSubscriptions([])
       setTransfers([])
       setInvestments([])
       setEditingIncome(null)
+      setEditingRecurringIncome(null)
       setEditingExpense(null)
       setEditingSavings(null)
       setEditingCategory(null)
@@ -365,22 +390,36 @@ export function useBudget(options = {}) {
         isFromCache: false
       })
     }
-  }, [user, authLoading, isPro, enableInvestments, enableSubscriptions, isAppActive])
+  }, [user, authLoading, authResolved])
 
   const addIncome = useCallback(async (income) => {
-    if (!user) {
-      throw new Error('Please sign in to add income')
-    }
+    if (!user) throw new Error('Please sign in to add income')
 
     try {
       setError(null)
       await incomeService.addIncome(income, user.uid)
     } catch (err) {
-      console.error('Add income error:', err)
       setError(err.message)
       throw err
     }
   }, [user])
+
+  const addRecurringIncome = useCallback(async (recurringIncome) => {
+    if (!user) return
+
+    try {
+      setError(null)
+      await recurringIncomeService.addRecurringIncome({
+        ...recurringIncome,
+        lastPostedDate: null,
+        nextDueDate: normalizeDateKey(recurringIncome.startDate),
+        isActive: recurringIncome.isActive !== false
+      }, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [normalizeDateKey, user])
 
   const addExpense = useCallback(async (expense) => {
     if (!user) return
@@ -404,6 +443,17 @@ export function useBudget(options = {}) {
     }
   }, [])
 
+  const deleteRecurringIncome = useCallback(async (id) => {
+    try {
+      setError(null)
+      await recurringIncomeService.deleteRecurringIncome(id)
+      setEditingRecurringIncome((current) => (current?.id === id ? null : current))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
   const deleteExpense = useCallback(async (id) => {
     try {
       setError(null)
@@ -418,6 +468,10 @@ export function useBudget(options = {}) {
     setEditingIncome(income)
   }, [])
 
+  const editRecurringIncome = useCallback((recurringIncome) => {
+    setEditingRecurringIncome(recurringIncome)
+  }, [])
+
   const updateIncome = useCallback(async (updatedIncome) => {
     try {
       setError(null)
@@ -430,6 +484,32 @@ export function useBudget(options = {}) {
     }
   }, [])
 
+  const updateRecurringIncome = useCallback(async (updatedRecurringIncome) => {
+    try {
+      setError(null)
+      const { id, ...updates } = updatedRecurringIncome
+      const scheduleChanged = (
+        editingRecurringIncome?.startDate !== updates.startDate ||
+        editingRecurringIncome?.intervalType !== updates.intervalType ||
+        Number(editingRecurringIncome?.customIntervalDays || 0) !== Number(updates.customIntervalDays || 0)
+      )
+
+      await recurringIncomeService.updateRecurringIncome(id, {
+        ...updates,
+        ...(scheduleChanged
+          ? {
+              lastPostedDate: null,
+              nextDueDate: normalizeDateKey(updates.startDate)
+            }
+          : {})
+      })
+      setEditingRecurringIncome(null)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [editingRecurringIncome, normalizeDateKey])
+
   const editExpense = useCallback((expense) => {
     setEditingExpense(expense)
   }, [])
@@ -438,8 +518,7 @@ export function useBudget(options = {}) {
     try {
       setError(null)
       const { id, ...updates } = updatedExpense
-      const compactUpdates = compactExpensePayload(updates)
-      await expenseService.updateExpense(id, compactUpdates)
+      await expenseService.updateExpense(id, compactExpensePayload(updates))
       setEditingExpense(null)
     } catch (err) {
       setError(err.message)
@@ -492,13 +571,8 @@ export function useBudget(options = {}) {
     const fundingDate = options?.date || formatLocalDateKey(new Date())
     const notes = options?.notes || ''
 
-    if (!goal) {
-      throw new Error('Savings goal not found')
-    }
-
-    if (!(numericAmount > 0)) {
-      throw new Error('Please enter a valid amount')
-    }
+    if (!goal) throw new Error('Savings goal not found')
+    if (!(numericAmount > 0)) throw new Error('Please enter a valid amount')
 
     const goalCurrency = goal.currency || 'PHP'
 
@@ -510,32 +584,17 @@ export function useBudget(options = {}) {
     }
 
     const sourceWallet = wallets.find((wallet) => wallet.id === sourceWalletId)
-
-    if (!sourceWallet) {
-      throw new Error('Source account not found')
-    }
-
+    if (!sourceWallet) throw new Error('Source account not found')
     if ((sourceWallet.currency || 'PHP') !== goalCurrency) {
       throw new Error('Account and savings goal currencies must match')
     }
 
     const computedSourceBalance = (
       parseFloat(sourceWallet.startingBalance || 0) +
-      incomes
-        .filter((income) => income.walletId === sourceWalletId)
-        .reduce((sum, income) => sum + parseFloat(income.amount || 0), 0) -
-      expenses
-        .filter((expense) => (
-          expense.walletId === sourceWalletId &&
-          isVisibleManagedExpense(expense)
-        ))
-        .reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0) -
-      transfers
-        .filter((transfer) => transfer.fromWalletId === sourceWalletId)
-        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0) +
-      transfers
-        .filter((transfer) => transfer.toWalletId === sourceWalletId)
-        .reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0)
+      incomes.filter((income) => income.walletId === sourceWalletId).reduce((sum, income) => sum + parseFloat(income.amount || 0), 0) -
+      expenses.filter((expense) => expense.walletId === sourceWalletId && isVisibleManagedExpense(expense)).reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0) -
+      transfers.filter((transfer) => transfer.fromWalletId === sourceWalletId).reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0) +
+      transfers.filter((transfer) => transfer.toWalletId === sourceWalletId).reduce((sum, transfer) => sum + parseFloat(transfer.amount || 0), 0)
     )
 
     if (sourceWallet.accountType !== 'credit' && computedSourceBalance < numericAmount) {
@@ -570,18 +629,10 @@ export function useBudget(options = {}) {
     try {
       setError(null)
       const nextName = normalizeCategoryName(category?.name)
+      if (!nextName) throw new Error('Category name is required')
 
-      if (!nextName) {
-        throw new Error('Category name is required')
-      }
-
-      const alreadyExists = categories.some((existingCategory) => (
-        normalizeCategoryName(existingCategory.name) === nextName
-      ))
-
-      if (alreadyExists) {
-        throw new Error('A category with that name already exists')
-      }
+      const alreadyExists = categories.some((existingCategory) => normalizeCategoryName(existingCategory.name) === nextName)
+      if (alreadyExists) throw new Error('A category with that name already exists')
 
       await categoryService.addCategory(category, user.uid)
     } catch (err) {
@@ -590,12 +641,33 @@ export function useBudget(options = {}) {
     }
   }, [categories, normalizeCategoryName, user])
 
-  const ensureSubscriptionCategory = useCallback(async () => {
-    const subscriptionCategoryName = 'subscription'
-    const existingCategory = categories.some((category) => (
-      normalizeCategoryName(category.name) === subscriptionCategoryName
-    ))
+  const upsertBudget = useCallback(async (budgetInput) => {
+    if (!user) return
 
+    try {
+      setError(null)
+      await budgetService.upsertBudget({
+        ...budgetInput,
+        monthKey: budgetInput.monthKey || selectedMonthKey
+      }, user.uid)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [selectedMonthKey, user])
+
+  const deleteBudget = useCallback(async (budgetId) => {
+    try {
+      setError(null)
+      await budgetService.deleteBudget(budgetId)
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [])
+
+  const ensureSubscriptionCategory = useCallback(async () => {
+    const existingCategory = categories.some((category) => normalizeCategoryName(category.name) === 'subscription')
     if (!existingCategory && user) {
       await categoryService.addCategory({
         name: 'Subscription',
@@ -607,7 +679,6 @@ export function useBudget(options = {}) {
   const addWallet = useCallback(async (wallet) => {
     if (!user) return
 
-    // Optimistic UI: add a temporary wallet locally so the dropdown updates immediately
     const tempId = `temp-${Date.now()}`
     const tempWallet = {
       id: tempId,
@@ -622,17 +693,15 @@ export function useBudget(options = {}) {
       createdAt: new Date()
     }
 
-    setWallets(prev => [tempWallet, ...prev])
+    setWallets((prev) => [tempWallet, ...prev])
 
     try {
       setError(null)
       const id = await walletService.addWallet(wallet, user.uid)
-      // backend subscription will replace the list; as a safeguard, remove temp if still present
-      setWallets(prev => prev.filter(w => w.id !== tempId))
+      setWallets((prev) => prev.filter((entry) => entry.id !== tempId))
       return id
     } catch (err) {
-      // rollback optimistic update
-      setWallets(prev => prev.filter(w => w.id !== tempId))
+      setWallets((prev) => prev.filter((entry) => entry.id !== tempId))
       setError(err.message)
       throw err
     }
@@ -657,7 +726,6 @@ export function useBudget(options = {}) {
       setError(null)
       const { id, ...updates } = updatedWallet
       await walletService.updateWallet(id, updates)
-      // clear editing state
       setEditingWallet(null)
     } catch (err) {
       setError(err.message)
@@ -670,15 +738,11 @@ export function useBudget(options = {}) {
       setError(null)
       const categoryToDelete = categories.find((category) => category.id === id)
       const categoryName = categoryToDelete?.name || ''
-      const linkedExpenses = expenses.filter((expense) => (
-        expense.categoryId === id || expense.category === categoryName
-      ))
+      const linkedExpenses = expenses.filter((expense) => expense.categoryId === id || expense.category === categoryName)
 
       if (linkedExpenses.length > 0) {
         await Promise.all(
-          linkedExpenses.map((expense) => (
-            expenseService.updateExpense(expense.id, { category: '', categoryId: null })
-          ))
+          linkedExpenses.map((expense) => expenseService.updateExpense(expense.id, { category: '', categoryId: null }))
         )
       }
 
@@ -698,19 +762,10 @@ export function useBudget(options = {}) {
     try {
       setError(null)
       const nextName = normalizeCategoryName(updatedCategory?.name)
+      if (!nextName) throw new Error('Category name is required')
 
-      if (!nextName) {
-        throw new Error('Category name is required')
-      }
-
-      const alreadyExists = categories.some((category) => (
-        category.id !== updatedCategory.id &&
-        normalizeCategoryName(category.name) === nextName
-      ))
-
-      if (alreadyExists) {
-        throw new Error('A category with that name already exists')
-      }
+      const alreadyExists = categories.some((category) => category.id !== updatedCategory.id && normalizeCategoryName(category.name) === nextName)
+      if (alreadyExists) throw new Error('A category with that name already exists')
 
       const previousCategory = categories.find((category) => category.id === updatedCategory.id)
       const { id, ...updates } = updatedCategory
@@ -720,15 +775,10 @@ export function useBudget(options = {}) {
       const nextDisplayName = updatedCategory.name
 
       if (previousName && previousName !== nextDisplayName) {
-        const linkedExpenses = expenses.filter((expense) => (
-          !expense.categoryId && expense.category === previousName
-        ))
-
+        const linkedExpenses = expenses.filter((expense) => !expense.categoryId && expense.category === previousName)
         if (linkedExpenses.length > 0) {
           await Promise.all(
-            linkedExpenses.map((expense) => (
-              expenseService.updateExpense(expense.id, { category: nextDisplayName, categoryId: id })
-            ))
+            linkedExpenses.map((expense) => expenseService.updateExpense(expense.id, { category: nextDisplayName, categoryId: id }))
           )
         }
       }
@@ -739,28 +789,6 @@ export function useBudget(options = {}) {
       throw err
     }
   }, [categories, expenses, normalizeCategoryName])
-
-  const normalizeDateKey = useCallback((dateValue) => {
-    if (!dateValue) return null
-    const date = new Date(`${dateValue}T00:00:00`)
-    return formatLocalDateKey(date)
-  }, [])
-
-  const addDays = useCallback((dateValue, days) => {
-    const nextDate = new Date(`${dateValue}T00:00:00`)
-    nextDate.setDate(nextDate.getDate() + days)
-    return formatLocalDateKey(nextDate)
-  }, [])
-
-  const addMonths = useCallback((dateValue, months) => {
-    const baseDate = new Date(`${dateValue}T00:00:00`)
-    const day = baseDate.getDate()
-    const target = new Date(baseDate)
-    target.setMonth(target.getMonth() + months, 1)
-    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
-    target.setDate(Math.min(day, lastDay))
-    return formatLocalDateKey(target)
-  }, [])
 
   const nextSubscriptionDate = useCallback((subscription, currentDate) => {
     switch (subscription.intervalType) {
@@ -776,10 +804,23 @@ export function useBudget(options = {}) {
     }
   }, [addDays, addMonths])
 
+  const nextRecurringIncomeDate = useCallback((recurringIncome, currentDate) => {
+    switch (recurringIncome.intervalType) {
+      case 'weekly':
+        return addDays(currentDate, 7)
+      case 'yearly':
+        return addMonths(currentDate, 12)
+      case 'custom':
+        return addDays(currentDate, Math.max(parseInt(recurringIncome.customIntervalDays || 0, 10), 1))
+      case 'monthly':
+      default:
+        return addMonths(currentDate, 1)
+    }
+  }, [addDays, addMonths])
+
   const getCurrentDueDate = useCallback((subscription, todayKey) => {
     const firstDate = normalizeDateKey(subscription.nextDueDate || subscription.nextRunDate || subscription.startDate)
-    if (!firstDate) return null
-    if (firstDate > todayKey) return null
+    if (!firstDate || firstDate > todayKey) return null
 
     let dueDate = firstDate
     let nextDate = nextSubscriptionDate(subscription, dueDate)
@@ -792,35 +833,33 @@ export function useBudget(options = {}) {
     return dueDate
   }, [nextSubscriptionDate, normalizeDateKey])
 
-  const getFirstFutureDueDate = useCallback((subscription, afterDateKey) => {
-    const firstDate = normalizeDateKey(subscription.startDate)
-    if (!firstDate) return null
-    if (firstDate > afterDateKey) return firstDate
+  const getCurrentRecurringIncomeDueDate = useCallback((recurringIncome, todayKey) => {
+    const firstDate = normalizeDateKey(recurringIncome.nextDueDate || recurringIncome.startDate)
+    if (!firstDate || firstDate > todayKey) return null
 
-    let nextDueDate = firstDate
-    while (nextDueDate && nextDueDate <= afterDateKey) {
-      nextDueDate = nextSubscriptionDate(subscription, nextDueDate)
+    let dueDate = firstDate
+    let nextDate = nextRecurringIncomeDate(recurringIncome, dueDate)
+
+    while (nextDate && nextDate <= todayKey) {
+      dueDate = nextDate
+      nextDate = nextRecurringIncomeDate(recurringIncome, dueDate)
     }
 
-    return nextDueDate
-  }, [nextSubscriptionDate, normalizeDateKey])
+    return dueDate
+  }, [nextRecurringIncomeDate, normalizeDateKey])
 
   const addSubscription = useCallback(async (subscription) => {
     if (!user) return
 
     try {
       setError(null)
-      if (!isPro) {
-        throw new Error('Subscriptions are part of Pitaka Pro')
-      }
+      if (!isPro) throw new Error('Subscriptions are part of Pitaka Pro')
       await ensureSubscriptionCategory()
-      const nextDueDate = normalizeDateKey(subscription.startDate)
-
       await subscriptionService.addSubscription({
         ...subscription,
         category: 'Subscription',
         lastPostedDate: null,
-        nextDueDate
+        nextDueDate: normalizeDateKey(subscription.startDate)
       }, user.uid)
     } catch (err) {
       setError(err.message)
@@ -835,9 +874,7 @@ export function useBudget(options = {}) {
   const updateSubscription = useCallback(async (updatedSubscription) => {
     try {
       setError(null)
-      if (!isPro) {
-        throw new Error('Subscriptions are part of Pitaka Pro')
-      }
+      if (!isPro) throw new Error('Subscriptions are part of Pitaka Pro')
       await ensureSubscriptionCategory()
       const { id, ...updates } = updatedSubscription
       const scheduleChanged = (
@@ -845,16 +882,14 @@ export function useBudget(options = {}) {
         editingSubscription?.intervalType !== updates.intervalType ||
         Number(editingSubscription?.customIntervalDays || 0) !== Number(updates.customIntervalDays || 0)
       )
-      const nextDueDate = scheduleChanged
-        ? normalizeDateKey(updates.startDate)
-        : undefined
+
       await subscriptionService.updateSubscription(id, {
         ...updates,
         category: 'Subscription',
         ...(scheduleChanged
           ? {
               lastPostedDate: null,
-              nextDueDate
+              nextDueDate: normalizeDateKey(updates.startDate)
             }
           : {})
       })
@@ -877,30 +912,16 @@ export function useBudget(options = {}) {
   }, [])
 
   const postSubscriptionBill = useCallback(async (subscriptionId) => {
-    if (!user) {
-      throw new Error('Please sign in to post a bill')
-    }
+    if (!user) throw new Error('Please sign in to post a bill')
 
     const subscription = subscriptions.find((entry) => entry.id === subscriptionId)
-
-    if (!subscription) {
-      throw new Error('Subscription not found')
-    }
+    if (!subscription) throw new Error('Subscription not found')
 
     const dueDate = normalizeDateKey(subscription.nextDueDate || subscription.nextRunDate || subscription.startDate)
+    if (!dueDate) throw new Error('Subscription is missing a valid due date')
 
-    if (!dueDate) {
-      throw new Error('Subscription is missing a valid due date')
-    }
-
-    const alreadyPosted = expenses.some((expense) => (
-      expense.subscriptionId === subscriptionId &&
-      normalizeDateKey(expense.date) === dueDate
-    ))
-
-    if (alreadyPosted) {
-      throw new Error('This bill has already been posted')
-    }
+    const alreadyPosted = expenses.some((expense) => expense.subscriptionId === subscriptionId && normalizeDateKey(expense.date) === dueDate)
+    if (alreadyPosted) throw new Error('This bill has already been posted')
 
     try {
       setError(null)
@@ -912,7 +933,7 @@ export function useBudget(options = {}) {
         walletId: subscription.walletId || null,
         currency: subscription.currency || null,
         subscriptionId: subscription.id,
-        postingSource: 'auto-next-due'
+        postingSource: 'manual-post-bill'
       }, user.uid)
 
       await subscriptionService.updateSubscription(subscription.id, {
@@ -925,32 +946,53 @@ export function useBudget(options = {}) {
     }
   }, [ensureSubscriptionCategory, expenses, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
 
-  useEffect(() => {
-    if (!user || !isPro || subscriptions.length === 0) {
-      return
+  const postRecurringIncome = useCallback(async (recurringIncomeId) => {
+    if (!user) throw new Error('Please sign in to post recurring income')
+
+    const recurringIncome = recurringIncomes.find((entry) => entry.id === recurringIncomeId)
+    if (!recurringIncome) throw new Error('Recurring income not found')
+
+    const dueDate = normalizeDateKey(recurringIncome.nextDueDate || recurringIncome.startDate)
+    if (!dueDate) throw new Error('Recurring income is missing a valid due date')
+
+    const alreadyPosted = incomes.some((income) => income.recurringIncomeId === recurringIncomeId && normalizeDateKey(income.date) === dueDate)
+    if (alreadyPosted) throw new Error('This recurring income has already been posted')
+
+    try {
+      setError(null)
+      await incomeService.addIncome({
+        source: recurringIncome.source,
+        amount: parseFloat(recurringIncome.amount || 0),
+        date: dueDate,
+        walletId: recurringIncome.walletId || null,
+        currency: recurringIncome.currency || null,
+        recurringIncomeId: recurringIncome.id,
+        postingSource: 'manual-post-schedule'
+      }, user.uid)
+
+      await recurringIncomeService.updateRecurringIncome(recurringIncome.id, {
+        lastPostedDate: dueDate,
+        nextDueDate: nextRecurringIncomeDate(recurringIncome, dueDate)
+      })
+    } catch (err) {
+      setError(err.message)
+      throw err
     }
+  }, [incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user])
+
+  useEffect(() => {
+    if (!user || !isPro || subscriptions.length === 0) return
 
     const todayKey = formatLocalDateKey(new Date())
 
     subscriptions.forEach((subscription) => {
-      if (!subscription?.id || subscription.isActive === false) {
-        return
-      }
-
-      if (processingSubscriptionsRef.current.has(subscription.id)) {
-        return
-      }
+      if (!subscription?.id || subscription.isActive === false) return
+      if (processingSubscriptionsRef.current.has(subscription.id)) return
 
       const dueDate = getCurrentDueDate(subscription, todayKey)
+      if (!dueDate) return
 
-      if (!dueDate) {
-        return
-      }
-
-      const alreadyPosted = expenses.some((expense) => (
-        expense.subscriptionId === subscription.id &&
-        normalizeDateKey(expense.date) === dueDate
-      ))
+      const alreadyPosted = expenses.some((expense) => expense.subscriptionId === subscription.id && normalizeDateKey(expense.date) === dueDate)
 
       if (alreadyPosted) {
         const nextDueDate = nextSubscriptionDate(subscription, dueDate)
@@ -959,12 +1001,10 @@ export function useBudget(options = {}) {
         if (nextDueDate && storedNextDueDate !== nextDueDate) {
           processingSubscriptionsRef.current.add(subscription.id)
           Promise.resolve()
-            .then(() => (
-              subscriptionService.updateSubscription(subscription.id, {
-                lastPostedDate: dueDate,
-                nextDueDate
-              })
-            ))
+            .then(() => subscriptionService.updateSubscription(subscription.id, {
+              lastPostedDate: dueDate,
+              nextDueDate
+            }))
             .catch((err) => {
               console.error('Failed to advance already-posted subscription:', err)
               setError(err.message)
@@ -1006,7 +1046,71 @@ export function useBudget(options = {}) {
     })
   }, [ensureSubscriptionCategory, expenses, getCurrentDueDate, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
 
-  // Transfer operations
+  useEffect(() => {
+    if (!user || recurringIncomes.length === 0) return
+
+    const todayKey = formatLocalDateKey(new Date())
+
+    recurringIncomes.forEach((recurringIncome) => {
+      if (!recurringIncome?.id || recurringIncome.isActive === false) return
+      if (processingRecurringIncomesRef.current.has(recurringIncome.id)) return
+
+      const dueDate = getCurrentRecurringIncomeDueDate(recurringIncome, todayKey)
+      if (!dueDate) return
+
+      const alreadyPosted = incomes.some((income) => income.recurringIncomeId === recurringIncome.id && normalizeDateKey(income.date) === dueDate)
+
+      if (alreadyPosted) {
+        const nextDueDate = nextRecurringIncomeDate(recurringIncome, dueDate)
+        const storedNextDueDate = normalizeDateKey(recurringIncome.nextDueDate)
+
+        if (nextDueDate && storedNextDueDate !== nextDueDate) {
+          processingRecurringIncomesRef.current.add(recurringIncome.id)
+          Promise.resolve()
+            .then(() => recurringIncomeService.updateRecurringIncome(recurringIncome.id, {
+              lastPostedDate: dueDate,
+              nextDueDate
+            }))
+            .catch((err) => {
+              console.error('Failed to advance already-posted recurring income:', err)
+              setError(err.message)
+            })
+            .finally(() => {
+              processingRecurringIncomesRef.current.delete(recurringIncome.id)
+            })
+        }
+        return
+      }
+
+      processingRecurringIncomesRef.current.add(recurringIncome.id)
+
+      Promise.resolve()
+        .then(async () => {
+          await incomeService.addIncome({
+            source: recurringIncome.source,
+            amount: parseFloat(recurringIncome.amount || 0),
+            date: dueDate,
+            walletId: recurringIncome.walletId || null,
+            currency: recurringIncome.currency || null,
+            recurringIncomeId: recurringIncome.id,
+            postingSource: 'auto-next-due'
+          }, user.uid)
+
+          await recurringIncomeService.updateRecurringIncome(recurringIncome.id, {
+            lastPostedDate: dueDate,
+            nextDueDate: nextRecurringIncomeDate(recurringIncome, dueDate)
+          })
+        })
+        .catch((err) => {
+          console.error('Failed to auto-process recurring income:', err)
+          setError(err.message)
+        })
+        .finally(() => {
+          processingRecurringIncomesRef.current.delete(recurringIncome.id)
+        })
+    })
+  }, [getCurrentRecurringIncomeDueDate, incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user])
+
   const addTransfer = useCallback(async (transfer) => {
     if (!user) return
 
@@ -1039,7 +1143,6 @@ export function useBudget(options = {}) {
     }
   }, [])
 
-  // Investment operations
   const addInvestment = useCallback(async (investment) => {
     if (!user) return
 
@@ -1113,18 +1216,12 @@ export function useBudget(options = {}) {
 
   const totalInvestments = useMemo(() => (
     investments.reduce((sum, investment) => (
-      sum + (parseFloat(investment.currentValue) || parseFloat(investment.purchasePrice) || 0)
+      sum + ((parseFloat(investment.quantity || 0) || 0) * (parseFloat(investment.currentValue || investment.purchasePrice || 0) || 0))
     ), 0)
   ), [investments])
 
-  const netIncome = useMemo(() => (
-    totalIncome - totalExpenses
-  ), [totalIncome, totalExpenses])
+  const netIncome = useMemo(() => totalIncome - totalExpenses, [totalIncome, totalExpenses])
 
-  // Build a list of categories to display in the dashboard chart.
-  // Include all created categories (from `categories`) plus any category names
-  // that appear only on expenses (to avoid dropping ad-hoc names). This
-  // ensures categories with zero spending still appear with total 0.
   const expenseCategories = useMemo(() => {
     const expenseCategoryNames = [
       ...(categories || []).map((category) => category.name),
@@ -1136,41 +1233,81 @@ export function useBudget(options = {}) {
   const expensesByCategory = useMemo(() => (
     expenseCategories.map((categoryName) => {
       const name = categoryName || 'Uncategorized'
-      const categoryExpenses = filteredExpenses.filter((expense) => (
-        (expense.category || '') === (categoryName || '')
-      ))
+      const categoryExpenses = filteredExpenses.filter((expense) => (expense.category || '') === (categoryName || ''))
       const total = categoryExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0)
       const percentage = totalExpenses > 0 ? (total / totalExpenses * 100).toFixed(1) : 0
       return { category: name, total, percentage }
     })
   ), [expenseCategories, filteredExpenses, totalExpenses])
 
-  // Wallet balances calculated from linked incomes/expenses plus startingBalance
   const walletBalances = useMemo(() => {
     const map = {}
-    wallets.forEach(w => { map[w.id] = parseFloat(w.startingBalance || 0) })
-    incomes.forEach(i => {
-      if (!i.walletId) return
-      map[i.walletId] = (map[i.walletId] || 0) + parseFloat(i.amount || 0)
+    wallets.forEach((wallet) => { map[wallet.id] = parseFloat(wallet.startingBalance || 0) })
+    incomes.forEach((income) => {
+      if (!income.walletId) return
+      map[income.walletId] = (map[income.walletId] || 0) + parseFloat(income.amount || 0)
     })
-    visibleExpenses.forEach(e => {
-      if (!e.walletId) return
-      map[e.walletId] = (map[e.walletId] || 0) - parseFloat(e.amount || 0)
+    visibleExpenses.forEach((expense) => {
+      if (!expense.walletId) return
+      map[expense.walletId] = (map[expense.walletId] || 0) - parseFloat(expense.amount || 0)
     })
-    // Apply transfers: subtract from source, add to destination
-    transfers.forEach(t => {
-      if (t.fromWalletId) {
-        map[t.fromWalletId] = (map[t.fromWalletId] || 0) - parseFloat(t.amount || 0)
-      }
-      if (t.toWalletId) {
-        map[t.toWalletId] = (map[t.toWalletId] || 0) + parseFloat(t.amount || 0)
-      }
+    transfers.forEach((transfer) => {
+      if (transfer.fromWalletId) map[transfer.fromWalletId] = (map[transfer.fromWalletId] || 0) - parseFloat(transfer.amount || 0)
+      if (transfer.toWalletId) map[transfer.toWalletId] = (map[transfer.toWalletId] || 0) + parseFloat(transfer.amount || 0)
     })
-    return wallets.map(w => ({ ...w, balance: map[w.id] || 0 }))
+    return wallets.map((wallet) => ({ ...wallet, balance: map[wallet.id] || 0 }))
   }, [wallets, incomes, visibleExpenses, transfers])
 
-  const creditCardSummaries = useMemo(() => {
-    return walletBalances
+  const categoryBudgets = useMemo(() => (
+    categories.map((category) => {
+      const matchingBudget = budgets.find((budget) => budget.categoryId === category.id)
+      const spent = filteredExpenses
+        .filter((expense) => expense.categoryId === category.id || expense.category === category.name)
+        .reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0)
+      const amount = parseFloat(matchingBudget?.amount || 0)
+      const hasBudget = amount > 0
+      return {
+        categoryId: category.id,
+        categoryName: category.name,
+        budgetId: matchingBudget?.id || null,
+        amount,
+        spent,
+        hasBudget,
+        utilization: hasBudget ? (spent / amount) * 100 : 0,
+        remaining: hasBudget ? amount - spent : null
+      }
+    })
+  ), [budgets, categories, filteredExpenses])
+
+  const netWorthSummary = useMemo(() => {
+    const walletTotals = summarizeByCurrency(
+      walletBalances,
+      (wallet) => parseFloat(wallet.balance || 0),
+      (wallet) => wallet.currency || 'PHP'
+    )
+    const savingsTotals = summarizeByCurrency(
+      savings,
+      (goal) => parseFloat(goal.currentAmount || 0),
+      (goal) => goal.currency || 'PHP'
+    )
+    const investmentTotals = summarizeByCurrency(
+      investments,
+      (investment) => (parseFloat(investment.quantity || 0) || 0) * (parseFloat(investment.currentValue || investment.purchasePrice || 0) || 0),
+      (investment) => investment.currency || 'PHP'
+    )
+
+    const merged = new Map()
+    ;[walletTotals, savingsTotals, investmentTotals].forEach((summary) => {
+      summary.forEach(({ currency, total }) => {
+        merged.set(currency, (merged.get(currency) || 0) + total)
+      })
+    })
+
+    return Array.from(merged.entries()).map(([currency, total]) => ({ currency, total }))
+  }, [investments, savings, walletBalances])
+
+  const creditCardSummaries = useMemo(() => (
+    walletBalances
       .filter((wallet) => wallet.accountType === 'credit')
       .map((wallet) => {
         const creditLimit = parseFloat(wallet.creditLimit || 0)
@@ -1180,11 +1317,8 @@ export function useBudget(options = {}) {
         const alertPercent = parseFloat(wallet.creditAlertPercent || 80)
 
         let status = 'ok'
-        if (creditLimit > 0 && utilization >= 100) {
-          status = 'maxed'
-        } else if (creditLimit > 0 && utilization >= alertPercent) {
-          status = 'warning'
-        }
+        if (creditLimit > 0 && utilization >= 100) status = 'maxed'
+        else if (creditLimit > 0 && utilization >= alertPercent) status = 'warning'
 
         return {
           ...wallet,
@@ -1197,7 +1331,7 @@ export function useBudget(options = {}) {
         }
       })
       .sort((a, b) => b.utilization - a.utilization)
-  }, [walletBalances])
+  ), [walletBalances])
 
   const liveSummary = useMemo(() => ({
     totalIncome,
@@ -1209,30 +1343,21 @@ export function useBudget(options = {}) {
     walletBalances,
     creditCardSummaries,
     savedAt: Date.now()
-  }), [
-    totalIncome,
-    totalExpenses,
-    totalSavings,
-    totalInvestments,
-    netIncome,
-    expensesByCategory,
-    walletBalances,
-    creditCardSummaries
-  ])
+  }), [totalIncome, totalExpenses, totalSavings, totalInvestments, netIncome, expensesByCategory, walletBalances, creditCardSummaries])
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !user?.uid || loading) {
-      return
-    }
+    if (typeof window === 'undefined' || !user?.uid || loading) return
 
     try {
       const cacheKey = getSummaryCacheKey(user.uid, timePeriod, selectedYear, selectedMonth)
       window.localStorage.setItem(cacheKey, JSON.stringify(liveSummary))
       setCachedSummary(liveSummary)
     } catch {
-      // Ignore cache write failures in restricted environments.
+      // Ignore cache write failures.
     }
   }, [user?.uid, timePeriod, selectedYear, selectedMonth, loading, liveSummary])
+
+
 
   const shouldUseCachedSummary = loading && !!cachedSummary
   const effectiveExpensesByCategory = shouldUseCachedSummary ? (cachedSummary.expensesByCategory || []) : expensesByCategory
@@ -1245,12 +1370,11 @@ export function useBudget(options = {}) {
   const effectiveNetIncome = shouldUseCachedSummary ? Number(cachedSummary.netIncome || 0) : netIncome
 
   const exportToCSV = () => {
-    const walletName = (id) => wallets.find(w => w.id === id)?.name || ''
-
+    const walletName = (id) => wallets.find((wallet) => wallet.id === id)?.name || ''
     const csvContent = [
       ['Type', 'Description/Source', 'Category', 'Wallet', 'Amount', 'Date'].join(','),
-      ...filteredIncomes.map(inc => ['Income', inc.source, '', walletName(inc.walletId), inc.amount, inc.date].join(',')),
-      ...filteredExpenses.map(exp => ['Expense', exp.description, exp.category, walletName(exp.walletId), exp.amount, exp.date].join(','))
+      ...filteredIncomes.map((income) => ['Income', income.source, '', walletName(income.walletId), income.amount, income.date].join(',')),
+      ...filteredExpenses.map((expense) => ['Expense', expense.description, expense.category, walletName(expense.walletId), expense.amount, expense.date].join(','))
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -1265,13 +1389,16 @@ export function useBudget(options = {}) {
   }
 
   return {
-    // State
     incomes,
+    recurringIncomes,
     expenses: visibleExpenses,
     savings,
     categories,
+    budgets,
+    categoryBudgets,
     wallets,
     subscriptions,
+
     transfers,
     investments,
     walletBalances: effectiveWalletBalances,
@@ -1279,6 +1406,7 @@ export function useBudget(options = {}) {
     selectedMonth,
     selectedYear,
     editingIncome,
+    editingRecurringIncome,
     editingExpense,
     editingSavings,
     editingCategory,
@@ -1291,35 +1419,42 @@ export function useBudget(options = {}) {
     totalExpenses: effectiveTotalExpenses,
     totalSavings: effectiveTotalSavings,
     totalInvestments: effectiveTotalInvestments,
+    netWorthSummary,
     netIncome: effectiveNetIncome,
     expensesByCategory: effectiveExpensesByCategory,
     loading,
     error,
     syncState,
 
-    // Actions
     setSelectedMonth,
     setSelectedYear,
     setTimePeriod,
     addIncome,
+    addRecurringIncome,
     addExpense,
     addSavings,
     addCategory,
+    upsertBudget,
     addWallet,
     addSubscription,
     postSubscriptionBill,
+    postRecurringIncome,
     addTransfer,
     addInvestment,
     deleteIncome,
+    deleteRecurringIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
+    deleteBudget,
     deleteWallet,
     deleteSubscription,
     deleteTransfer,
     deleteInvestment,
     editIncome,
+    editRecurringIncome,
     updateIncome,
+    updateRecurringIncome,
     editExpense,
     updateExpense,
     editSavings,

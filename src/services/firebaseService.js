@@ -15,13 +15,16 @@ import { db } from '../firebase'
 
 const COLLECTION_NAMES = {
   INCOMES: 'incomes',
+  RECURRING_INCOMES: 'recurringIncomes',
   EXPENSES: 'expenses',
   SAVINGS: 'savings',
   CATEGORIES: 'categories',
+  BUDGETS: 'budgets',
   WALLETS: 'wallets',
   TRANSFERS: 'transfers',
   INVESTMENTS: 'investments',
   SUBSCRIPTIONS: 'subscriptions',
+  NET_WORTH_SNAPSHOTS: 'netWorthSnapshots',
   USERS: 'users'
 }
 
@@ -60,6 +63,33 @@ export const incomeService = {
 
   // Add new income
   addIncome: async (income, userId) => {
+    const isManagedRecurringIncome = (
+      !!income?.recurringIncomeId &&
+      (
+        income?.postingSource === 'manual-post-schedule' ||
+        income?.postingSource === 'auto-next-due'
+      )
+    )
+
+    if (
+      income?.recurringIncomeId &&
+      income?.postingSource &&
+      !isManagedRecurringIncome
+    ) {
+      throw new Error('Automatic recurring income creation is disabled')
+    }
+
+    if (isManagedRecurringIncome && income?.date) {
+      const docId = `recurring_income_${userId}_${income.recurringIncomeId}_${String(income.date).replace(/[^a-zA-Z0-9_-]/g, '_')}`
+      const docRef = doc(db, COLLECTION_NAMES.INCOMES, docId)
+      await setDoc(docRef, {
+        ...income,
+        userId,
+        createdAt: new Date()
+      })
+      return docRef.id
+    }
+
     const docRef = await addDoc(collection(db, COLLECTION_NAMES.INCOMES), {
       ...income,
       userId,
@@ -80,6 +110,41 @@ export const incomeService = {
   // Delete income
   deleteIncome: async (incomeId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.INCOMES, incomeId))
+  }
+}
+
+export const recurringIncomeService = {
+  subscribeToRecurringIncomes: (userId, callback, metadataCallback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.RECURRING_INCOMES),
+      where('userId', '==', userId)
+    )
+
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
+      console.error('Recurring incomes snapshot error:', err)
+      try { callback([]) } catch { /* swallow */ }
+    })
+  },
+
+  addRecurringIncome: async (recurringIncome, userId) => {
+    const docRef = await addDoc(collection(db, COLLECTION_NAMES.RECURRING_INCOMES), {
+      ...recurringIncome,
+      userId,
+      createdAt: new Date()
+    })
+    return docRef.id
+  },
+
+  updateRecurringIncome: async (recurringIncomeId, updates) => {
+    const docRef = doc(db, COLLECTION_NAMES.RECURRING_INCOMES, recurringIncomeId)
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: new Date()
+    })
+  },
+
+  deleteRecurringIncome: async (recurringIncomeId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.RECURRING_INCOMES, recurringIncomeId))
   }
 }
 
@@ -222,6 +287,41 @@ export const categoryService = {
   // Delete category
   deleteCategory: async (categoryId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.CATEGORIES, categoryId))
+  }
+}
+
+export const budgetService = {
+  subscribeToBudgets: (userId, monthKey, callback, metadataCallback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.BUDGETS),
+      where('userId', '==', userId),
+      where('monthKey', '==', monthKey)
+    )
+
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
+      console.error('Budgets snapshot error:', err)
+      try { callback([]) } catch { /* swallow */ }
+    })
+  },
+
+  upsertBudget: async (budget, userId) => {
+    const safeMonthKey = String(budget.monthKey || '').replace(/[^a-zA-Z0-9_-]/g, '_')
+    const safeCategoryId = String(budget.categoryId || '').replace(/[^a-zA-Z0-9_-]/g, '_')
+    const budgetId = `budget_${userId}_${safeMonthKey}_${safeCategoryId}`
+    const docRef = doc(db, COLLECTION_NAMES.BUDGETS, budgetId)
+
+    await setDoc(docRef, {
+      ...budget,
+      userId,
+      updatedAt: new Date(),
+      createdAt: budget.createdAt || new Date()
+    }, { merge: true })
+
+    return budgetId
+  },
+
+  deleteBudget: async (budgetId) => {
+    await deleteDoc(doc(db, COLLECTION_NAMES.BUDGETS, budgetId))
   }
 }
 
@@ -406,6 +506,35 @@ export const subscriptionService = {
 
   deleteSubscription: async (subscriptionId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.SUBSCRIPTIONS, subscriptionId))
+  }
+}
+
+export const netWorthSnapshotService = {
+  subscribeToNetWorthSnapshots: (userId, callback, metadataCallback) => {
+    const q = query(
+      collection(db, COLLECTION_NAMES.NET_WORTH_SNAPSHOTS),
+      where('userId', '==', userId)
+    )
+
+    return subscribeWithMetadata(q, callback, metadataCallback, (err) => {
+      console.error('Net worth snapshots error:', err)
+      try { callback([]) } catch { /* swallow */ }
+    })
+  },
+
+  upsertSnapshot: async (snapshot, userId) => {
+    const safeMonthKey = String(snapshot.monthKey || '').replace(/[^a-zA-Z0-9_-]/g, '_')
+    const snapshotId = `networth_${userId}_${safeMonthKey}`
+    const docRef = doc(db, COLLECTION_NAMES.NET_WORTH_SNAPSHOTS, snapshotId)
+
+    await setDoc(docRef, {
+      ...snapshot,
+      userId,
+      updatedAt: new Date(),
+      createdAt: snapshot.createdAt || new Date()
+    }, { merge: true })
+
+    return snapshotId
   }
 }
 

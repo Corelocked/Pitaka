@@ -41,10 +41,12 @@ const CategoryForm = lazy(() => import('./components/CategoryForm'))
 const SubscriptionForm = lazy(() => import('./components/SubscriptionForm'))
 const SavingsForm = lazy(() => import('./components/SavingsForm'))
 const AddToSavingsForm = lazy(() => import('./components/AddToSavingsForm'))
+const RecurringIncomeForm = lazy(() => import('./components/RecurringIncomeForm'))
 const IncomeTable = lazy(() => import('./components/IncomeTable'))
 const ExpenseTable = lazy(() => import('./components/ExpenseTable'))
 const WalletsTable = lazy(() => import('./components/WalletsTable'))
 const CategoryTable = lazy(() => import('./components/CategoryTable'))
+const RecurringIncomesTable = lazy(() => import('./components/RecurringIncomesTable'))
 const SubscriptionsTable = lazy(() => import('./components/SubscriptionsTable'))
 const InvestmentForm = lazy(() => import('./components/InvestmentForm'))
 const InvestmentsTable = lazy(() => import('./components/InvestmentsTable'))
@@ -369,6 +371,7 @@ function ModernApp() {
     selectedMonth,
     selectedYear,
     editingIncome,
+    editingRecurringIncome,
     editingExpense,
     editingSavings,
     editingCategory,
@@ -380,6 +383,8 @@ function ModernApp() {
     expensesByCategory,
     filteredIncomes,
     filteredExpenses,
+    recurringIncomes,
+    netWorthSnapshots,
     categories,
     subscriptions,
     loading: budgetLoading,
@@ -388,17 +393,21 @@ function ModernApp() {
     setSelectedMonth,
     setSelectedYear,
     addIncome,
+    addRecurringIncome,
     addExpense,
     addSavings,
     addCategory,
     addSubscription,
     deleteIncome,
+    deleteRecurringIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
     deleteSubscription,
     editIncome,
+    editRecurringIncome,
     updateIncome,
+    updateRecurringIncome,
     editExpense,
     updateExpense,
     editSavings,
@@ -938,6 +947,22 @@ function ModernApp() {
     year: 'numeric'
   })
 
+  const formatSnapshotMonth = (monthKey) => {
+    if (!monthKey) return 'Unknown period'
+    const [yearRaw, monthRaw] = String(monthKey).split('-')
+    const year = Number(yearRaw)
+    const month = Number(monthRaw)
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+      return monthKey
+    }
+
+    return new Date(year, month - 1, 1).toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric'
+    })
+  }
+
   const currentPeriodTransfers = transfers.filter((transfer) => {
     const date = new Date(transfer.date)
     return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear
@@ -962,6 +987,8 @@ function ModernApp() {
   const walletBalanceSummary = formatCurrencySummary(
     summarizeByCurrency(walletBalances, (wallet) => wallet.balance || 0, (wallet) => wallet.currency || DEFAULT_CURRENCY)
   )
+
+
 
   const totalSavingsSummary = formatCurrencySummary(
     summarizeByCurrency(savings, (goal) => goal.currentAmount || 0, (goal) => goal.currency || DEFAULT_CURRENCY)
@@ -1110,6 +1137,13 @@ function ModernApp() {
           >
             <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
             <div>Subscriptions</div>
+          </button>
+          <button
+            className={`sidebar-nav-item ${currentView === 'recurring-income' ? 'active' : ''}`}
+            onClick={() => setCurrentView('recurring-income')}
+          >
+            <div className="sidebar-nav-icon"><IncomeIcon size={20} /></div>
+            <div>Recurring Income</div>
           </button>
           <button
             className={`sidebar-nav-item ${currentView === 'android-app' ? 'active' : ''}`}
@@ -1591,6 +1625,48 @@ function ModernApp() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )
+
+      case 'recurring-income':
+        return (
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Recurring Cashflow',
+              title: 'Recurring Income',
+              description: 'Manage repeating income schedules and keep the next payout dates accurate.',
+              stats: [
+                { label: 'Schedules', value: recurringIncomes.length },
+                { label: 'This Month Entries', value: filteredIncomes.length }
+              ]
+            })}
+
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><IncomeIcon size={18} /> Recurring Income Schedules</h3>
+                  <p className="card-subtitle">Create and maintain salary, allowance, or retainer schedules.</p>
+                </div>
+                <button
+                  onClick={() => openBottomSheet('addRecurringIncome')}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
+                >
+                  + Add Recurring Income
+                </button>
+              </div>
+              <RecurringIncomesTable
+                recurringIncomes={recurringIncomes}
+                wallets={walletBalances}
+                onEditRecurringIncome={(recurringIncome) => {
+                  editRecurringIncome(recurringIncome)
+                  openBottomSheet('addRecurringIncome')
+                }}
+                onDeleteRecurringIncome={deleteRecurringIncome}
+                selectable
+                onBulkDelete={(rows) => deleteMany(rows, deleteRecurringIncome)}
+              />
             </div>
           </div>
         )
@@ -2108,6 +2184,14 @@ function ModernApp() {
                 </button>
 
                 <button
+                  onClick={() => setCurrentView('recurring-income')}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <IncomeIcon size={16} /> Manage Recurring Income
+                </button>
+
+                <button
                   onClick={() => setCurrentView('categories')}
                   className="btn btn-secondary"
                   style={{ justifyContent: 'flex-start' }}
@@ -2396,6 +2480,26 @@ function ModernApp() {
               </button>
             </div>
           </div>
+        )
+
+      case 'addRecurringIncome':
+        return (
+          <RecurringIncomeForm
+            onAddRecurringIncome={async (recurringIncome) => {
+              await addRecurringIncome(recurringIncome)
+              closeBottomSheet()
+            }}
+            editingRecurringIncome={editingRecurringIncome}
+            onUpdateRecurringIncome={async (recurringIncome) => {
+              await updateRecurringIncome(recurringIncome)
+              closeBottomSheet()
+            }}
+            onCancelEdit={() => {
+              editRecurringIncome(null)
+              closeBottomSheet()
+            }}
+            wallets={walletBalances}
+          />
         )
 
       case 'customizeMobileDashboard':
@@ -2892,7 +2996,7 @@ function ModernApp() {
           <div>Wealth</div>
         </button>
         <button
-          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', 'android-app', 'contact', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
+          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
         >
           <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>

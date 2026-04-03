@@ -22,12 +22,46 @@ export default function DataTable({
   const tableRef = useRef(null)
   const [localCols, setLocalCols] = useState(columns)
   useEffect(() => setLocalCols(columns), [columns])
+  const [isCompactMobile, setIsCompactMobile] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+    return window.matchMedia('(max-width: 520px)').matches
+  })
+  const [expandedRows, setExpandedRows] = useState(() => new Set())
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
+    const mediaQuery = window.matchMedia('(max-width: 520px)')
+    const updateCompactMobile = (event) => setIsCompactMobile(event.matches)
+    setIsCompactMobile(mediaQuery.matches)
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updateCompactMobile)
+      return () => mediaQuery.removeEventListener('change', updateCompactMobile)
+    }
+
+    mediaQuery.addListener(updateCompactMobile)
+    return () => mediaQuery.removeListener(updateCompactMobile)
+  }, [])
+
+  useEffect(() => {
+    if (!isCompactMobile) {
+      setExpandedRows(new Set())
+    }
+  }, [isCompactMobile])
 
   // Selection
   const [selected, setSelected] = useState(new Set())
   const toggleSelect = useCallback((id) => {
     setSelected(s => {
       const next = new Set(s)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+  const toggleExpandedRow = useCallback((id) => {
+    setExpandedRows((current) => {
+      const next = new Set(current)
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
@@ -233,8 +267,33 @@ export default function DataTable({
     }
   }
 
+  const dataColumns = useMemo(
+    () => localCols.filter((col) => !String(col.className || '').includes('actions') && col.key !== 'actions'),
+    [localCols]
+  )
+  const primarySummaryColumn = dataColumns[0] || localCols[0]
+  const secondarySummaryColumn = dataColumns[1] || null
+
+  const getCellContent = useCallback((row, col, rowId) => {
+    if (!col) return null
+    const isEditing = editing && editing.id === rowId && editing.key === col.key
+
+    if (isEditing) {
+      return (
+        <input
+          autoFocus
+          defaultValue={row[col.key]}
+          onBlur={(e) => finishEdit(rowId, col.key, e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}
+        />
+      )
+    }
+
+    return typeof col.render === 'function' ? col.render(row) : (row[col.key] ?? '')
+  }, [editing])
+
   if (!data || data.length === 0) return (
-    <div className={`table-wrapper ${tableClassName || ''}`}>
+    <div className={`table-wrapper ${tableClassName || ''}${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
       {emptyState || (
         <div className="empty-state">
           <div className="icon empty-icon" aria-hidden></div>
@@ -245,7 +304,7 @@ export default function DataTable({
   )
 
   return (
-    <div className={`table-wrapper ${tableClassName || ''}`}>
+    <div className={`table-wrapper ${tableClassName || ''}${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
       {selectable && selected.size > 0 && (
         <div className="table-bulk-toolbar">
           <div>{selected.size} selected</div>
@@ -257,6 +316,67 @@ export default function DataTable({
         </div>
       )}
 
+      {isCompactMobile ? (
+        <div className="table-mobile-list" role="list">
+          {pageData.map((row, i) => {
+            const id = rowKey(row, i)
+            const isExpanded = expandedRows.has(id)
+            const primaryContent = getCellContent(row, primarySummaryColumn, id)
+            const secondaryContent = secondarySummaryColumn ? getCellContent(row, secondarySummaryColumn, id) : null
+
+            return (
+              <section key={id} className={`table-mobile-item${isExpanded ? ' is-expanded' : ''}`} role="listitem">
+                <button
+                  type="button"
+                  className="table-mobile-summary"
+                  onClick={() => toggleExpandedRow(id)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="table-mobile-summary-main">
+                    {selectable && (
+                      <span className="table-mobile-select" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(id)}
+                          onChange={() => toggleSelect(id)}
+                          aria-label={`Select row ${i + 1}`}
+                        />
+                      </span>
+                    )}
+                    <div className="table-mobile-summary-copy">
+                      <div className="table-mobile-summary-label">{primarySummaryColumn?.header || 'Entry'}</div>
+                      <div className="table-mobile-summary-value">{primaryContent}</div>
+                      {secondarySummaryColumn && secondaryContent != null && secondaryContent !== '' && (
+                        <div className="table-mobile-summary-meta">
+                          <span>{secondarySummaryColumn.header}</span>
+                          <strong>{secondaryContent}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="table-mobile-summary-toggle">{isExpanded ? 'Hide' : 'Details'}</span>
+                </button>
+
+                {isExpanded && (
+                  <div className="table-mobile-details">
+                    {localCols.map((col) => (
+                      <div key={col.key} className={`table-mobile-field ${col.className || ''}`}>
+                        <div className="table-mobile-field-label">{col.header}</div>
+                        <div
+                          className="table-mobile-field-value"
+                          onDoubleClick={() => col.editable && startEdit(id, col.key)}
+                        >
+                          {getCellContent(row, col, id)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+        </div>
+      ) : (
       <table ref={tableRef} className={tableClassName + ' data-table'} role="table" aria-rowcount={data.length}>
         <colgroup>
           {selectable && <col className="col-select" />}
@@ -295,14 +415,10 @@ export default function DataTable({
                 <td className="col-select"><input type="checkbox" checked={selected.has(rowKey(row))} onChange={() => toggleSelect(rowKey(row))} aria-label={`Select row ${i + 1}`} /></td>
               )}
               {localCols.map(col => {
-                const isEditing = editing && editing.id === rowKey(row) && editing.key === col.key
+                const rowId = rowKey(row)
                 return (
-                  <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowKey(row), col.key)}>
-                    {isEditing ? (
-                      <input autoFocus defaultValue={row[col.key]} onBlur={(e) => finishEdit(rowKey(row), col.key, e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur() } }} />
-                    ) : (
-                      typeof col.render === 'function' ? col.render(row) : (row[col.key] ?? '')
-                    )}
+                  <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowId, col.key)}>
+                    {getCellContent(row, col, rowId)}
                   </td>
                 )
               })}
@@ -310,6 +426,7 @@ export default function DataTable({
           ))}
         </tbody>
       </table>
+      )}
 
       <div className="table-footer">
         <div className="pager">

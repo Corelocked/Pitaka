@@ -12,6 +12,7 @@ export function FirebaseProvider({ children }) {
   const [user, setUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [authResolved, setAuthResolved] = useState(false)
   const [error, setError] = useState(null)
 
   // Firebase authentication
@@ -28,6 +29,7 @@ export function FirebaseProvider({ children }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       clearTimeout(authTimeout) // Clear the timeout since we got a response
+      setAuthResolved(true)
 
       if (user) {
         setUser(user)
@@ -137,6 +139,7 @@ export function FirebaseProvider({ children }) {
     user,
     userProfile,
     loading,
+    authResolved,
     error,
     login,
     signup,
