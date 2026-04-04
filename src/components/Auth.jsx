@@ -3,9 +3,13 @@ import { FirebaseContext } from '../contexts/FirebaseContext'
 import Login from './Login'
 import Signup from './Signup'
 
-function Auth() {
-  const [isLogin, setIsLogin] = useState(true)
+function Auth({ initialMode = 'login' }) {
+  const [isLogin, setIsLogin] = useState(() => initialMode !== 'signup')
   const { login, signup, googleSignIn, error } = useContext(FirebaseContext)
+
+  useEffect(() => {
+    setIsLogin(initialMode !== 'signup')
+  }, [initialMode])
 
   useEffect(() => {
     // Set dark theme for auth pages

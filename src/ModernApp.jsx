@@ -182,6 +182,62 @@ const DASHBOARD_LAYOUT_SECTION_DEFAULTS = {
 const DASHBOARD_WIDGET_IDS = DASHBOARD_WIDGET_LIBRARY.map((widget) => widget.id)
 const DASHBOARD_DESKTOP_TILE_SIZES = ['small', 'medium', 'large']
 const BUILT_IN_DASHBOARD_LAYOUT_IDS = DASHBOARD_LAYOUTS.filter((layout) => layout.id !== 'custom').map((layout) => layout.id)
+const PUBLIC_AUTH_ROUTE_MODES = {
+  '/login': 'login',
+  '/signup': 'signup'
+}
+const PUBLIC_LANDING_SECTION_SLUGS = {
+  '/about': 'about',
+  '/features': 'features',
+  '/pricing': 'pricing',
+  '/contact': 'contact',
+  '/help': 'help',
+  '/privacy': 'contact',
+  '/terms': 'contact'
+}
+const AUTHENTICATED_VIEW_PATHS = {
+  dashboard: '/dashboard',
+  transactions: '/transactions',
+  accounts: '/accounts',
+  wealth: '/wealth',
+  savings: '/savings',
+  investments: '/investments',
+  categories: '/categories',
+  subscriptions: '/subscriptions',
+  'recurring-income': '/recurring-income',
+  'android-app': '/android-app',
+  contact: '/contact',
+  pro: '/pro',
+  settings: '/settings'
+}
+const AUTHENTICATED_PATH_VIEW_ALIASES = {
+  '/': 'dashboard',
+  '/app': 'dashboard',
+  '/home': 'dashboard',
+  '/dashboard': 'dashboard',
+  '/transactions': 'transactions',
+  '/accounts': 'accounts',
+  '/wealth': 'wealth',
+  '/savings': 'savings',
+  '/investments': 'investments',
+  '/categories': 'categories',
+  '/subscriptions': 'subscriptions',
+  '/recurring-income': 'recurring-income',
+  '/android-app': 'android-app',
+  '/contact': 'contact',
+  '/pro': 'pro',
+  '/settings': 'settings'
+}
+
+const normalizePathname = (path = '/') => {
+  const normalized = String(path || '/').replace(/\/+$/, '')
+  return normalized || '/'
+}
+
+const resolveAuthenticatedViewFromPath = (path = '/') => {
+  const normalizedPath = normalizePathname(path)
+  return AUTHENTICATED_PATH_VIEW_ALIASES[normalizedPath] || null
+}
 
 const getCompletedDashboardSections = (layoutId = 'editorial') => {
   const defaults = DASHBOARD_LAYOUT_SECTION_DEFAULTS[layoutId] || DASHBOARD_LAYOUT_SECTION_DEFAULTS.editorial
@@ -869,6 +925,36 @@ function ModernApp() {
     }
   }, [isAuthenticated, authLoading, isPro])
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || isNativeMobileApp || !isAuthenticated) return undefined
+
+    const syncViewFromLocation = () => {
+      const nextView = resolveAuthenticatedViewFromPath(window.location.pathname || '/')
+      if (nextView) {
+        setCurrentView(nextView)
+      }
+    }
+
+    syncViewFromLocation()
+    window.addEventListener('popstate', syncViewFromLocation)
+
+    return () => {
+      window.removeEventListener('popstate', syncViewFromLocation)
+    }
+  }, [isAuthenticated, isNativeMobileApp])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isNativeMobileApp || !isAuthenticated) return
+
+    const nextPath = AUTHENTICATED_VIEW_PATHS[currentView]
+    if (!nextPath) return
+
+    const currentPath = normalizePathname(window.location.pathname || '/')
+    if (currentPath === nextPath) return
+
+    window.history.replaceState(null, '', `${nextPath}${window.location.search || ''}${window.location.hash || ''}`)
+  }, [currentView, isAuthenticated, isNativeMobileApp])
+
   const installApp = async () => {
     if (!deferredInstallPrompt) return
 
@@ -1280,6 +1366,8 @@ function ModernApp() {
   // Show auth screen only after Firebase has finished resolving the session
   if (!isAuthenticated) {
     const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
+    const publicAuthMode = PUBLIC_AUTH_ROUTE_MODES[normalizedPublicPath] || null
+    const landingSection = PUBLIC_LANDING_SECTION_SLUGS[normalizedPublicPath] || null
     const showPublicBlog = !isNativeMobileApp
       && (
         normalizedPublicPath === '/blog'
@@ -1292,9 +1380,19 @@ function ModernApp() {
       <Suspense fallback={<SectionFallback label="Loading..." />}>
         {isNativeMobileApp
           ? <Auth />
+          : publicAuthMode
+            ? <Auth initialMode={publicAuthMode} />
           : showPublicBlog
             ? <Blog onBackToLanding={() => openPublicRoute('/')} />
-            : <Landing />}
+            : (
+              <Landing
+                initialSection={landingSection}
+                onOpenAuthRoute={(mode = 'login') => {
+                  openPublicRoute(mode === 'signup' ? '/signup' : '/login')
+                }}
+                onOpenBlogRoute={() => openPublicRoute('/blogs')}
+              />
+            )}
       </Suspense>
     )
   }

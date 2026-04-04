@@ -94,9 +94,27 @@ const faqs = [
   }
 ]
 
-export default function Landing() {
+export default function Landing({ initialSection = null, onOpenAuthRoute, onOpenBlogRoute }) {
   const [showAuth, setShowAuth] = useState(false)
   const [showBlog, setShowBlog] = useState(false)
+
+  const openAuthRoute = (mode = 'login') => {
+    if (typeof onOpenAuthRoute === 'function') {
+      onOpenAuthRoute(mode)
+      return
+    }
+
+    setShowAuth(true)
+  }
+
+  const openBlogRoute = () => {
+    if (typeof onOpenBlogRoute === 'function') {
+      onOpenBlogRoute()
+      return
+    }
+
+    setShowBlog(true)
+  }
 
   useEffect(() => {
     const previousTheme = document.body.dataset.theme
@@ -106,7 +124,7 @@ export default function Landing() {
     applySeo({
       title: 'Pitaka - Budget Tracker, Expense Manager, and Personal Finance App',
       description: 'Track expenses, manage income, monitor savings goals, and review investments with Pitaka. A personal finance and budget tracking app for web, Android, and iOS.',
-      path: '/',
+      path: typeof window === 'undefined' ? '/' : (window.location.pathname || '/'),
       keywords: 'budget tracker app, expense tracker app, personal finance app, money management app, income and expense tracker, savings goals app, investment tracker app, monthly budget planner, financial dashboard app, web and mobile budget app',
       type: 'website',
       imageAlt: 'Pitaka social share card for budgeting, expenses, savings, and investments'
@@ -213,6 +231,15 @@ export default function Landing() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!initialSection || showAuth || showBlog || typeof document === 'undefined') return
+
+    const sectionElement = document.getElementById(initialSection)
+    if (!sectionElement) return
+
+    sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [initialSection, showAuth, showBlog])
+
   if (showAuth) {
     return <Auth />
   }
@@ -234,10 +261,10 @@ export default function Landing() {
             <nav className="landing-topbar-nav" aria-label="Main navigation">
               <a href="#features" className="landing-topbar-link">Features</a>
               <a href="#pricing" className="landing-topbar-link">Pricing</a>
-              <button type="button" onClick={() => setShowAuth(true)} className="landing-topbar-link landing-topbar-link--button">
+              <button type="button" onClick={() => openAuthRoute('login')} className="landing-topbar-link landing-topbar-link--button">
                 Sign In
               </button>
-              <button type="button" onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary landing-topbar-cta">
+              <button type="button" onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary landing-topbar-cta">
                 Get Started Free
               </button>
             </nav>
@@ -256,10 +283,10 @@ export default function Landing() {
               </p>
 
               <div className="landing-cta-buttons">
-                <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary">
+                <button onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary">
                   Get Started Free
                 </button>
-                <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-secondary">
+                <button onClick={() => openAuthRoute('login')} className="landing-btn landing-btn-secondary">
                   Sign In
                 </button>
               </div>
@@ -326,7 +353,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-editorial-band">
+      <section className="landing-editorial-band" id="about">
         <div className="landing-container landing-editorial-layout">
           <div className="landing-editorial-copy">
             <span className="landing-eyebrow">Why It Feels Different</span>
@@ -365,7 +392,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-faq">
+      <section className="landing-faq" id="help">
         <div className="landing-container">
           <div className="landing-section-heading">
             <span className="landing-eyebrow">Questions</span>
@@ -383,7 +410,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-contact">
+      <section className="landing-contact" id="contact">
         <div className="landing-container">
           <div className="landing-contact-shell">
             <div className="landing-contact-intro">
@@ -405,7 +432,7 @@ export default function Landing() {
             <h2>Ready to take control?</h2>
             <p>Start managing your finances with a cleaner system and a sharper monthly view.</p>
           </div>
-          <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary landing-btn-lg">
+          <button onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary landing-btn-lg">
             Create Free Account
           </button>
         </div>
@@ -418,7 +445,7 @@ export default function Landing() {
             <h2>Financial insights from Pitaka</h2>
             <p>Tips, strategies, and grounded thinking to help you manage money with more discipline.</p>
           </div>
-          <button onClick={() => setShowBlog(true)} className="landing-btn landing-btn-secondary landing-btn-lg">
+          <button onClick={openBlogRoute} className="landing-btn landing-btn-secondary landing-btn-lg">
             Read Our Blog
           </button>
         </div>
