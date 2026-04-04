@@ -224,71 +224,85 @@ export default function Landing() {
   return (
     <div className="landing-page">
       <section className="landing-hero">
-        <div className="landing-container landing-hero-layout">
-          <div className="landing-hero-copy">
-            <span className="landing-eyebrow">Private Finance Workspace</span>
-            <h1>Budget with more control and less noise.</h1>
-            <p className="landing-hero-description">
-              Pitaka gives you one place to track spending, manage accounts, monitor savings, and review the month with clarity.
-            </p>
+        <div className="landing-container">
+          <header className="landing-topbar" aria-label="Primary">
+            <div className="landing-topbar-brand">
+              <img src="/pitaka-logo.png" alt="Pitaka logo - personal finance and budget tracker app" className="landing-brand-mark" />
+              <span className="landing-brand-wordmark">Pitaka</span>
+            </div>
 
-            <div className="landing-cta-buttons">
-              <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary">
-                Get Started Free
-              </button>
-              <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-secondary">
+            <nav className="landing-topbar-nav" aria-label="Main navigation">
+              <a href="#features" className="landing-topbar-link">Features</a>
+              <a href="#pricing" className="landing-topbar-link">Pricing</a>
+              <button type="button" onClick={() => setShowAuth(true)} className="landing-topbar-link landing-topbar-link--button">
                 Sign In
               </button>
+              <button type="button" onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary landing-topbar-cta">
+                Get Started Free
+              </button>
+            </nav>
+          </header>
+
+          <div className="landing-hero-layout">
+            <div className="landing-hero-copy">
+              <div className="landing-brand-row" aria-hidden="true">
+                <img src="/pitaka-logo.png" alt="" className="landing-brand-mark" />
+                <span className="landing-brand-wordmark">Pitaka</span>
+              </div>
+              <span className="landing-eyebrow">Private Finance Workspace</span>
+              <h1>Budget with more control and less noise.</h1>
+              <p className="landing-hero-description">
+                Pitaka gives you one place to track spending, manage accounts, monitor savings, and review the month with clarity.
+              </p>
+
+              <div className="landing-cta-buttons">
+                <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-primary">
+                  Get Started Free
+                </button>
+                <button onClick={() => setShowAuth(true)} className="landing-btn landing-btn-secondary">
+                  Sign In
+                </button>
+              </div>
+
+              <div className="landing-proof-strip">
+                {proofPoints.map((point) => (
+                  <div key={point.value} className="landing-proof-card">
+                    <strong>{point.value}</strong>
+                    <span>{point.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="landing-proof-strip">
-              {proofPoints.map((point) => (
-                <div key={point.value} className="landing-proof-card">
-                  <strong>{point.value}</strong>
-                  <span>{point.label}</span>
-                </div>
-              ))}
+            <div className="landing-hero-showcase landing-hero-showcase--screens">
+              <figure className="landing-screenshot-frame landing-screenshot-frame--desktop">
+                <picture>
+                  <source media="(min-width: 981px)" srcSet="/pitaka-dashboard-desktop-cropped.webp" />
+                  <img
+                    src="/pitaka-dashboard-desktop.webp"
+                    alt="Pitaka personal finance dashboard on desktop showing budget overview, expense tracking, income totals, and monthly net position"
+                    width="1600"
+                    height="1000"
+                  />
+                </picture>
+              </figure>
+
+              <figure className="landing-screenshot-frame landing-screenshot-frame--mobile">
+                <img
+                  src="/pitaka-dashboard-mobile.webp"
+                  alt="Pitaka mobile budget tracker interface showing account balances, income and expense cards, and quick finance navigation"
+                  width="900"
+                  height="1600"
+                />
+              </figure>
             </div>
           </div>
 
-          <div className="landing-hero-showcase" aria-hidden="true">
-            <div className="landing-showcase-panel landing-showcase-panel--lead">
-              <div className="landing-showcase-label">This Month</div>
-              <div className="landing-showcase-value">PHP 24,680</div>
-              <div className="landing-showcase-caption">Net position after income, expenses, and savings activity.</div>
-              <div className="landing-showcase-bars">
-                <span style={{ width: '84%' }} />
-                <span style={{ width: '58%' }} />
-                <span style={{ width: '73%' }} />
-              </div>
-            </div>
-
-            <div className="landing-showcase-grid">
-              <div className="landing-showcase-panel">
-                <div className="landing-showcase-label">Top Category</div>
-                <div className="landing-showcase-value landing-showcase-value--small">Food & Dining</div>
-                <div className="landing-showcase-caption">Largest expense area this month.</div>
-              </div>
-              <div className="landing-showcase-panel landing-showcase-panel--accent">
-                <div className="landing-showcase-label">Savings Goal</div>
-                <div className="landing-showcase-value landing-showcase-value--small">71%</div>
-                <div className="landing-showcase-caption">Progress toward your next planned reserve.</div>
-              </div>
-              <div className="landing-showcase-panel landing-showcase-panel--wide">
-                <div className="landing-showcase-label">Account Mix</div>
-                <div className="landing-showcase-allocation">
-                  <span>Cash</span>
-                  <span>Bank</span>
-                  <span>E-wallet</span>
-                  <span>Investments</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="landing-hero-divider" aria-hidden="true" />
         </div>
       </section>
 
-      <section className="landing-features">
+      <section className="landing-features" id="features">
         <div className="landing-container">
           <div className="landing-section-heading">
             <span className="landing-eyebrow">Core Surface</span>
@@ -384,7 +398,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-cta">
+      <section className="landing-cta" id="pricing">
         <div className="landing-container landing-cta-shell">
           <div>
             <span className="landing-eyebrow">Start Now</span>
