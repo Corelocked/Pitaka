@@ -3,6 +3,7 @@ const DEFAULT_SITE_NAME = 'Pitaka'
 const DEFAULT_LOCALE = 'en_US'
 const DEFAULT_TWITTER_CARD = 'summary_large_image'
 const DEFAULT_TWITTER_HANDLE = '@pitaka'
+const DEFAULT_SITE_ORIGIN = 'https://pitaka-sigma.vercel.app'
 const DEFAULT_KEYWORDS = [
   'personal finance app',
   'budget tracker',
@@ -66,13 +67,27 @@ const setCanonical = (url) => {
   tag.setAttribute('href', url)
 }
 
-const toAbsoluteUrl = (path = '/') => {
-  const fallbackOrigin = 'https://pitaka-sigma.vercel.app'
-  if (typeof window === 'undefined') {
-    return `${fallbackOrigin}${path.startsWith('/') ? path : `/${path}`}`
-  }
+const normalizePath = (path = '/') => {
+  const rawPath = String(path || '/').trim() || '/'
+  const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+  return normalizedPath === '/' ? '/' : normalizedPath.replace(/\/+$/, '')
+}
 
-  return new URL(path, window.location.origin).toString()
+const getSiteOrigin = () => {
+  const envOrigin = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SITE_URL : null
+  const rawOrigin = String(envOrigin || DEFAULT_SITE_ORIGIN).trim()
+
+  try {
+    return new URL(rawOrigin).origin
+  } catch {
+    return DEFAULT_SITE_ORIGIN
+  }
+}
+
+const toAbsoluteUrl = (path = '/') => {
+  const siteOrigin = getSiteOrigin()
+  const normalizedPath = normalizePath(path)
+  return new URL(normalizedPath, `${siteOrigin}/`).toString()
 }
 
 export const applySeo = ({
