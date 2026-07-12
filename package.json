@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -18,7 +21,9 @@
     "preview": "vite preview",
     "payments:dev": "node --env-file=server/payments/.env server/payments/index.js",
     "webhooks:dev": "node server/webhooks/index.js",
-    "webhooks:test": "node server/webhooks/test-normalizers.mjs"
+    "webhooks:test": "node server/webhooks/test-normalizers.mjs",
+    "budget:test": "node src/utils/budgetMath.test.mjs && node src/utils/financeInsights.test.mjs && node src/utils/savingsPlan.test.mjs && node src/utils/categoryRules.test.mjs && node src/utils/excelUtils.test.mjs && node src/utils/errorReporting.test.mjs && node firestore.rules.test.mjs",
+    "verify": "npm run lint && npm run budget:test && npm run webhooks:test && npm run build"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

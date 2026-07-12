@@ -2,25 +2,21 @@ import admin from 'firebase-admin'
 
 let firestoreDb = null
 
-export function getFirestore(config) {
-  if (firestoreDb) return firestoreDb
-
+function initializeFirebaseAdmin(config) {
+  if (admin.apps.length) return
   // Prefer FIREBASE_SERVICE_ACCOUNT if available
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT
   if (serviceAccountJson) {
     let serviceAccount
     try {
       serviceAccount = JSON.parse(serviceAccountJson)
-    } catch (err) {
+    } catch {
       throw new Error('FIREBASE_SERVICE_ACCOUNT env var is not valid JSON')
     }
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      })
-    }
-    firestoreDb = admin.firestore()
-    return firestoreDb
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    })
+    return
   }
 
   // Fallback to split env vars (backward compatibility)
@@ -28,18 +24,27 @@ export function getFirestore(config) {
     throw new Error('Missing Firebase Admin credentials in env variables')
   }
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: config.firebaseProjectId,
-        clientEmail: config.firebaseClientEmail,
-        privateKey: config.firebasePrivateKey.replace(/\\n/g, '\n')
-      })
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: config.firebaseProjectId,
+      clientEmail: config.firebaseClientEmail,
+      privateKey: config.firebasePrivateKey.replace(/\\n/g, '\n')
     })
-  }
+  })
+}
+
+export function getFirestore(config) {
+  if (firestoreDb) return firestoreDb
+
+  initializeFirebaseAdmin(config)
 
   firestoreDb = admin.firestore()
   return firestoreDb
+}
+
+export async function verifyFirebaseIdToken(config, idToken) {
+  initializeFirebaseAdmin(config)
+  return admin.auth().verifyIdToken(idToken)
 }
 
 export async function savePendingCheckoutSession(config, session) {

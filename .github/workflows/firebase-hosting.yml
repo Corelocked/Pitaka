@@ -7,6 +7,11 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      VITE_BILLING_API_BASE: '${{ vars.VITE_BILLING_API_BASE }}'
+      VITE_SITE_URL: 'https://pitaka-sigma.vercel.app'
+      VITE_PITAKA_PRO_PRICE_AMOUNT: '19900'
+      VITE_PITAKA_PRO_PRICE_CURRENCY: 'PHP'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -14,13 +19,36 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate production configuration
+        run: test -n "$VITE_BILLING_API_BASE"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test finance and Firestore rules
+        run: npm run budget:test
+
+      - name: Test webhook normalizers
+        run: npm run webhooks:test
+
       - name: Build
         run: npm run build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+
+      - name: Deploy Firestore rules and indexes
+        run: npx firebase-tools@14.22.0 deploy --only firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID"
+        env:
+          FIREBASE_PROJECT_ID: '${{ secrets.FIREBASE_PROJECT_ID }}'
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { normalizePayPalEvent } from './providers/paypal.js'
-import { normalizeMayaEvent } from './providers/maya.js'
-import { normalizeGCashEvent } from './providers/gcash.js'
+import { normalizeMayaEvent, verifyMayaSignature } from './providers/maya.js'
+import { normalizeGCashEvent, verifyGCashSignature } from './providers/gcash.js'
 
 const paypal = normalizePayPalEvent({
   id: 'WH-1',
@@ -48,5 +48,10 @@ assert.equal(gcash.provider, 'gcash')
 assert.equal(gcash.amount, 149.95)
 assert.equal(gcash.currency, 'PHP')
 assert.equal(gcash.status, 'completed')
+
+assert.equal(verifyMayaSignature({ headers: { 'x-maya-signature': 'unverified' }, config: { allowInsecureWebhooks: false } }).ok, false)
+assert.equal(verifyGCashSignature({ headers: { 'x-gcash-signature': 'unverified' }, config: { allowInsecureWebhooks: false } }).ok, false)
+assert.equal(verifyMayaSignature({ headers: {}, config: { allowInsecureWebhooks: true } }).ok, true)
+assert.equal(verifyGCashSignature({ headers: {}, config: { allowInsecureWebhooks: true } }).ok, true)
 
 console.log('All webhook normalizer checks passed.')

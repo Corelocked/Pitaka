@@ -9,7 +9,9 @@ import {
   orderBy,
   onSnapshot,
   getDoc,
-  setDoc
+  increment,
+  setDoc,
+  writeBatch
 } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -249,6 +251,25 @@ export const savingsService = {
   // Delete savings goal
   deleteSavings: async (savingsId) => {
     await deleteDoc(doc(db, COLLECTION_NAMES.SAVINGS, savingsId))
+  },
+
+  fundSavingsFromWallet: async ({ savingsId, transfer, amount }, userId) => {
+    const batch = writeBatch(db)
+    const transferRef = doc(collection(db, COLLECTION_NAMES.TRANSFERS))
+    const savingsRef = doc(db, COLLECTION_NAMES.SAVINGS, savingsId)
+
+    batch.set(transferRef, {
+      ...transfer,
+      userId,
+      createdAt: new Date()
+    })
+    batch.update(savingsRef, {
+      currentAmount: increment(amount),
+      updatedAt: new Date()
+    })
+
+    await batch.commit()
+    return transferRef.id
   }
 }
 

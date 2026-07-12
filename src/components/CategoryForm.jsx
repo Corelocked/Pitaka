@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 
 function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCancelEdit }) {
@@ -7,9 +8,7 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
 
   useEffect(() => {
     if (editingCategory) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(editingCategory.name)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDescription(editingCategory.description || '')
     } else {
       setName('')
@@ -28,11 +27,11 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
           setName('')
           setDescription('')
         }
-      } catch (err) {
-        console.error('CategoryForm submit error:', err)
-        try { alert(err?.message || 'Failed to save category') } catch (e) { /* ignore */ }
-      }
+    } catch (err) {
+      console.error('CategoryForm submit error:', err)
+      try { alert(err?.message || 'Failed to save category') } catch { /* ignore */ }
     }
+  }
   }
 
   const handleCancel = () => {

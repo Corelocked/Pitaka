@@ -1,66 +1,148 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsExisting() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function ownsBoth() {
+      return ownsExisting() && ownsIncoming();
+    }
+
+    function optionalNumber(field) {
+      return !request.resource.data.keys().hasAny([field])
+        || request.resource.data[field] is number;
+    }
+
+    function nonNegativeNumber(field) {
+      return optionalNumber(field) && (
+        !request.resource.data.keys().hasAny([field])
+        || request.resource.data[field] >= 0
+      );
+    }
+
+    function optionalString(field) {
+      return !request.resource.data.keys().hasAny([field])
+        || request.resource.data[field] is string;
+    }
+
+    function validMoneyDoc() {
+      return nonNegativeNumber('amount') && optionalString('currency');
+    }
+
+    function validSavingsDoc() {
+      return nonNegativeNumber('targetAmount')
+        && nonNegativeNumber('currentAmount')
+        && optionalString('currency');
+    }
+
+    function validWalletDoc() {
+      return optionalNumber('startingBalance')
+        && nonNegativeNumber('creditLimit')
+        && nonNegativeNumber('creditAlertPercent')
+        && nonNegativeNumber('creditApr')
+        && nonNegativeNumber('creditMinimumPayment')
+        && optionalString('currency');
+    }
+
     match /incomes/{incomeId} {
       // Allow reads only to the owner
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
       // Allow create when the incoming document's userId matches the authenticated user
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow create: if ownsIncoming() && validMoneyDoc();
       // Allow update/delete only if existing resource belongs to the user
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
     }
 
     match /expenses/{expenseId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
     }
 
     match /savings/{savingsId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validSavingsDoc();
+      allow update: if ownsBoth() && validSavingsDoc();
+      allow delete: if ownsExisting();
     }
 
     match /categories/{categoryId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsBoth();
+      allow delete: if ownsExisting();
     }
 
     // Wallets collection — owner-only access (mirrors other collections)
     match /wallets/{walletId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validWalletDoc();
+      allow update: if ownsBoth() && validWalletDoc();
+      allow delete: if ownsExisting();
     }
 
     // Lendings collection — track money lent/borrowed per user
     match /lendings/{lendingId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
     }
 
     // Transfers collection — track wallet-to-wallet moves per user
     match /transfers/{transferId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
     }
 
     // Investments collection — track holdings per user
     match /investments/{investmentId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
     }
 
     // Subscriptions collection — track recurring expenses per user
     match /subscriptions/{subscriptionId} {
-      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
+    }
+
+    match /recurringIncomes/{recurringIncomeId} {
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
+    }
+
+    match /budgets/{budgetId} {
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming() && validMoneyDoc();
+      allow update: if ownsBoth() && validMoneyDoc();
+      allow delete: if ownsExisting();
+    }
+
+    match /netWorthSnapshots/{snapshotId} {
+      allow get, list: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsBoth();
+      allow delete: if ownsExisting();
     }
 
     // User profiles — each signed-in user can read and manage only their own profile document

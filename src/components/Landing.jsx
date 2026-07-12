@@ -86,7 +86,7 @@ const faqs = [
   },
   {
     question: 'Can I use it on mobile?',
-    answer: 'Yes. Pitaka is designed for web and mobile usage, with Android and iOS support in the project.'
+    answer: 'Yes. Pitaka is available on the web and as an Android app.'
   },
   {
     question: 'Can I export my records?',
@@ -123,7 +123,7 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
 
     applySeo({
       title: 'Pitaka - Budget Tracker, Expense Manager, and Personal Finance App',
-      description: 'Track expenses, manage income, monitor savings goals, and review investments with Pitaka. A personal finance and budget tracking app for web, Android, and iOS.',
+      description: 'Track expenses, manage income, monitor savings goals, and review investments with Pitaka. A personal finance and budget tracking app for web and Android.',
       path: typeof window === 'undefined' ? '/' : (window.location.pathname || '/'),
       keywords: 'budget tracker app, expense tracker app, personal finance app, money management app, income and expense tracker, savings goals app, investment tracker app, monthly budget planner, financial dashboard app, web and mobile budget app',
       type: 'website',
@@ -139,9 +139,6 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
           name: 'Pitaka',
           url: 'https://pitaka-sigma.vercel.app/',
           logo: 'https://pitaka-sigma.vercel.app/pitaka-logo.png',
-          sameAs: [
-            'https://pitaka-sigma.vercel.app/blogs'
-          ]
         },
         {
           '@type': 'WebSite',
@@ -158,10 +155,22 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
           '@type': 'SoftwareApplication',
           name: 'Pitaka',
           applicationCategory: 'FinanceApplication',
-          operatingSystem: 'Web, Android, iOS',
+          operatingSystem: 'Web, Android',
           url: 'https://pitaka-sigma.vercel.app/',
           image: 'https://pitaka-sigma.vercel.app/pitaka-social-share.png',
           description: 'Personal finance tracker for budgeting, expenses, savings, and investments.',
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'PHP',
+            description: 'Core budgeting, expense tracking, account management, and savings tools are free.'
+          },
+          audience: {
+            '@type': 'Audience',
+            audienceType: 'Individuals and households managing personal finances'
+          },
+          areaServed: 'Worldwide',
+          inLanguage: ['en', 'en-PH', 'fil-PH'],
           publisher: {
             '@id': 'https://pitaka-sigma.vercel.app/#organization'
           },
@@ -171,7 +180,11 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
             'Savings goal tracking',
             'Investment tracking',
             'Multi-wallet support',
-            'Data export and import'
+            'Data export and import',
+            'Category budgets with carryover',
+            'Cash-flow forecasting',
+            'Debt payoff planning',
+            'Offline access and cross-device sync'
           ]
         },
         {
@@ -206,7 +219,7 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
               name: 'Can I use it on mobile?',
               acceptedAnswer: {
                 '@type': 'Answer',
-                text: 'Yes. Pitaka is designed for web and mobile usage, with Android and iOS support in the project.'
+                text: 'Yes. Pitaka is available on the web and as an Android app.'
               }
             },
             {
@@ -340,10 +353,10 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
           </div>
 
           <div className="landing-features-grid">
-            {featureCards.map(({ icon: Icon, title, description }) => (
+            {featureCards.map(({ icon, title, description }) => (
               <article key={title} className="landing-feature-card">
                 <div className="landing-feature-icon">
-                  <Icon size={28} />
+                  {icon({ size: 28 })}
                 </div>
                 <h3>{title}</h3>
                 <p>{description}</p>

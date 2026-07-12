@@ -1,13 +1,21 @@
 import { createCheckoutSession, verifyWebhookSignature } from './paymongo.js'
-import { markCheckoutSessionPaid, savePendingCheckoutSession } from './firebaseAdmin.js'
+import { markCheckoutSessionPaid, savePendingCheckoutSession, verifyFirebaseIdToken } from './firebaseAdmin.js'
 
-export async function handleCheckoutSessionRequest(config, body = {}) {
-  const { userId, email, name } = body
+function getBearerToken(authorizationHeader = '') {
+  const [scheme, token] = String(authorizationHeader).split(' ')
+  return scheme?.toLowerCase() === 'bearer' ? token : ''
+}
+
+export async function handleCheckoutSessionRequest(config, body = {}, authorizationHeader = '') {
+  const decodedToken = await verifyFirebaseIdToken(config, getBearerToken(authorizationHeader))
+  const userId = decodedToken.uid
+  const email = decodedToken.email || body.email
+  const name = body.name || decodedToken.name || email
 
   if (!userId || !email) {
     return {
-      status: 400,
-      body: { ok: false, error: 'userId and email are required' }
+      status: 401,
+      body: { ok: false, error: 'Signed-in email is required' }
     }
   }
 

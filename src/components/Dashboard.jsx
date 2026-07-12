@@ -9,11 +9,10 @@ import {
 } from './Icons'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, getWalletCurrency, summarizeByCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
+import { buildFinanceInsights } from '../utils/financeInsights'
+import { buildSavingsPlan } from '../utils/savingsPlan'
 
 function Dashboard({
-  totalIncome,
-  totalExpenses,
-  netIncome,
   totalSavings,
   walletBalances,
   savings,
@@ -21,7 +20,9 @@ function Dashboard({
   filteredExpenses,
   transfers,
   subscriptions = [],
-  expensesByCategory,
+  recurringIncomes = [],
+  netWorthSnapshots = [],
+  categoryBudgets = [],
   selectedMonth,
   selectedYear,
   isPro = false,
@@ -113,19 +114,16 @@ function Dashboard({
   const hasMixedSavingsCurrencies = savingsSummary.length > 1
   const comparableIncomeAndExpense = incomeSummary.length === 1 && expenseSummary.length === 1 && incomeSummary[0].currency === expenseSummary[0].currency
   const comparableExpenseAndSavings = expenseSummary.length === 1 && savingsSummary.length === 1 && expenseSummary[0].currency === savingsSummary[0].currency
+  const primaryCurrency = walletSummary.length === 1 ? walletSummary[0].currency : incomeSummary[0]?.currency || expenseSummary[0]?.currency || DEFAULT_CURRENCY
 
   const featuredSavingsGoals = useMemo(() => {
     return [...(savings || [])]
       .map((goal) => {
-        const current = parseFloat(goal.currentAmount || 0)
-        const target = parseFloat(goal.targetAmount || 0)
-        const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0
+        const plan = buildSavingsPlan(goal)
 
         return {
           ...goal,
-          current,
-          target,
-          progress
+          ...plan
         }
       })
       .sort((a, b) => {
@@ -199,6 +197,9 @@ function Dashboard({
 
         const dayDiff = Math.round((due.getTime() - today.getTime()) / 86400000)
         const wallet = walletBalances.find((entry) => entry.id === subscription.walletId)
+        const amount = parseFloat(subscription.amount || 0)
+        const currency = subscription.currency || getWalletCurrency(wallet) || DEFAULT_CURRENCY
+        const walletBalance = Number(wallet?.balance || 0)
 
         return {
           id: subscription.id,
@@ -206,14 +207,65 @@ function Dashboard({
           dueDate,
           dueLabel: due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           dayDiff,
-          amountLabel: formatCurrency(parseFloat(subscription.amount || 0), subscription.currency || getWalletCurrency(wallet) || DEFAULT_CURRENCY),
-          walletName: wallet?.name || 'No wallet'
+          amountLabel: formatCurrency(amount, currency),
+          amount,
+          currency,
+          walletName: wallet?.name || 'No wallet',
+          hasFundingRisk: Boolean(wallet && getWalletCurrency(wallet) === currency && walletBalance < amount)
         }
       })
       .filter(Boolean)
       .sort((a, b) => a.dayDiff - b.dayDiff || new Date(a.dueDate) - new Date(b.dueDate))
       .slice(0, 5)
   }, [subscriptions, walletBalances])
+
+  const netWorthRows = useMemo(() => (
+    [...netWorthSnapshots]
+      .filter((snapshot) => Number.isFinite(Number(snapshot.total)))
+      .sort((a, b) => String(a.monthKey || '').localeCompare(String(b.monthKey || '')))
+      .slice(-6)
+  ), [netWorthSnapshots])
+
+  const budgetAlerts = useMemo(() => (
+    categoryBudgets
+      .filter((budget) => budget.hasBudget && ['warning', 'over'].includes(budget.status))
+      .sort((a, b) => b.utilization - a.utilization)
+      .slice(0, 3)
+  ), [categoryBudgets])
+  const netWorthChange = netWorthRows.length >= 2
+    ? Number(netWorthRows[netWorthRows.length - 1].total || 0) - Number(netWorthRows[netWorthRows.length - 2].total || 0)
+    : null
+
+  const cashflowForecast = useMemo(() => {
+    const cash = walletSummary.length === 1 ? Number(walletSummary[0].total || 0) : null
+    if (cash == null) return []
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayKey = getLocalDateInputValue(today)
+    const horizons = [30, 60, 90]
+
+    return horizons.map((days) => {
+      const end = new Date(today)
+      end.setDate(end.getDate() + days)
+      const endKey = getLocalDateInputValue(end)
+      const scheduledIncome = recurringIncomes
+        .filter((income) => income.isActive !== false)
+        .filter((income) => {
+          const due = income.nextDueDate || income.nextRunDate || income.startDate
+          return due && due >= todayKey && due <= endKey
+        })
+        .reduce((sum, income) => sum + Number(income.amount || 0), 0)
+      const scheduledBills = upcomingBills
+        .filter((bill) => bill.dueDate >= todayKey && bill.dueDate <= endKey)
+        .reduce((sum, bill) => sum + Number(bill.amount || 0), 0)
+
+      return {
+        days,
+        total: cash + scheduledIncome - scheduledBills
+      }
+    })
+  }, [recurringIncomes, upcomingBills, walletSummary])
 
   const getWalletName = (walletId) => {
     const wallet = walletBalances.find((entry) => entry.id === walletId)
@@ -227,6 +279,32 @@ function Dashboard({
     }
     return `${sourceName} → ${getWalletName(transfer.toWalletId)}`
   }
+
+  const financeInsights = useMemo(() => {
+    const comparable = (
+      walletSummary.length <= 1 &&
+      incomeSummary.length <= 1 &&
+      expenseSummary.length <= 1 &&
+      savingsSummary.length <= 1 &&
+      [walletSummary[0]?.currency, incomeSummary[0]?.currency, expenseSummary[0]?.currency, savingsSummary[0]?.currency]
+        .filter(Boolean)
+        .every((currency) => currency === primaryCurrency)
+    )
+
+    if (!comparable) return null
+
+    const upcomingBillsTotal = upcomingBills
+      .filter((bill) => bill.currency === primaryCurrency)
+      .reduce((sum, bill) => sum + Number(bill.amount || 0), 0)
+
+    return buildFinanceInsights({
+      cash: Number(walletSummary[0]?.total || 0),
+      income: Number(incomeSummary[0]?.total || 0),
+      expenses: Number(expenseSummary[0]?.total || 0),
+      savings: Number(savingsSummary[0]?.total || 0),
+      upcomingBills: upcomingBillsTotal
+    })
+  }, [expenseSummary, incomeSummary, primaryCurrency, savingsSummary, upcomingBills, walletSummary])
 
   const getAccountPillLabel = (wallet) => {
     if (wallet.accountType === 'credit') {
@@ -263,6 +341,28 @@ function Dashboard({
         )
 
     return `account-card ${toneClass}`
+  }
+
+  const getCreditPayoffHint = (wallet) => {
+    if (wallet.accountType !== 'credit') return ''
+
+    const balance = Math.max(Number(wallet.balance || 0) * -1, 0)
+    if (balance <= 0) return 'No card debt'
+
+    const plannedPayment = Number(wallet.creditMinimumPayment || 0)
+    const monthlyPayment = plannedPayment > 0 ? plannedPayment : Math.max(balance * 0.1, 500)
+    const monthlyRate = Math.max(Number(wallet.creditApr || 0), 0) / 100 / 12
+    let months = 0
+    let projectedBalance = balance
+
+    while (projectedBalance > 0.01 && months < 600) {
+      const interest = projectedBalance * monthlyRate
+      if (monthlyPayment <= interest) return 'Payment too low to project payoff'
+      projectedBalance = projectedBalance + interest - monthlyPayment
+      months++
+    }
+
+    return `${months} mo payoff at ${formatCurrency(monthlyPayment, getWalletCurrency(wallet))}/mo`
   }
 
   const renderWidgetEmptyState = (message = 'No data available yet.') => (
@@ -398,7 +498,7 @@ function Dashboard({
   const cashflowTrendRows = useMemo(() => {
     const weeks = Array.from({ length: 5 }, (_, index) => ({
       id: `week-${index + 1}`,
-      label: index === 4 ? 'Week 5+' : `Week ${index + 1}`,
+      label: index === 4 ? 'W5+' : `W${index + 1}`,
       shortLabel: index === 4 ? 'W5+' : `W${index + 1}`,
       income: 0,
       expenses: 0
@@ -496,7 +596,7 @@ function Dashboard({
     })
 
     const maxAmount = Math.max(...rows, 0)
-    const labels = ['Days 1-8', 'Days 9-16', 'Days 17-24', 'Days 25+']
+    const labels = ['1-8', '9-16', '17-24', '25+']
 
     return rows.map((amount, index) => ({
       id: labels[index],
@@ -655,6 +755,9 @@ function Dashboard({
                 <div className="account-pill">{getAccountPillLabel(wallet)}</div>
               </div>
               <div className="account-balance">{formatCurrency(parseFloat(wallet.balance || 0), getWalletCurrency(wallet))}</div>
+              {getCreditPayoffHint(wallet) && (
+                <div className="transaction-subtitle">{getCreditPayoffHint(wallet)}</div>
+              )}
             </div>
           ))}
         </div>
@@ -877,6 +980,11 @@ function Dashboard({
                 <span>{goal.targetDate ? `Target ${new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Open timeline'}</span>
                 <span>{formatCurrency(Math.max(goal.target - goal.current, 0), goal.currency || DEFAULT_CURRENCY)} left</span>
               </div>
+              <div className="savings-goal-plan">
+                {goal.monthlyNeeded == null
+                  ? 'Add a target date to see the monthly pace.'
+                  : `${formatCurrency(goal.monthlyNeeded, goal.currency || DEFAULT_CURRENCY)} / month for ${goal.monthsLeft} month${goal.monthsLeft === 1 ? '' : 's'}`}
+              </div>
             </div>
           ))}
         </div>
@@ -903,6 +1011,7 @@ function Dashboard({
                 <div className="transaction-title">{bill.name}</div>
                 <div className="transaction-subtitle">
                   {bill.dayDiff === 0 ? 'Due today' : bill.dayDiff === 1 ? 'Due tomorrow' : `Due in ${bill.dayDiff} days`} • {bill.walletName}
+                  {bill.hasFundingRisk ? ' • Funding risk' : ''}
                 </div>
               </div>
               <div className="dashboard-bill-actions">
@@ -918,7 +1027,117 @@ function Dashboard({
     </div>
   )
 
+  const netWorthHistoryCard = (
+    <div className="card">
+      <div className="card-header">
+        <div>
+          <h3 className="card-title"><TrendUpIcon size={18} /> Net Worth History</h3>
+          <span className="card-subtitle">Monthly snapshots</span>
+        </div>
+      </div>
+      {netWorthRows.length > 0 ? (
+        <div className="dashboard-bar-chart">
+          {netWorthRows.map((snapshot) => {
+            const maxTotal = Math.max(...netWorthRows.map((row) => Math.abs(Number(row.total || 0))), 1)
+            const height = `${Math.max((Math.abs(Number(snapshot.total || 0)) / maxTotal) * 100, 6)}%`
+            return (
+              <div key={snapshot.id || snapshot.monthKey} className="dashboard-bar-item">
+                <div className="dashboard-bar-track">
+                  <div className="dashboard-bar-fill income" style={{ height }} />
+                </div>
+                <span>{String(snapshot.monthKey || '').slice(5) || 'Now'}</span>
+                <strong>{formatCurrency(snapshot.total, snapshot.currency || DEFAULT_CURRENCY, { maximumFractionDigits: 0 })}</strong>
+              </div>
+            )
+          })}
+        </div>
+      ) : renderWidgetEmptyState('Net worth history will appear after the first monthly snapshot is saved.')}
+    </div>
+  )
+
+  const monthlyCloseoutCard = (
+    <div className="card dashboard-plan-card">
+      <div className="card-header">
+        <div>
+          <h3 className="card-title"><ChartIcon size={18} /> Monthly Closeout</h3>
+          <span className="card-subtitle">{monthName}</span>
+        </div>
+      </div>
+      <div className="dashboard-plan-list">
+        <div className="atelier-metric-chip dashboard-rail-chip">
+          <span>Net Position</span>
+          <strong>{netIncomeLabel}</strong>
+        </div>
+        <div className="atelier-metric-chip dashboard-rail-chip">
+          <span>Top Spend</span>
+          <strong>{topCategory ? `${topCategory.category} ${topCategory.percentage}%` : 'None yet'}</strong>
+        </div>
+        <div className="atelier-metric-chip dashboard-rail-chip">
+          <span>Budget Misses</span>
+          <strong>{categoryBudgets.filter((budget) => budget.status === 'over').length}</strong>
+        </div>
+        <div className="atelier-metric-chip dashboard-rail-chip">
+          <span>Net Worth Change</span>
+          <strong>
+            {netWorthChange == null
+              ? 'Need 2 snapshots'
+              : formatCurrency(netWorthChange, netWorthRows[netWorthRows.length - 1]?.currency || DEFAULT_CURRENCY)}
+          </strong>
+        </div>
+      </div>
+    </div>
+  )
+
+  const planAheadCard = (
+    <div className="card dashboard-plan-card">
+      <div className="card-header">
+        <div>
+          <h3 className="card-title"><TrendUpIcon size={18} /> Plan Ahead</h3>
+          <span className="card-subtitle">Forecast and financial health</span>
+        </div>
+      </div>
+      {financeInsights ? (
+        <div className="dashboard-plan-grid">
+          <div className="dashboard-plan-score">
+            <span className="dashboard-kicker">Health Score</span>
+            <strong>{financeInsights.score}</strong>
+            <span className={`value-chip ${financeInsights.score >= 60 ? 'positive' : 'negative'}`}>{financeInsights.status}</span>
+          </div>
+          <div className="dashboard-plan-list">
+            <div className="atelier-metric-chip dashboard-rail-chip">
+              <span>Projected Month-End</span>
+              <strong>{formatCurrency(financeInsights.projectedMonthEnd, primaryCurrency)}</strong>
+            </div>
+            <div className="atelier-metric-chip dashboard-rail-chip">
+              <span>Cash Runway</span>
+              <strong>{financeInsights.runwayDays == null ? 'No spend yet' : `${financeInsights.runwayDays} days`}</strong>
+            </div>
+            <div className="atelier-metric-chip dashboard-rail-chip">
+              <span>Upcoming Bill Load</span>
+              <strong>{financeInsights.billLoad.toFixed(0)}%</strong>
+            </div>
+            {cashflowForecast.map((forecast) => (
+              <div key={forecast.days} className="atelier-metric-chip dashboard-rail-chip">
+                <span>{forecast.days}-Day Cash</span>
+                <strong>{formatCurrency(forecast.total, primaryCurrency)}</strong>
+              </div>
+            ))}
+            {budgetAlerts.map((budget) => (
+              <div key={budget.categoryId} className="atelier-metric-chip dashboard-rail-chip">
+                <span>{budget.categoryName} Budget</span>
+                <strong>{budget.utilization.toFixed(0)}%</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : renderWidgetEmptyState('Use one currency this month to unlock forecast and health scoring.')}
+    </div>
+  )
+
   const sectionNodes = {
+    'plan-ahead': planAheadCard,
+    'monthly-closeout': monthlyCloseoutCard,
+    'net-worth-history': netWorthHistoryCard,
     'recent-activity': recentActivityCard,
     spending: spendingCard,
     accounts: accountsCard,
@@ -931,6 +1150,9 @@ function Dashboard({
     'account-allocation-chart': accountAllocationChartCard
   }
   const sectionLabels = {
+    'plan-ahead': 'Plan Ahead',
+    'monthly-closeout': 'Monthly Closeout',
+    'net-worth-history': 'Net Worth History',
     'recent-activity': 'Recent Activity',
     spending: 'Spending Overview',
     accounts: 'Accounts',
@@ -961,14 +1183,6 @@ function Dashboard({
     sideSections.length === 0 ? 'dashboard-content-grid--side-empty' : '',
     mainSections.length > 0 && sideSections.length > 0 ? 'dashboard-content-grid--split' : 'dashboard-content-grid--single'
   ].filter(Boolean).join(' ')
-  const mainColumnClassName = [
-    'dashboard-main-column',
-    sideSections.length === 0 ? 'dashboard-main-column--full' : ''
-  ].filter(Boolean).join(' ')
-  const sideColumnClassName = [
-    'dashboard-side-column',
-    mainSections.length === 0 ? 'dashboard-side-column--full' : ''
-  ].filter(Boolean).join(' ')
   const mobileSections = (customization?.mobileWidgetOrder || [])
     .filter((sectionId) => !hiddenSectionIds.includes(sectionId))
     .map((sectionId) => ({ id: sectionId, label: sectionLabels[sectionId] || 'Dashboard Card', node: sectionNodes[sectionId] }))
@@ -981,7 +1195,7 @@ function Dashboard({
       tileSize: customization?.desktopTileSizes?.[sectionId] || 'medium'
     }))
     .filter((section) => Boolean(section.node))
-  const desktopTileLayout = useMemo(() => {
+  const desktopTileLayout = (() => {
     const rows = []
     let currentRow = []
     let currentWidth = 0
@@ -1033,7 +1247,7 @@ function Dashboard({
 
     pushRow()
     return rows
-  }, [desktopTileSections])
+  })()
   const clearMobileDragState = () => {
     if (mobileAutoScrollFrameRef.current) {
       window.cancelAnimationFrame(mobileAutoScrollFrameRef.current)

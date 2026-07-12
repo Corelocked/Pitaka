@@ -50,7 +50,7 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
 
   const calculateMetrics = (investment) => {
     const cost = parseFloat(investment.quantity || 0) * parseFloat(investment.purchasePrice || 0)
-    const current = parseFloat(investment.quantity || 0) * (parseFloat(investment.currentValue) || parseFloat(investment.purchasePrice || 0))
+    const current = parseFloat(investment.quantity || 0) * Number(investment.currentValue ?? investment.purchasePrice ?? 0)
     const gainLoss = current - cost
     const gainLossPercent = cost > 0 ? ((gainLoss / cost) * 100) : 0
 
@@ -158,7 +158,7 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
                   )}
                 </div>
                 <div className="transaction-subtitle">
-                  {getInvestmentTypeLabel(investment.investmentType)} • {investment.quantity} units @ {formatCurrency(parseFloat(investment.currentValue || investment.purchasePrice), currency)} {getCurrencyCode(currency)}
+                  {getInvestmentTypeLabel(investment.investmentType)} • {investment.quantity} units @ {formatCurrency(Number(investment.currentValue ?? investment.purchasePrice ?? 0), currency)} {getCurrencyCode(currency)}
                 </div>
                 <div style={{ marginTop: '8px', fontSize: '0.875rem' }}>
                   <span style={{ color: metrics.gainLoss >= 0 ? 'var(--success-color)' : 'var(--danger-color)', fontWeight: 600 }}>

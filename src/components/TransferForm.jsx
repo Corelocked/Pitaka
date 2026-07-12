@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
 import { TransferIcon } from './Icons'
 import './Form.css'
 import { formatCurrency, getWalletCurrency } from '../utils/currency'

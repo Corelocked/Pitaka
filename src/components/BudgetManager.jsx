@@ -27,6 +27,7 @@ export default function BudgetManager({
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [amount, setAmount] = useState('')
+  const [carryover, setCarryover] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [editingCategoryId, setEditingCategoryId] = useState('')
 
@@ -46,10 +47,12 @@ export default function BudgetManager({
       await onSaveBudget({
         categoryId: selectedCategoryId,
         monthKey,
-        amount
+        amount,
+        carryover: Number(carryover || 0)
       })
       setSelectedCategoryId('')
       setAmount('')
+      setCarryover('')
       setEditingCategoryId('')
     } finally {
       setSubmitting(false)
@@ -59,6 +62,7 @@ export default function BudgetManager({
   const startEdit = (entry) => {
     setSelectedCategoryId(entry.categoryId)
     setAmount(String(entry.amount || ''))
+    setCarryover(String(entry.carryover || ''))
     setEditingCategoryId(entry.categoryId)
   }
 
@@ -78,6 +82,11 @@ export default function BudgetManager({
               <option key={category.id} value={category.id}>{category.name}</option>
             ))}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="budget-carryover">Carryover from Previous Month</label>
+          <input id="budget-carryover" type="number" min="0" step="0.01" value={carryover} onChange={(event) => setCarryover(event.target.value)} placeholder="0.00" />
         </div>
 
         <div className="form-group">
@@ -104,6 +113,7 @@ export default function BudgetManager({
               onClick={() => {
                 setSelectedCategoryId('')
                 setAmount('')
+                setCarryover('')
                 setEditingCategoryId('')
               }}
             >
@@ -159,7 +169,7 @@ export default function BudgetManager({
                   <div>
                     <div style={{ fontWeight: 700 }}>{entry.categoryName}</div>
                     <div className="card-subtitle" style={{ marginTop: '0.2rem' }}>
-                      Budget {entry.hasBudget ? formatAmount(entry.amount) : 'not set'} | Spent {formatAmount(entry.spent)}
+                      Budget {entry.hasBudget ? formatAmount(entry.amount) : 'not set'}{entry.carryover > 0 ? ` + ${formatAmount(entry.carryover)} carryover` : ''} | Spent {formatAmount(entry.spent)}
                     </div>
                   </div>
                   {entry.hasBudget ? (
@@ -175,7 +185,7 @@ export default function BudgetManager({
                       <button
                         type="button"
                         className="btn btn-secondary"
-                        onClick={() => onDeleteBudget(entry.id)}
+                        onClick={() => onDeleteBudget(entry.budgetId)}
                         style={{ minHeight: 'auto', padding: '8px 14px' }}
                       >
                         Remove
@@ -201,7 +211,7 @@ export default function BudgetManager({
                   </div>
                   <div className="card-subtitle">
                     {entry.hasBudget
-                      ? `${entry.remaining >= 0 ? 'Remaining' : 'Over by'} ${formatAmount(Math.abs(entry.remaining))}`
+                      ? `${entry.remaining >= 0 ? 'Remaining' : 'Over by'} ${formatAmount(Math.abs(entry.remaining))}${entry.dailyAllowance != null ? ` | ${formatAmount(entry.dailyAllowance)} per day` : ''}`
                       : 'No budget set for this category yet.'}
                   </div>
                 </div>
