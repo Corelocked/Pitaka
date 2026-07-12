@@ -663,7 +663,7 @@ function Dashboard({
             {totalSavingsLabel}
           </div>
           <div className="dashboard-insight-note">
-            {savings.length} active goal{savings.length === 1 ? '' : 's'}
+            {savings.length} funded goal{savings.length === 1 ? '' : 's'}
           </div>
         </div>
       </div>
@@ -1032,10 +1032,10 @@ function Dashboard({
       <div className="card-header">
         <div>
           <h3 className="card-title"><TrendUpIcon size={18} /> Net Worth History</h3>
-          <span className="card-subtitle">Monthly snapshots</span>
+          <span className="card-subtitle">Monthly trend</span>
         </div>
       </div>
-      {netWorthRows.length > 0 ? (
+      {netWorthRows.length >= 2 ? (
         <div className="dashboard-bar-chart">
           {netWorthRows.map((snapshot) => {
             const maxTotal = Math.max(...netWorthRows.map((row) => Math.abs(Number(row.total || 0))), 1)
@@ -1045,11 +1045,18 @@ function Dashboard({
                 <div className="dashboard-bar-track">
                   <div className="dashboard-bar-fill income" style={{ height }} />
                 </div>
-                <span>{String(snapshot.monthKey || '').slice(5) || 'Now'}</span>
+                <span>{snapshot.monthKey ? new Date(`${snapshot.monthKey}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short' }) : 'Now'}</span>
                 <strong>{formatCurrency(snapshot.total, snapshot.currency || DEFAULT_CURRENCY, { maximumFractionDigits: 0 })}</strong>
               </div>
             )
           })}
+        </div>
+      ) : netWorthRows.length === 1 ? (
+        <div className="dashboard-plan-list">
+          <div className="atelier-metric-chip dashboard-rail-chip">
+            <span>{netWorthRows[0].monthKey ? new Date(`${netWorthRows[0].monthKey}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Current snapshot'}</span>
+            <strong>{formatCurrency(netWorthRows[0].total, netWorthRows[0].currency || DEFAULT_CURRENCY)}</strong>
+          </div>
         </div>
       ) : renderWidgetEmptyState('Net worth history will appear after the first monthly snapshot is saved.')}
     </div>
@@ -1069,18 +1076,18 @@ function Dashboard({
           <strong>{netIncomeLabel}</strong>
         </div>
         <div className="atelier-metric-chip dashboard-rail-chip">
-          <span>Top Spend</span>
-          <strong>{topCategory ? `${topCategory.category} ${topCategory.percentage}%` : 'None yet'}</strong>
+          <span>Top Spending Category</span>
+          <strong>{topCategory ? `${topCategory.category} (${topCategory.percentage}%)` : 'None yet'}</strong>
         </div>
         <div className="atelier-metric-chip dashboard-rail-chip">
-          <span>Budget Misses</span>
+          <span>Budgets Over Limit</span>
           <strong>{categoryBudgets.filter((budget) => budget.status === 'over').length}</strong>
         </div>
         <div className="atelier-metric-chip dashboard-rail-chip">
-          <span>Net Worth Change</span>
+          <span>Net Worth Movement</span>
           <strong>
             {netWorthChange == null
-              ? 'Need 2 snapshots'
+              ? 'Baseline only'
               : formatCurrency(netWorthChange, netWorthRows[netWorthRows.length - 1]?.currency || DEFAULT_CURRENCY)}
           </strong>
         </div>
@@ -1113,7 +1120,7 @@ function Dashboard({
               <strong>{financeInsights.runwayDays == null ? 'No spend yet' : `${financeInsights.runwayDays} days`}</strong>
             </div>
             <div className="atelier-metric-chip dashboard-rail-chip">
-              <span>Upcoming Bill Load</span>
+              <span>Scheduled Bills vs Income</span>
               <strong>{financeInsights.billLoad.toFixed(0)}%</strong>
             </div>
             {cashflowForecast.map((forecast) => (
@@ -1424,21 +1431,18 @@ function Dashboard({
               <div className="atelier-hero-copy">
                 <span className="eyebrow">Private Ledger</span>
                 <h2 className="atelier-hero-title">{monthName}</h2>
-                <p className="atelier-hero-text">
-                  A composed briefing on liquidity, spending pressure, and capital reserved for future goals.
-                </p>
               </div>
 
               <div className="dashboard-hero-total">
                 <span className="dashboard-kicker">Portfolio Balance</span>
                 <div className="dashboard-total-amount">{totalBalanceLabel}</div>
-                <div className="dashboard-total-meta">{walletBalances.length} accounts under watch</div>
+                <div className="dashboard-total-meta">{walletBalances.length} linked account{walletBalances.length === 1 ? '' : 's'}</div>
               </div>
             </div>
 
             <div className="dashboard-hero-rail">
               <div className="atelier-metric-chip dashboard-rail-chip">
-                <span>Expense Load</span>
+                <span>Spending vs Income</span>
                 <strong>{comparableIncomeAndExpense ? `${expenseCoverage.toFixed(0)}%` : hasMixedIncomeCurrencies || hasMixedExpenseCurrencies ? 'Mixed' : '0%'}</strong>
               </div>
               <div className="atelier-metric-chip dashboard-rail-chip">
@@ -1446,7 +1450,7 @@ function Dashboard({
                 <strong>{hasMixedExpenseCurrencies ? 'Mixed currencies' : topCategory?.category || 'None yet'}</strong>
               </div>
               <div className="atelier-metric-chip dashboard-rail-chip">
-                <span>Savings Buffer</span>
+                <span>Savings vs Spending</span>
                 <strong>{comparableExpenseAndSavings ? `${savingsCoverage.toFixed(0)}%` : hasMixedExpenseCurrencies || hasMixedSavingsCurrencies ? 'Mixed' : '0%'}</strong>
               </div>
             </div>
