@@ -25,13 +25,17 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
     return { limit, spent, utilization }
   }
 
+  const data = wallets.map(w => ({ ...w, balance: (balances.find(b => b.id === w.id)?.balance) ?? w.balance ?? 0 }))
+  const hasCreditAccounts = data.some(wallet => wallet.accountType === 'credit')
+  const hasMultipleCurrencies = new Set(data.map(getWalletCurrency)).size > 1
+
   const columns = [
     { key: 'name', header: 'Name', className: 'col-name', width: '1fr', render: r => r.name, sortable: true, editable: true },
     { key: 'accountType', header: 'Type', className: 'col-type', width: '130px', render: r => typeLabel(r), sortable: true, sortValue: r => typeLabel(r) },
     { key: 'description', header: 'Description', className: 'col-desc', width: '2fr', render: r => r.description || '' },
-    { key: 'currency', header: 'Currency', className: 'col-currency', width: '100px', render: r => getWalletCurrency(r) },
+    ...(hasMultipleCurrencies ? [{ key: 'currency', header: 'Currency', className: 'col-currency', width: '100px', render: r => getWalletCurrency(r) }] : []),
     { key: 'startingBalance', header: 'Starting', className: 'col-start', width: '140px', render: r => formatCurrency(r.startingBalance || 0, getWalletCurrency(r)) },
-    {
+    ...(hasCreditAccounts ? [{
       key: 'creditLimit',
       header: 'Limit',
       className: 'col-limit',
@@ -53,7 +57,7 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
       width: '140px',
       render: r => r.accountType === 'credit' && creditMetrics(r).limit > 0 ? `${creditMetrics(r).utilization.toFixed(0)}%` : '—',
       sortValue: r => creditMetrics(r).utilization
-    },
+    }] : []),
     { key: 'balance', header: 'Balance', className: 'col-balance', width: '140px', render: r => formatCurrency(r.balance || 0, getWalletCurrency(r)), sortable: true },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: r => (
       <>
@@ -62,9 +66,6 @@ export default function WalletsTable({ wallets = [], balances = [], onEditWallet
       </>
     ) }
   ]
-
-  // merge balances into wallets by id
-  const data = wallets.map(w => ({ ...w, balance: (balances.find(b => b.id === w.id)?.balance) ?? w.balance ?? 0 }))
 
   return (
     <DataTable

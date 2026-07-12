@@ -39,13 +39,19 @@
   --table-stacked-label: #4d6664;
 }
 
-/* Allow tables inside the page cards to shrink to their container
-   and avoid forcing horizontal overflow in two-column layouts. */
+/* Keep desktop columns readable; oversized tables scroll inside their card. */
 .page-table-card .data-table,
 .page-table-card .table {
-  min-width: 0;
-  table-layout: fixed;
+  min-width: 760px;
+  table-layout: auto;
 }
+
+.page-table-card .table--categories { min-width: 560px; }
+.page-table-card .table--incomes { min-width: 700px; }
+.page-table-card .table--subscriptions { min-width: 800px; }
+.page-table-card .table--expenses,
+.page-table-card .table--wallets { min-width: 900px; }
+.page-table-card .table--recurring-incomes { min-width: 1000px; }
 
 .page-table-card .data-table th,
 .page-table-card .data-table td,
@@ -213,6 +219,10 @@
   z-index: 7;
 }
 
+.data-table tbody td.col-actions {
+  background: inherit;
+}
+
 .edit-btn,
 .delete-btn {
   display: inline-flex;
@@ -244,6 +254,52 @@
 
 .delete-btn:hover {
   background: #fecaca;
+}
+
+@media (min-width: 901px) {
+  .data-table tbody tr,
+  .table tbody tr {
+    height: 56px;
+  }
+
+  .page-table-card .data-table td.col-name,
+  .page-table-card .data-table td.col-source,
+  .page-table-card .data-table td.col-desc,
+  .page-table-card .table td.col-name,
+  .page-table-card .table td.col-source,
+  .page-table-card .table td.col-desc {
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .data-table th.col-amount,
+  .data-table td.col-amount,
+  .data-table th.col-start,
+  .data-table td.col-start,
+  .data-table th.col-limit,
+  .data-table td.col-limit,
+  .data-table th.col-used,
+  .data-table td.col-used,
+  .data-table th.col-balance,
+  .data-table td.col-balance {
+    text-align: right;
+  }
+
+  .data-table th.col-date,
+  .data-table td.col-date,
+  .data-table th.col-actions,
+  .data-table td.col-actions {
+    white-space: nowrap;
+  }
+
+  .data-table th.col-actions,
+  .data-table td.col-actions {
+    text-align: center;
+  }
+
+  .data-table td.col-actions .delete-btn {
+    margin-left: 6px;
+  }
 }
 
 .table-bulk-toolbar {
@@ -532,6 +588,34 @@
 .table-mobile-field-value .btn {
   margin-right: 8px;
   margin-bottom: 6px;
+}
+
+.table-wrapper--compact-mobile .table-mobile-details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.table-wrapper--compact-mobile .table-mobile-field.actions,
+.table-wrapper--compact-mobile .table-mobile-field.col-actions {
+  grid-column: 1 / -1;
+  padding-top: 12px;
+}
+
+.table-wrapper--compact-mobile .table-mobile-field.actions .table-mobile-field-value,
+.table-wrapper--compact-mobile .table-mobile-field.col-actions .table-mobile-field-value {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.table-wrapper--compact-mobile .table-mobile-field.actions .edit-btn,
+.table-wrapper--compact-mobile .table-mobile-field.actions .delete-btn,
+.table-wrapper--compact-mobile .table-mobile-field.col-actions .edit-btn,
+.table-wrapper--compact-mobile .table-mobile-field.col-actions .delete-btn {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  font-size: 0.8rem;
 }
 
 .data-table th.col-select,

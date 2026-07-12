@@ -17,7 +17,7 @@ export default function ExpenseTable({ expenses = [], wallets = [], onDeleteExpe
     { key: 'wallet', header: 'Wallet', className: 'col-wallet', width: '160px', render: r => walletName(r.walletId) },
     { key: 'amount', header: 'Amount', className: 'col-amount amount', width: '140px', render: r => formatCurrency(r.amount || 0, currencyFor(r)), sortable: true, sortValue: r => parseFloat(r.amount || 0), editable: true, exportValue: r => Number(r.amount || 0) },
     { key: 'date', header: 'Date', className: 'col-date date', width: '140px', render: r => (r.date ? new Date(r.date).toLocaleDateString() : ''), sortable: true },
-    { key: 'tags', header: 'Tags', className: 'col-tags', width: '160px', render: r => (r.tags || []).join(', ') },
+    ...(expenses.some(expense => expense.tags?.length) ? [{ key: 'tags', header: 'Tags', className: 'col-tags', width: '160px', render: r => (r.tags || []).join(', ') }] : []),
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: r => (
         <>
           <button className="edit-btn" title="Edit" aria-label="Edit" onClick={() => { onEditExpense && onEditExpense(r) }}>Edit</button>

@@ -24,7 +24,9 @@ export default function DataTable({
   const wrapperRef = useRef(null)
   const [localCols, setLocalCols] = useState(columns)
   useEffect(() => setLocalCols(columns), [columns])
-  const [isCompactMobile, setIsCompactMobile] = useState(false)
+  const [isCompactMobile, setIsCompactMobile] = useState(() => (
+    typeof window !== 'undefined' && window.innerWidth < 700
+  ))
   const [expandedRows, setExpandedRows] = useState(() => new Set())
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -371,7 +373,9 @@ export default function DataTable({
 
                 {isExpanded && (
                   <div className="table-mobile-details">
-                    {localCols.map((col) => (
+                    {localCols.filter((col) => (
+                      col.key !== primarySummaryColumn?.key && col.key !== secondarySummaryColumn?.key
+                    )).map((col) => (
                       <div key={col.key} className={`table-mobile-field ${col.className || ''}`}>
                         <div className="table-mobile-field-label">{col.header}</div>
                         <div

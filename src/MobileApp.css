@@ -5240,26 +5240,30 @@ body,
   }
 
   .quick-actions-wrap {
-    padding: 8px 12px;
+    padding: 12px;
   }
 
   .quick-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-  }
-
-  .quick-actions::-webkit-scrollbar {
-    display: none;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    scroll-snap-type: none;
   }
 
   .quick-action-btn {
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 136px;
-    scroll-snap-align: start;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    white-space: normal;
+    line-height: 1.2;
+    scroll-snap-align: none;
+  }
+
+  .quick-actions .quick-action-btn:last-child {
+    grid-column: 1 / -1;
   }
 
   .dashboard-hero {
@@ -5334,14 +5338,24 @@ body,
   }
 
   .dashboard-column-chart {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
-    min-height: 180px;
+    min-height: 0;
   }
 
   .dashboard-column-chart-stage {
-    min-height: 112px;
+    min-height: 100px;
     padding: 6px 3px;
     border-radius: 10px;
+  }
+
+  .dashboard-bar-chart {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 0;
+  }
+
+  .dashboard-bar-item .dashboard-bar-track {
+    height: 96px;
   }
 
   .dashboard-breakdown-donut {

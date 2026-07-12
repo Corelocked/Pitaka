@@ -10,7 +10,7 @@ export default function CategoryTable({ categories = [], onDeleteCategory, onEdi
 
   const columns = [
     { key: 'name', header: 'Category Name', className: 'col-name', width: '240px', render: r => r.name },
-    { key: 'description', header: 'Description', className: 'col-desc', width: '1fr', render: r => (r.description || 'No description') },
+    ...(categories.some(category => category.description?.trim()) ? [{ key: 'description', header: 'Description', className: 'col-desc', width: '1fr', render: r => (r.description || 'No description') }] : []),
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: r => (
       <>
         <button

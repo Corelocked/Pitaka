@@ -55,16 +55,7 @@ export default function RecurringIncomesTable({
       header: 'Source',
       className: 'col-name',
       width: '220px',
-      render: (row) => {
-        const audit = formatAuditStatus(row)
-
-        return (
-          <div className="table-row-primary">
-            <span className="table-row-primary-text">{row.source}</span>
-            <span className={`table-audit-chip table-audit-chip--${audit.tone}`}>{audit.label}</span>
-          </div>
-        )
-      },
+      render: (row) => row.source,
       sortable: true,
       sortValue: (row) => row.source
     },
@@ -73,7 +64,7 @@ export default function RecurringIncomesTable({
     { key: 'startDate', header: 'First Payout', className: 'col-date', width: '140px', render: (row) => row.startDate, sortable: true },
     { key: 'interval', header: 'Interval', className: 'col-interval', width: '140px', render: (row) => formatInterval(row), sortable: true, sortValue: (row) => formatInterval(row) },
     { key: 'nextDueDate', header: 'Next Run', className: 'col-date', width: '140px', render: (row) => row.nextDueDate || 'Pending', sortable: true },
-    {
+    ...(recurringIncomes.some(row => row.lastPostedAt || row.lastPostedDate || row.lastSkippedAt || row.lastSkippedDate) ? [{
       key: 'lastActivity',
       header: 'Last Activity',
       className: 'col-date table-audit-cell',
@@ -84,7 +75,7 @@ export default function RecurringIncomesTable({
       },
       sortable: true,
       sortValue: (row) => row.lastPostedAt || row.lastPostedDate || row.lastSkippedAt || row.lastSkippedDate || ''
-    },
+    }] : []),
     {
       key: 'actions',
       header: 'Actions',

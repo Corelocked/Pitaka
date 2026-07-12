@@ -476,7 +476,6 @@ function ModernApp() {
     netWorthSnapshots,
     loading: budgetLoading,
     error,
-    syncState,
     setSelectedMonth,
     setSelectedYear,
     addIncome,
@@ -536,9 +535,6 @@ function ModernApp() {
   const [importMappingType, setImportMappingType] = useState('expenses')
   const [isDesktopDashboardEditMode, setIsDesktopDashboardEditMode] = useState(false)
   const [isMobileDashboardEditMode, setIsMobileDashboardEditMode] = useState(false)
-  const [isOnline, setIsOnline] = useState(() => (
-    typeof navigator === 'undefined' ? true : navigator.onLine
-  ))
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
   const [billingStatus, setBillingStatus] = useState(null)
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
@@ -823,8 +819,6 @@ function ModernApp() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
 
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault()
       setDeferredInstallPrompt(event)
@@ -834,14 +828,10 @@ function ModernApp() {
       setDeferredInstallPrompt(null)
     }
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleInstalled)
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleInstalled)
     }
@@ -3587,27 +3577,6 @@ function ModernApp() {
           fontWeight: 500
         }}>
           ⚠️ {error}
-        </div>
-      )}
-
-      {(!isOnline || syncState.hasPendingWrites || syncState.isFromCache) && (
-        <div className="status-strip">
-          {!isOnline && (
-            <div className="status-pill warning">
-              Offline mode: cached pages are available and changes will sync when connection returns.
-            </div>
-          )}
-
-          {syncState.hasPendingWrites && (
-            <div className="status-pill accent">
-              Sync pending: local changes are queued and waiting for Firestore confirmation.
-            </div>
-          )}
-          {syncState.isFromCache && isOnline && (
-            <div className="status-pill warning">
-              Showing cached data{syncState.lastSyncedAt ? `; last confirmed ${new Date(syncState.lastSyncedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}.
-            </div>
-          )}
         </div>
       )}
 
