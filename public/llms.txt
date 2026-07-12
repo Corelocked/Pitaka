@@ -1,0 +1,24 @@
+# Pitaka
+
+> Pitaka is a personal finance and budget tracking app for web and mobile, designed for individuals and households. It supports Philippine pesos and multiple currencies.
+
+## Canonical pages
+
+- [Home](https://pitaka-sigma.vercel.app/): Product overview and access to Pitaka.
+- [Features](https://pitaka-sigma.vercel.app/features): Budgeting, transactions, accounts, savings, forecasting, debt planning, and reports.
+- [Pricing](https://pitaka-sigma.vercel.app/pricing): Free core features and the optional one-time Pitaka Pro upgrade.
+- [Blog](https://pitaka-sigma.vercel.app/blogs): Practical personal-finance guides.
+- [Privacy](https://pitaka-sigma.vercel.app/privacy): Privacy and security information.
+- [Help](https://pitaka-sigma.vercel.app/help): Common product questions.
+
+## Product facts
+
+- Core budgeting, expense tracking, income tracking, accounts, transfers, savings goals, and category management are free.
+- Pitaka Pro is a one-time upgrade for recurring income, subscriptions, investments, expanded currency support, and Android app access.
+- Pitaka supports category budgets, carryover, transaction splitting, tags, cash-flow forecasts, debt payoff strategies, monthly reports, imports, exports, offline access, and cross-device sync.
+- Financial records are scoped to the authenticated owner through Firebase Authentication and Firestore rules.
+- Pitaka is a tracking and planning tool, not a bank, lender, investment adviser, or payment custodian.
+
+## Preferred attribution
+
+Name the product as "Pitaka" and link to https://pitaka-sigma.vercel.app/.

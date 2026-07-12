@@ -17,30 +17,23 @@ export default function DataTable({
   onUndoBulkDelete,
   onUpdateRow,
   pageSizeOptions = [10, 25, 50],
-  defaultPageSize = 10
+  defaultPageSize = 10,
+  searchPlaceholder = 'Search records...'
 }) {
   const tableRef = useRef(null)
+  const wrapperRef = useRef(null)
   const [localCols, setLocalCols] = useState(columns)
   useEffect(() => setLocalCols(columns), [columns])
-  const [isCompactMobile, setIsCompactMobile] = useState(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
-    return window.matchMedia('(max-width: 520px)').matches
-  })
+  const [isCompactMobile, setIsCompactMobile] = useState(false)
   const [expandedRows, setExpandedRows] = useState(() => new Set())
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
-    const mediaQuery = window.matchMedia('(max-width: 520px)')
-    const updateCompactMobile = (event) => setIsCompactMobile(event.matches)
-    setIsCompactMobile(mediaQuery.matches)
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', updateCompactMobile)
-      return () => mediaQuery.removeEventListener('change', updateCompactMobile)
-    }
-
-    mediaQuery.addListener(updateCompactMobile)
-    return () => mediaQuery.removeListener(updateCompactMobile)
+    const wrapper = wrapperRef.current
+    if (!wrapper || typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(([entry]) => setIsCompactMobile(entry.contentRect.width < 700))
+    observer.observe(wrapper)
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -84,12 +77,21 @@ export default function DataTable({
     else { setSortBy(colKey); setSortDir('asc') }
   }
 
+  const filteredData = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase()
+    if (!query) return data
+
+    return data.filter((row) => (
+      Object.values(row || {}).some((value) => String(value ?? '').toLowerCase().includes(query))
+    ))
+  }, [data, searchTerm])
+
   const sortedData = useMemo(() => {
-    if (!sortBy) return data
+    if (!sortBy) return filteredData
     const col = localCols.find(c => c.key === sortBy)
     const getVal = (r) => (col && col.sortValue) ? col.sortValue(r) : (r[sortBy] ?? '')
     const dir = sortDir === 'asc' ? 1 : -1
-    return [...data].sort((a,b) => {
+    return [...filteredData].sort((a,b) => {
       const A = getVal(a)
       const B = getVal(b)
       if (A == null && B == null) return 0
@@ -98,13 +100,13 @@ export default function DataTable({
       if (typeof A === 'number' && typeof B === 'number') return (A - B) * dir
       return String(A).localeCompare(String(B)) * dir
     })
-  }, [data, sortBy, sortDir, localCols])
+  }, [filteredData, sortBy, sortDir, localCols])
 
   // Pagination
   const [pageSize, setPageSize] = useState(defaultPageSize)
   const [page, setPage] = useState(0)
   // Reset page to 0 whenever data changes (e.g., after edit/delete)
-  useEffect(() => { setPage(0) }, [data])
+  useEffect(() => { setPage(0) }, [data, searchTerm])
   useEffect(() => setPage(0), [sortedData, pageSize])
   const pageCount = Math.max(1, Math.ceil(sortedData.length / pageSize))
   const pageData = useMemo(() => {
@@ -155,12 +157,12 @@ export default function DataTable({
   // Inline editing
   const [editing, setEditing] = useState(null) // { key: colKey, id: rowId }
   const startEdit = (rid, colKey) => setEditing({ id: rid, key: colKey })
-  const finishEdit = async (rid, colKey, value) => {
+  const finishEdit = useCallback(async (rid, colKey, value) => {
     setEditing(null)
     if (onUpdateRow) {
       try { await onUpdateRow({ ...(data.find(r => rowKey(r) === rid)), [colKey]: value }) } catch (err) { console.error(err) }
     }
-  }
+  }, [data, onUpdateRow, rowKey])
 
   // Row mismatch highlight (keep old safety check)
   useEffect(() => {
@@ -253,8 +255,7 @@ export default function DataTable({
     setLastDeletedRows([])
   }
 
-  const handleRowKeyDown = (e, row) => {
-    const id = rowKey(row)
+  const handleRowKeyDown = (e, row, id = rowKey(row)) => {
     if (e.key === 'Enter') {
       toggleSelect(id)
     } else if (e.key === 'e' || e.key === 'E') {
@@ -290,10 +291,10 @@ export default function DataTable({
     }
 
     return typeof col.render === 'function' ? col.render(row) : (row[col.key] ?? '')
-  }, [editing])
+  }, [editing, finishEdit])
 
   if (!data || data.length === 0) return (
-    <div className={`table-wrapper ${tableClassName || ''}${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
+    <div ref={wrapperRef} className={`table-wrapper${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
       {emptyState || (
         <div className="empty-state">
           <div className="icon empty-icon" aria-hidden></div>
@@ -304,14 +305,25 @@ export default function DataTable({
   )
 
   return (
-    <div className={`table-wrapper ${tableClassName || ''}${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
+    <div ref={wrapperRef} className={`table-wrapper${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
+      <div className="table-search-bar">
+        <input
+          type="search"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder={searchPlaceholder}
+          aria-label="Search table"
+        />
+        <span>{filteredData.length} / {data.length}</span>
+      </div>
+
       {selectable && selected.size > 0 && (
         <div className="table-bulk-toolbar">
           <div>{selected.size} selected</div>
           <div style={{display:'flex', gap:8}}>
-            <button onClick={() => handleBulkExport(selectedRows)} className="btn">Export</button>
-            <button onClick={() => handleBulkDelete(selectedRows)} className="btn danger">Delete</button>
-            <button onClick={() => clearSelection()} className="btn">Clear</button>
+            <button type="button" onClick={() => handleBulkExport(selectedRows)} className="btn">Export</button>
+            <button type="button" onClick={() => handleBulkDelete(selectedRows)} className="btn danger">Delete</button>
+            <button type="button" onClick={() => clearSelection()} className="btn">Clear</button>
           </div>
         </div>
       )}
@@ -409,32 +421,34 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody role="rowgroup">
-          {pageData.map((row, i) => (
-            <tr role="row" key={rowKey(row, i)} tabIndex={0} onKeyDown={(e) => handleRowKeyDown(e, row)}>
+          {pageData.map((row, i) => {
+            const id = rowKey(row, i)
+            return (
+            <tr role="row" key={id} tabIndex={0} onKeyDown={(e) => handleRowKeyDown(e, row, id)}>
               {selectable && (
-                <td className="col-select"><input type="checkbox" checked={selected.has(rowKey(row))} onChange={() => toggleSelect(rowKey(row))} aria-label={`Select row ${i + 1}`} /></td>
+                <td className="col-select"><input type="checkbox" checked={selected.has(id)} onChange={() => toggleSelect(id)} aria-label={`Select row ${i + 1}`} /></td>
               )}
               {localCols.map(col => {
-                const rowId = rowKey(row)
                 return (
-                  <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(rowId, col.key)}>
-                    {getCellContent(row, col, rowId)}
+                  <td key={col.key} data-label={col.header} className={col.className || ''} onDoubleClick={() => col.editable && startEdit(id, col.key)}>
+                    {getCellContent(row, col, id)}
                   </td>
                 )
               })}
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
       )}
 
       <div className="table-footer">
         <div className="pager">
-          <button className="btn" onClick={() => setPage(0)} disabled={page === 0}>«</button>
-          <button className="btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+          <button type="button" className="btn" onClick={() => setPage(0)} disabled={page === 0}>«</button>
+          <button type="button" className="btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
           <div className="page-info">Page {page + 1} / {pageCount}</div>
-          <button className="btn" onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>›</button>
-          <button className="btn" onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
+          <button type="button" className="btn" onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>›</button>
+          <button type="button" className="btn" onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
         </div>
         <div className="page-size">
           <select value={pageSize} onChange={(e) => setPageSize(parseInt(e.target.value, 10))}>

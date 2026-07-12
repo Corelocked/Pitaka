@@ -33,10 +33,9 @@ createRoot(document.getElementById('root')).render(
 
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations()
-      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    navigator.serviceWorker.register('/sw.js')
       .catch(() => {
-        // Ignore cleanup failures so the app still boots normally.
+        // Offline installation is optional; the app still works without it.
       })
   })
 }

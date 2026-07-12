@@ -967,7 +967,7 @@ const renderBlogContent = (content) => {
   return elements
 }
 
-export default function Blog({ onSelectPost, onBackToLanding }) {
+export default function Blog({ onBackToLanding }) {
   const [selectedSlug, setSelectedSlug] = useState(() => getInitialBlogSlug())
 
   const featuredPost = BLOG_POSTS.find(p => p.featured)

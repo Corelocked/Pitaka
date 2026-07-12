@@ -34,8 +34,9 @@ export function verifyMayaSignature({ headers, config }) {
     return { ok: true, reason: 'Skipped Maya signature verification in insecure mode' }
   }
 
-  // Add HMAC verification here with MAYA_WEBHOOK_SECRET once your account setup confirms hash format.
-  return { ok: true }
+  return config.allowInsecureWebhooks
+    ? { ok: true, reason: 'Skipped Maya signature verification in insecure mode' }
+    : { ok: false, reason: 'Maya signature verification is not configured' }
 }
 
 export function normalizeMayaEvent(body) {

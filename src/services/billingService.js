@@ -5,14 +5,14 @@ function getBillingApiBase() {
   return configuredBase || DEFAULT_BILLING_API_BASE
 }
 
-export async function createProCheckoutSession({ userId, email, name }) {
+export async function createProCheckoutSession({ idToken, email, name }) {
   const response = await fetch(`${getBillingApiBase()}/billing/paymongo/checkout-session`, {
     method: 'POST',
     headers: {
+      Authorization: `Bearer ${idToken}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      userId,
       email,
       name
     })

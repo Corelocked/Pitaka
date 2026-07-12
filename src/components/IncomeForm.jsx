@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'

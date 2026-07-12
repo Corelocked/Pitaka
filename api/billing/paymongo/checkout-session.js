@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   try {
     const config = getPaymentsConfig()
     const body = await readJsonBody(req)
-    const result = await handleCheckoutSessionRequest(config, body)
+    const result = await handleCheckoutSessionRequest(config, body, req.headers.authorization || '')
     res.status(result.status).json(result.body)
   } catch (error) {
     console.error('Failed to create PayMongo checkout session', error)

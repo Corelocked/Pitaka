@@ -89,7 +89,7 @@ export function exportToExcel(data) {
         escapeCsv(inv.ticker || ''),
         inv.quantity,
         inv.purchasePrice,
-        inv.currentValue || inv.purchasePrice,
+        inv.currentValue ?? inv.purchasePrice,
         inv.purchaseDate,
         escapeCsv(inv.notes || '')
       ].join(','))
@@ -163,8 +163,8 @@ export async function importFromExcel(file) {
 }
 
 // Parse CSV content into structured data
-function parseExcelCsv(text) {
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line)
+export function parseExcelCsv(text) {
+  const rows = parseCsvRows(text)
   const result = {
     incomes: [],
     expenses: [],
@@ -176,12 +176,16 @@ function parseExcelCsv(text) {
 
   let currentSection = null
   let headers = []
+  let sawSection = false
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i].map((cell) => cell.trim())
+    const line = cells.join(',')
+    if (cells.every((cell) => !cell)) continue
 
     // Detect section headers
-    if (line.startsWith('===')) {
+    if (cells[0]?.startsWith('===')) {
+      sawSection = true
       if (line.includes('INCOME')) currentSection = 'incomes'
       else if (line.includes('EXPENSES')) currentSection = 'expenses'
       else if (line.includes('TRANSFERS')) currentSection = 'transfers'
@@ -193,11 +197,9 @@ function parseExcelCsv(text) {
     }
 
     // Skip summary and empty lines
-    if (!currentSection || line.startsWith('Export Date') || line.startsWith('Period')) {
+    if (!currentSection || cells[0] === 'Export Date' || cells[0] === 'Period') {
       continue
     }
-
-    const cells = parseCsvLine(line)
 
     // First line of each section is headers
     if (headers.length === 0 || (cells[0] && (cells[0].includes('Date') || cells[0].includes('Name')))) {
@@ -246,7 +248,9 @@ function parseExcelCsv(text) {
           ticker: row.ticker || '',
           quantity: parseFloat(row.quantity) || 0,
           purchasePrice: parseFloat(row.purchase_price) || 0,
-          currentValue: parseFloat(row.current_value) || parseFloat(row.purchase_price) || 0,
+          currentValue: row.current_value === ''
+            ? parseFloat(row.purchase_price) || 0
+            : parseFloat(row.current_value) || 0,
           purchaseDate: row.purchase_date,
           notes: row.notes || ''
         })
@@ -268,35 +272,58 @@ function parseExcelCsv(text) {
     }
 
     // Reset headers for next section
-    if (i < lines.length - 1 && lines[i + 1].startsWith('===')) {
+    if (i < rows.length - 1 && rows[i + 1][0]?.startsWith('===')) {
       headers = []
+    }
+  }
+
+  if (!sawSection && rows.length > 1) {
+    const [headerRow, ...dataRows] = rows
+    result.unmapped = {
+      headers: headerRow.map((cell) => String(cell || '').trim()).filter(Boolean),
+      rows: dataRows.filter((row) => row.some((cell) => String(cell || '').trim()))
     }
   }
 
   return result
 }
 
-// Parse a single CSV line handling quotes
-function parseCsvLine(line) {
-  const cells = []
+// Parse CSV rows handling quoted commas, escaped quotes, and quoted newlines.
+function parseCsvRows(text) {
+  const rows = []
+  let row = []
   let current = ''
   let inQuotes = false
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
+  const source = String(text || '').replace(/^\ufeff/, '')
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i]
 
     if (char === '"') {
-      inQuotes = !inQuotes
+      if (inQuotes && source[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
     } else if (char === ',' && !inQuotes) {
-      cells.push(current.trim())
+      row.push(current)
+      current = ''
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && source[i + 1] === '\n') i++
+      row.push(current)
+      rows.push(row)
+      row = []
       current = ''
     } else {
       current += char
     }
   }
 
-  cells.push(current.trim())
-  return cells.map(cell => cell.replace(/^"|"$/g, '')) // Remove surrounding quotes
+  row.push(current)
+  rows.push(row)
+  return rows
 }
 
 // Escape CSV values

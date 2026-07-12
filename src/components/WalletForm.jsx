@@ -23,6 +23,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
   const [startingBalance, setStartingBalance] = useState('')
   const [creditLimit, setCreditLimit] = useState('')
   const [creditAlertPercent, setCreditAlertPercent] = useState('80')
+  const [creditApr, setCreditApr] = useState('')
+  const [creditMinimumPayment, setCreditMinimumPayment] = useState('')
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [error, setError] = useState('')
 
@@ -36,6 +38,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setStartingBalance(editingWallet.startingBalance || '')
       setCreditLimit(editingWallet.creditLimit || '')
       setCreditAlertPercent(editingWallet.creditAlertPercent || '80')
+      setCreditApr(editingWallet.creditApr || '')
+      setCreditMinimumPayment(editingWallet.creditMinimumPayment || '')
       setCurrency(editingWallet.currency || DEFAULT_CURRENCY)
     } else {
       // Reset form
@@ -46,6 +50,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       setStartingBalance('')
       setCreditLimit('')
       setCreditAlertPercent('80')
+      setCreditApr('')
+      setCreditMinimumPayment('')
       setCurrency(DEFAULT_CURRENCY)
     }
   }, [editingWallet])
@@ -73,6 +79,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         startingBalance: parseFloat(startingBalance) || 0,
         creditLimit: accountType === 'credit' ? (parseFloat(creditLimit) || 0) : null,
         creditAlertPercent: accountType === 'credit' ? (parseFloat(creditAlertPercent) || 80) : null,
+        creditApr: accountType === 'credit' ? (parseFloat(creditApr) || 0) : null,
+        creditMinimumPayment: accountType === 'credit' ? (parseFloat(creditMinimumPayment) || 0) : null,
         currency
       }
 
@@ -88,6 +96,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         setStartingBalance('')
         setCreditLimit('')
         setCreditAlertPercent('80')
+        setCreditApr('')
+        setCreditMinimumPayment('')
         setCurrency(DEFAULT_CURRENCY)
       }
     } catch (err) {
@@ -263,6 +273,32 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
               <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
                 Pitaka will flag the card once spending reaches this percentage of the limit.
               </small>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">APR (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditApr}
+                onChange={(e) => setCreditApr(e.target.value)}
+                className="form-input"
+                placeholder="24"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Planned Monthly Payment</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditMinimumPayment}
+                onChange={(e) => setCreditMinimumPayment(e.target.value)}
+                className="form-input"
+                placeholder="2500.00"
+              />
             </div>
           </>
         )}

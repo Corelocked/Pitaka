@@ -26,7 +26,7 @@ app.get('/health', (_req, res) => {
 
 app.post('/billing/paymongo/checkout-session', async (req, res) => {
   try {
-    const result = await handleCheckoutSessionRequest(config, req.body)
+    const result = await handleCheckoutSessionRequest(config, req.body, req.get('Authorization') || '')
     res.status(result.status).json(result.body)
   } catch (error) {
     console.error('Failed to create PayMongo checkout session', error)

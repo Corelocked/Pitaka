@@ -1,7 +1,27 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import './Modal.css'
 
 export default function Modal({ open, title, description, children, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) {
+  const modalRef = useRef(null)
+  const previousFocusRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    previousFocusRef.current = document.activeElement
+    modalRef.current?.focus()
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && typeof onCancel === 'function') onCancel()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previousFocusRef.current?.focus?.()
+    }
+  }, [onCancel, open])
+
   if (!open) return null
   return (
     <div className="modal-backdrop" role="presentation" onClick={onCancel}>
@@ -10,6 +30,8 @@ export default function Modal({ open, title, description, children, onConfirm, o
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        tabIndex={-1}
+        ref={modalRef}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >

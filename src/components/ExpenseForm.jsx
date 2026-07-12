@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
+import { suggestCategory } from '../utils/categoryRules'
 
 function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEdit, categories = [], wallets = [] }) {
   const [description, setDescription] = useState('')
@@ -9,22 +11,23 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(getLocalDateInputValue())
   const [walletId, setWalletId] = useState('')
+  const [notes, setNotes] = useState('')
+  const [tags, setTags] = useState('')
+  const [splitCategory, setSplitCategory] = useState('')
+  const [splitAmount, setSplitAmount] = useState('')
 
   const selectedWallet = wallets.find((wallet) => wallet.id === walletId)
   const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingExpense?.currency || DEFAULT_CURRENCY)
 
   useEffect(() => {
     if (editingExpense) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDescription(editingExpense.description)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCategory(editingExpense.category)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAmount(editingExpense.amount.toString())
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDate(editingExpense.date)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWalletId(editingExpense.walletId || '')
+      setNotes(editingExpense.notes || '')
+      setTags((editingExpense.tags || []).join(', '))
     }
   }, [editingExpense])
 
@@ -32,13 +35,22 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
     e.preventDefault()
     if (description && category && amount) {
       if (editingExpense) {
-        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
+        onUpdateExpense({ ...editingExpense, description, category, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency, notes: notes.trim(), tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean) })
       } else {
-        onAddExpense({ description, category, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
+        const total = parseFloat(amount)
+        const split = parseFloat(splitAmount || 0)
+        const base = { description, date, walletId: walletId || null, currency: activeCurrency, notes: notes.trim(), tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean) }
+        onAddExpense(splitCategory && split > 0 && split < total
+          ? [{ ...base, category, amount: total - split }, { ...base, description: `${description} (split)`, category: splitCategory, amount: split }]
+          : { ...base, category, amount: total })
         setDescription('')
         setCategory('')
         setAmount('')
         setWalletId('')
+        setNotes('')
+        setTags('')
+        setSplitCategory('')
+        setSplitAmount('')
       }
     }
   }
@@ -48,6 +60,8 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
     setCategory('')
     setAmount('')
     setDate(getLocalDateInputValue())
+    setNotes('')
+    setTags('')
     onCancelEdit()
   }
 
@@ -60,7 +74,14 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
           type="text"
           placeholder="e.g., Groceries, Rent, Utilities"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            const nextDescription = e.target.value
+            setDescription(nextDescription)
+            if (!category) {
+              const suggestion = suggestCategory(nextDescription, categories)
+              if (suggestion) setCategory(suggestion)
+            }
+          }}
           required
         />
       </div>
@@ -116,6 +137,32 @@ function ExpenseForm({ onAddExpense, editingExpense, onUpdateExpense, onCancelEd
           )}
         </select>
       </div>
+
+      <div className="form-group">
+        <label htmlFor="expense-tags">Tags</label>
+        <input id="expense-tags" type="text" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="work, reimbursable" />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="expense-notes">Notes</label>
+        <textarea id="expense-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows="3" />
+      </div>
+
+      {!editingExpense && (
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="expense-split-category">Split Category</label>
+            <select id="expense-split-category" value={splitCategory} onChange={(e) => setSplitCategory(e.target.value)}>
+              <option value="">No split</option>
+              {categories.filter((item) => item.name !== category).map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="expense-split-amount">Split Amount</label>
+            <input id="expense-split-amount" type="number" min="0" max={amount || undefined} step="0.01" value={splitAmount} onChange={(e) => setSplitAmount(e.target.value)} disabled={!splitCategory} />
+          </div>
+        </div>
+      )}
 
       <div className="form-buttons">
         <button type="submit">{editingExpense ? 'Update' : 'Add'} Expense</button>

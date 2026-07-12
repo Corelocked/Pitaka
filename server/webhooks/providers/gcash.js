@@ -34,8 +34,9 @@ export function verifyGCashSignature({ headers, config }) {
     return { ok: true, reason: 'Skipped GCash signature verification in insecure mode' }
   }
 
-  // Add HMAC verification here with GCASH_WEBHOOK_SECRET once your partner docs confirm signature scheme.
-  return { ok: true }
+  return config.allowInsecureWebhooks
+    ? { ok: true, reason: 'Skipped GCash signature verification in insecure mode' }
+    : { ok: false, reason: 'GCash signature verification is not configured' }
 }
 
 export function normalizeGCashEvent(body) {

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useContext, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { App as CapacitorApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseContext } from './contexts/FirebaseContext'
@@ -28,6 +28,9 @@ import {
 import { exportToExcel, importFromExcel, downloadImportTemplate } from './utils/excelUtils'
 import { createProCheckoutSession } from './services/billingService'
 import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCurrency } from './utils/currency'
+import { suggestCategory } from './utils/categoryRules'
+import { getLocalDateInputValue } from './utils/date'
+import { reportAppError } from './utils/errorReporting'
 
 const Auth = lazy(() => import('./components/Auth'))
 const Landing = lazy(() => import('./components/Landing'))
@@ -46,6 +49,7 @@ const IncomeTable = lazy(() => import('./components/IncomeTable'))
 const ExpenseTable = lazy(() => import('./components/ExpenseTable'))
 const WalletsTable = lazy(() => import('./components/WalletsTable'))
 const CategoryTable = lazy(() => import('./components/CategoryTable'))
+const BudgetManager = lazy(() => import('./components/BudgetManager'))
 const RecurringIncomesTable = lazy(() => import('./components/RecurringIncomesTable'))
 const SubscriptionsTable = lazy(() => import('./components/SubscriptionsTable'))
 const InvestmentForm = lazy(() => import('./components/InvestmentForm'))
@@ -75,6 +79,21 @@ const DASHBOARD_LAYOUTS = [
 ]
 
 const DASHBOARD_WIDGET_LIBRARY = [
+  {
+    id: 'plan-ahead',
+    name: 'Plan Ahead',
+    description: 'Shows financial health, cash runway, upcoming bill pressure, and projected month-end.'
+  },
+  {
+    id: 'net-worth-history',
+    name: 'Net Worth History',
+    description: 'Charts saved monthly net worth snapshots.'
+  },
+  {
+    id: 'monthly-closeout',
+    name: 'Monthly Closeout',
+    description: 'Summarizes surplus, top spend, budget misses, and net worth movement.'
+  },
   {
     id: 'recent-activity',
     name: 'Recent Activity',
@@ -130,9 +149,12 @@ const DASHBOARD_WIDGET_LIBRARY = [
 
 const DASHBOARD_LAYOUT_SECTION_DEFAULTS = {
   editorial: {
-    mainOrder: ['cashflow-chart', 'spending', 'income-source-chart', 'accounts', 'recent-activity'],
+    mainOrder: ['plan-ahead', 'monthly-closeout', 'net-worth-history', 'cashflow-chart', 'spending', 'income-source-chart', 'accounts', 'recent-activity'],
     sideOrder: ['savings', 'upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart'],
     desktopTileSizes: {
+      'plan-ahead': 'large',
+      'monthly-closeout': 'medium',
+      'net-worth-history': 'medium',
       'cashflow-chart': 'large',
       spending: 'medium',
       'income-source-chart': 'medium',
@@ -146,9 +168,12 @@ const DASHBOARD_LAYOUT_SECTION_DEFAULTS = {
     }
   },
   compact: {
-    mainOrder: ['recent-activity', 'accounts', 'spending', 'cashflow-chart', 'income-source-chart'],
+    mainOrder: ['plan-ahead', 'monthly-closeout', 'recent-activity', 'accounts', 'net-worth-history', 'spending', 'cashflow-chart', 'income-source-chart'],
     sideOrder: ['upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart', 'savings'],
     desktopTileSizes: {
+      'plan-ahead': 'medium',
+      'monthly-closeout': 'medium',
+      'net-worth-history': 'medium',
       'recent-activity': 'large',
       accounts: 'medium',
       spending: 'medium',
@@ -162,9 +187,12 @@ const DASHBOARD_LAYOUT_SECTION_DEFAULTS = {
     }
   },
   planner: {
-    mainOrder: ['savings', 'spending', 'cashflow-chart', 'accounts', 'recent-activity'],
+    mainOrder: ['plan-ahead', 'monthly-closeout', 'savings', 'net-worth-history', 'spending', 'cashflow-chart', 'accounts', 'recent-activity'],
     sideOrder: ['upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart', 'income-source-chart'],
     desktopTileSizes: {
+      'plan-ahead': 'large',
+      'monthly-closeout': 'medium',
+      'net-worth-history': 'medium',
       savings: 'large',
       spending: 'medium',
       'cashflow-chart': 'medium',
@@ -192,7 +220,7 @@ const PUBLIC_LANDING_SECTION_SLUGS = {
   '/pricing': 'pricing',
   '/contact': 'contact',
   '/help': 'help',
-  '/privacy': 'contact',
+  '/privacy': 'privacy',
   '/terms': 'contact'
 }
 const AUTHENTICATED_VIEW_PATHS = {
@@ -207,6 +235,7 @@ const AUTHENTICATED_VIEW_PATHS = {
   'recurring-income': '/recurring-income',
   'android-app': '/android-app',
   contact: '/contact',
+  privacy: '/privacy',
   pro: '/pro',
   settings: '/settings'
 }
@@ -391,7 +420,7 @@ const THEME_OPTIONS = [
   }
 ]
 
-const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 50000)
+const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 19900)
 const PRO_PRICE_CURRENCY = String(import.meta.env.VITE_PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase()
 const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_METHOD_LABEL || 'QRPh')
 const APP_DISTRIBUTION_INVITE_URL = String(
@@ -441,9 +470,10 @@ function ModernApp() {
     filteredIncomes,
     filteredExpenses,
     recurringIncomes,
-    netWorthSnapshots,
     categories,
+    categoryBudgets,
     subscriptions,
+    netWorthSnapshots,
     loading: budgetLoading,
     error,
     syncState,
@@ -454,12 +484,14 @@ function ModernApp() {
     addExpense,
     addSavings,
     addCategory,
+    upsertBudget,
     addSubscription,
     deleteIncome,
     deleteRecurringIncome,
     deleteExpense,
     deleteSavings,
     deleteCategory,
+    deleteBudget,
     deleteSubscription,
     editIncome,
     editRecurringIncome,
@@ -475,6 +507,7 @@ function ModernApp() {
     updateSubscription,
     addToSavingsGoal,
     walletBalances,
+    creditCardSummaries,
     addWallet,
     deleteWallet,
     updateWallet,
@@ -497,6 +530,10 @@ function ModernApp() {
 
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [bottomSheetContent, setBottomSheetContent] = useState(null)
+  const bottomSheetRef = useRef(null)
+  const [lastImportBatch, setLastImportBatch] = useState([])
+  const [importColumnMapping, setImportColumnMapping] = useState({})
+  const [importMappingType, setImportMappingType] = useState('expenses')
   const [isDesktopDashboardEditMode, setIsDesktopDashboardEditMode] = useState(false)
   const [isMobileDashboardEditMode, setIsMobileDashboardEditMode] = useState(false)
   const [isOnline, setIsOnline] = useState(() => (
@@ -505,6 +542,8 @@ function ModernApp() {
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
   const [billingStatus, setBillingStatus] = useState(null)
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
+  const [privacyShieldEnabled, setPrivacyShieldEnabled] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('pitaka.privacyShield') !== 'off')
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('pitaka.notifications') === 'on')
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
@@ -553,6 +592,16 @@ function ModernApp() {
   const themePreference = user?.uid && themePreferences[user.uid]
     ? themePreferences[user.uid]
     : 'light'
+
+  useEffect(() => {
+    const updatePrivacyShield = () => document.body.classList.toggle('privacy-shielded', privacyShieldEnabled && document.hidden)
+    updatePrivacyShield()
+    document.addEventListener('visibilitychange', updatePrivacyShield)
+    return () => {
+      document.removeEventListener('visibilitychange', updatePrivacyShield)
+      document.body.classList.remove('privacy-shielded')
+    }
+  }, [privacyShieldEnabled])
   const dashboardCustomization = effectiveDashboardLayout
   const dashboardLayoutStyle = dashboardLayout === 'custom'
     ? dashboardCustomization.layoutStyle || 'editorial'
@@ -701,36 +750,6 @@ function ModernApp() {
     })
   }
 
-  const moveDashboardWidget = (sectionId, column, direction) => {
-    const key = column === 'side' ? 'sideOrder' : 'mainOrder'
-    const order = [...dashboardCustomization[key]]
-    const currentIndex = order.indexOf(sectionId)
-    if (currentIndex === -1) return
-
-    const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (nextIndex < 0 || nextIndex >= order.length) return
-
-    ;[order[currentIndex], order[nextIndex]] = [order[nextIndex], order[currentIndex]]
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      [key]: order
-    })
-  }
-
-  const moveDashboardWidgetToColumn = (sectionId, targetColumn) => {
-    const sourceColumn = dashboardCustomization.mainOrder.includes(sectionId) ? 'mainOrder' : 'sideOrder'
-    const destinationColumn = targetColumn === 'side' ? 'sideOrder' : 'mainOrder'
-
-    if (sourceColumn === destinationColumn) return
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      [sourceColumn]: dashboardCustomization[sourceColumn].filter((id) => id !== sectionId),
-      [destinationColumn]: [...dashboardCustomization[destinationColumn], sectionId]
-    })
-  }
-
   const toggleDashboardWidgetVisibility = (sectionId) => {
     const isHidden = dashboardCustomization.hiddenSectionIds.includes(sectionId)
 
@@ -740,10 +759,6 @@ function ModernApp() {
         ? dashboardCustomization.hiddenSectionIds.filter((id) => id !== sectionId)
         : [...dashboardCustomization.hiddenSectionIds, sectionId]
     })
-  }
-
-  const resetDashboardCustomization = () => {
-    persistDashboardCustomization(createDashboardCustomization(dashboardLayoutStyle))
   }
 
   const deleteMany = async (rows, deleteHandler) => {
@@ -860,6 +875,7 @@ function ModernApp() {
     if (quickAction) {
       handleQuickAction(quickAction)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -915,6 +931,7 @@ function ModernApp() {
     return () => {
       removeListener?.remove?.()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isPro])
 
   useEffect(() => {
@@ -923,6 +940,7 @@ function ModernApp() {
     if (pendingAction) {
       handleQuickAction(pendingAction)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, authLoading, isPro])
 
   useEffect(() => {
@@ -974,8 +992,9 @@ function ModernApp() {
     setIsStartingCheckout(true)
 
     try {
+      const idToken = await user.getIdToken()
       const session = await createProCheckoutSession({
-        userId: user.uid,
+        idToken,
         email: user.email,
         name: user.displayName || user.email
       })
@@ -996,10 +1015,22 @@ function ModernApp() {
     setShowBottomSheet(true)
   }
 
-  const closeBottomSheet = () => {
+  const closeBottomSheet = useCallback(() => {
     setShowBottomSheet(false)
     setTimeout(() => setBottomSheetContent(null), 300)
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!showBottomSheet) return undefined
+
+    bottomSheetRef.current?.focus()
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeBottomSheet()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [closeBottomSheet, showBottomSheet])
 
   const openCategorySheet = (category = null) => {
     editCategory(category)
@@ -1035,38 +1066,10 @@ function ModernApp() {
     year: 'numeric'
   })
 
-  const formatSnapshotMonth = (monthKey) => {
-    if (!monthKey) return 'Unknown period'
-    const [yearRaw, monthRaw] = String(monthKey).split('-')
-    const year = Number(yearRaw)
-    const month = Number(monthRaw)
-
-    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
-      return monthKey
-    }
-
-    return new Date(year, month - 1, 1).toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
   const currentPeriodTransfers = transfers.filter((transfer) => {
     const date = new Date(transfer.date)
     return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear
   })
-
-  const dashboardWidgetAvailability = {
-    'recent-activity': filteredIncomes.length > 0 || filteredExpenses.length > 0 || currentPeriodTransfers.length > 0,
-    spending: expensesByCategory.length > 0,
-    accounts: walletBalances.length > 0,
-    savings: savings.length > 0,
-    'cashflow-chart': totalIncome > 0 || totalExpenses > 0 || netIncome !== 0,
-    'income-source-chart': filteredIncomes.length > 0,
-    'weekly-spending-chart': filteredExpenses.length > 0,
-    'expense-trend-chart': filteredExpenses.length > 0,
-    'account-allocation-chart': walletBalances.some((wallet) => parseFloat(wallet.balance || 0) > 0)
-  }
 
   const topCategory = [...expensesByCategory]
     .filter((category) => category.total > 0)
@@ -1094,12 +1097,55 @@ function ModernApp() {
       investments,
       (investment) => {
         const quantity = parseFloat(investment.quantity || 0)
-        const unitValue = parseFloat(investment.currentValue) || parseFloat(investment.purchasePrice) || 0
+        const unitValue = Number(investment.currentValue ?? investment.purchasePrice ?? 0)
         return quantity * unitValue
       },
       (investment) => investment.currency || DEFAULT_CURRENCY
     )
   )
+  const debtSnowball = [...creditCardSummaries].filter((card) => card.spent > 0).sort((a, b) => a.spent - b.spent)
+  const debtAvalanche = [...debtSnowball].sort((a, b) => b.apr - a.apr || a.spent - b.spent)
+  const selectedBudgetMonthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
+
+  useEffect(() => {
+    if (!notificationsEnabled || typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+    const warnings = categoryBudgets.filter((budget) => ['warning', 'over'].includes(budget.status)).length
+      + creditCardSummaries.filter((card) => ['warning', 'maxed'].includes(card.status)).length
+    if (!warnings) return
+    const key = `pitaka.notification.${getLocalDateInputValue()}`
+    if (window.localStorage.getItem(key)) return
+    new Notification('Pitaka needs your attention', { body: `${warnings} budget or credit alert${warnings === 1 ? '' : 's'} need review.` })
+    window.localStorage.setItem(key, 'sent')
+  }, [categoryBudgets, creditCardSummaries, notificationsEnabled])
+
+  const toggleNotifications = async () => {
+    if (typeof Notification === 'undefined') return
+    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
+    const enabled = permission === 'granted' && !notificationsEnabled
+    setNotificationsEnabled(enabled)
+    window.localStorage.setItem('pitaka.notifications', enabled ? 'on' : 'off')
+  }
+
+  const togglePrivacyShield = () => {
+    const enabled = !privacyShieldEnabled
+    setPrivacyShieldEnabled(enabled)
+    window.localStorage.setItem('pitaka.privacyShield', enabled ? 'on' : 'off')
+  }
+
+  const downloadDiagnostics = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      online: navigator.onLine,
+      path: window.location.pathname,
+      userAgent: navigator.userAgent,
+      errors: JSON.parse(window.localStorage.getItem('pitaka.errorLog') || '[]')
+    }
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }))
+    link.download = `pitaka-diagnostics-${getLocalDateInputValue()}.json`
+    link.click()
+    URL.revokeObjectURL(link.href)
+  }
 
   const normalizeImportValue = (value) => String(value ?? '').trim().toLowerCase()
   const normalizeImportAmount = (value) => Number(parseFloat(value || 0).toFixed(2))
@@ -1149,6 +1195,133 @@ function ModernApp() {
     normalizeImportAmount(existingInvestment.purchasePrice) === normalizeImportAmount(investment.purchasePrice) &&
     normalizeImportValue(existingInvestment.purchaseDate) === normalizeImportValue(investment.purchaseDate)
   ))
+
+  const savingsExists = (goal) => savings.some((existingGoal) => (
+    normalizeImportValue(existingGoal.goal) === normalizeImportValue(goal.goal) &&
+    normalizeImportAmount(existingGoal.targetAmount) === normalizeImportAmount(goal.targetAmount) &&
+    normalizeImportAmount(existingGoal.currentAmount) === normalizeImportAmount(goal.currentAmount) &&
+    normalizeImportValue(existingGoal.targetDate) === normalizeImportValue(goal.targetDate)
+  ))
+
+  const recurringIncomeExists = (income) => recurringIncomes.some((existingIncome) => (
+    normalizeImportValue(existingIncome.source) === normalizeImportValue(income.source) &&
+    normalizeImportAmount(existingIncome.amount) === normalizeImportAmount(income.amount) &&
+    normalizeImportValue(existingIncome.startDate) === normalizeImportValue(income.startDate)
+  ))
+
+  const subscriptionExists = (subscription) => subscriptions.some((existingSubscription) => (
+    normalizeImportValue(existingSubscription.name) === normalizeImportValue(subscription.name) &&
+    normalizeImportAmount(existingSubscription.amount) === normalizeImportAmount(subscription.amount) &&
+    normalizeImportValue(existingSubscription.startDate) === normalizeImportValue(subscription.startDate)
+  ))
+
+  const undoImportedRows = async (rows) => {
+    const deleteByType = {
+      wallets: deleteWallet,
+      categories: deleteCategory,
+      incomes: deleteIncome,
+      expenses: deleteExpense,
+      transfers: deleteTransfer,
+      investments: deleteInvestment
+    }
+
+    let undone = 0
+    let failed = 0
+
+    for (const row of rows) {
+      try {
+        if (!row?.id || !deleteByType[row.type]) {
+          failed++
+          continue
+        }
+        await deleteByType[row.type](row.id)
+        undone++
+      } catch (err) {
+        reportAppError('import.undo', err, { type: row?.type })
+        failed++
+      }
+    }
+
+    setLastImportBatch([])
+    return { undone, failed }
+  }
+
+  const downloadJsonBackup = () => {
+    const backup = {
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      data: {
+        wallets,
+        categories,
+        incomes,
+        expenses,
+        transfers,
+        savings,
+        subscriptions,
+        recurringIncomes,
+        investments
+      }
+    }
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `pitaka-backup-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const restoreJsonBackup = (file) => {
+    const cleanBackupItem = (item) => {
+      const payload = { ...(item || {}) }
+      delete payload.id
+      delete payload.userId
+      delete payload.createdAt
+      delete payload.updatedAt
+      return payload
+    }
+
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result)
+        const data = parsed?.data || parsed
+        const restorePlan = [
+          ['wallets', addWallet, walletExists],
+          ['categories', addCategory, categoryExists],
+          ['savings', addSavings, savingsExists],
+          ['incomes', addIncome, incomeExists],
+          ['expenses', addExpense, expenseExists],
+          ['transfers', addTransfer, transferExists],
+          ['recurringIncomes', addRecurringIncome, recurringIncomeExists],
+          ['subscriptions', addSubscription, subscriptionExists],
+          ['investments', addInvestment, investmentExists]
+        ]
+        let restored = 0
+        let skipped = 0
+
+        for (const [key, addHandler, exists] of restorePlan) {
+          for (const item of data[key] || []) {
+            const payload = cleanBackupItem(item)
+            if (exists(payload)) {
+              skipped++
+              continue
+            }
+            await addHandler(payload)
+            restored++
+          }
+        }
+
+        alert(`Backup restored.\nImported: ${restored}\nSkipped duplicates: ${skipped}`)
+      } catch (err) {
+        reportAppError('backup.restore', err)
+        alert('Failed to restore backup: ' + err.message)
+      }
+    }
+    reader.readAsText(file)
+  }
 
   const renderPageIntro = ({ eyebrow, title, description, stats = [] }) => (
     <section className="page-intro card">
@@ -1412,6 +1585,9 @@ function ModernApp() {
             filteredExpenses={filteredExpenses}
             transfers={transfers}
             subscriptions={subscriptions}
+            recurringIncomes={recurringIncomes}
+            netWorthSnapshots={netWorthSnapshots}
+            categoryBudgets={categoryBudgets}
             isPro={isPro}
             expensesByCategory={expensesByCategory}
             selectedMonth={selectedMonth}
@@ -1673,6 +1849,42 @@ function ModernApp() {
               </div>
             )}
             </div>
+            {debtSnowball.length > 0 && (
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><WalletIcon size={18} /> Debt Payoff Strategy</h3>
+                    <p className="card-subtitle">Compare the quickest psychological wins with the lowest-interest-cost order.</p>
+                  </div>
+                </div>
+                <div className="layout-preference-list layout-preference-list--two-up">
+                  <div className="layout-preference-card">
+                    <strong>Snowball</strong>
+                    <div className="layout-preference-description">{debtSnowball.map((card) => card.name).join(' → ')}</div>
+                  </div>
+                  <div className="layout-preference-card">
+                    <strong>Avalanche</strong>
+                    <div className="layout-preference-description">{debtAvalanche.map((card) => `${card.name} (${card.apr || 0}% APR)`).join(' → ')}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><ChartIcon size={18} /> Monthly Report</h3>
+                  <p className="card-subtitle">A compact review for {currentPeriodLabel}.</p>
+                </div>
+              </div>
+              <div className="dashboard-plan-list">
+                <div className="atelier-metric-chip"><span>Income</span><strong>{formatCurrencySummary(summarizeByCurrency(filteredIncomes, (item) => item.amount, (item) => item.currency))}</strong></div>
+                <div className="atelier-metric-chip"><span>Expenses</span><strong>{formatCurrencySummary(summarizeByCurrency(filteredExpenses, (item) => item.amount, (item) => item.currency))}</strong></div>
+                <div className="atelier-metric-chip"><span>Top Category</span><strong>{topCategory?.category || 'None'}</strong></div>
+                <div className="atelier-metric-chip"><span>Budget Alerts</span><strong>{categoryBudgets.filter((budget) => ['warning', 'over'].includes(budget.status)).length}</strong></div>
+              </div>
+            </div>
+
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
@@ -1831,6 +2043,22 @@ function ModernApp() {
                 onBulkDelete={(rows) => deleteMany(rows, deleteCategory)}
               />
             </div>
+
+            <section className="page-hero-card" style={{ display: 'grid', gap: '1rem' }}>
+              <div className="card-header" style={{ marginBottom: 0 }}>
+                <div>
+                  <h3 className="card-title"><ChartIcon size={18} /> Budget Envelopes</h3>
+                  <p className="card-subtitle">Set monthly category limits and watch what is left for the current month.</p>
+                </div>
+              </div>
+              <BudgetManager
+                monthKey={selectedBudgetMonthKey}
+                categories={categories}
+                categoryBudgets={categoryBudgets}
+                onSaveBudget={upsertBudget}
+                onDeleteBudget={deleteBudget}
+              />
+            </section>
           </div>
         )
 
@@ -2038,6 +2266,7 @@ function ModernApp() {
                         try {
                           await startProCheckout()
                         } catch (checkoutError) {
+                          reportAppError('billing.checkout', checkoutError)
                           alert(checkoutError.message || 'Failed to start PayMongo checkout.')
                         }
                       }}
@@ -2073,6 +2302,7 @@ function ModernApp() {
                           try {
                             await startProCheckout()
                           } catch (checkoutError) {
+                            reportAppError('billing.checkout', checkoutError)
                             alert(checkoutError.message || 'Failed to start PayMongo checkout.')
                           }
                         }}
@@ -2223,6 +2453,51 @@ function ModernApp() {
           </div>
         )
 
+      case 'privacy':
+        return (
+          <div className="mobile-content page-shell">
+            {renderPageIntro({
+              eyebrow: 'Trust',
+              title: 'Privacy & Security',
+              description: 'How Pitaka handles finance data, account access, and billing.',
+              stats: [
+                { label: 'Data Access', value: 'Owner Only' },
+                { label: 'Billing', value: 'Token Verified' }
+              ]
+            })}
+
+            <div className="card page-hero-card">
+              <h3 className="card-title"><SettingsIcon size={18} /> Data Handling</h3>
+              <div className="layout-preference-list">
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Your records stay in your account</span>
+                  </div>
+                  <div className="layout-preference-description">Firestore rules restrict finance documents to the signed-in owner and block owner changes on update.</div>
+                </div>
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Money inputs are validated</span>
+                  </div>
+                  <div className="layout-preference-description">Rules reject negative amount fields for core money records and validate basic currency field types.</div>
+                </div>
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Billing uses Firebase identity</span>
+                  </div>
+                  <div className="layout-preference-description">Checkout requests verify the Firebase ID token server-side before creating a PayMongo session.</div>
+                </div>
+                <div className="layout-preference-card active">
+                  <div className="layout-preference-top">
+                    <span className="layout-preference-name">Backups are user controlled</span>
+                  </div>
+                  <div className="layout-preference-description">CSV and JSON exports are downloaded locally from your browser when you request them.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
       case 'settings':
         return (
           <div className="mobile-content page-shell">
@@ -2288,6 +2563,29 @@ function ModernApp() {
               </div>
             </div>
 
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><SettingsIcon size={18} /> Privacy, Alerts & Diagnostics</h3>
+                  <p className="card-subtitle">Protect backgrounded screens, receive local financial alerts, and export troubleshooting data.</p>
+                </div>
+              </div>
+              <div className="layout-preference-list">
+                <button type="button" className={`layout-preference-card ${privacyShieldEnabled ? 'active' : ''}`} onClick={togglePrivacyShield}>
+                  <div className="layout-preference-top"><span className="layout-preference-name">Privacy Shield</span><span className="layout-preference-state">{privacyShieldEnabled ? 'On' : 'Off'}</span></div>
+                  <div className="layout-preference-description">Hide financial content when Pitaka is backgrounded or shown in the app switcher.</div>
+                </button>
+                <button type="button" className={`layout-preference-card ${notificationsEnabled ? 'active' : ''}`} onClick={toggleNotifications}>
+                  <div className="layout-preference-top"><span className="layout-preference-name">Budget & Debt Alerts</span><span className="layout-preference-state">{notificationsEnabled ? 'On' : 'Off'}</span></div>
+                  <div className="layout-preference-description">Send one local daily notification when budgets or credit limits need attention.</div>
+                </button>
+                <button type="button" className="layout-preference-card" onClick={downloadDiagnostics}>
+                  <div className="layout-preference-top"><span className="layout-preference-name">Export Diagnostics</span><span className="layout-preference-state">Download</span></div>
+                  <div className="layout-preference-description">Download recent local errors and device context without financial records.</div>
+                </button>
+              </div>
+            </div>
+
             <div className="card page-hero-card">
               <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
               
@@ -2343,6 +2641,14 @@ function ModernApp() {
                 </button>
 
                 <button
+                  onClick={() => setCurrentView('privacy')}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <SettingsIcon size={16} /> Privacy & Security
+                </button>
+
+                <button
                   onClick={() => {
                     exportToExcel({
                       incomes,
@@ -2371,8 +2677,26 @@ function ModernApp() {
                       if (file) {
                         try {
                           const data = await importFromExcel(file)
-                          openBottomSheet({ type: 'importData', data })
+                          if (data.unmapped) {
+                            const headers = data.unmapped.headers || []
+                            setImportMappingType('expenses')
+                            setImportColumnMapping({
+                              date: headers.find((header) => /date/i.test(header)) || '',
+                              description: headers.find((header) => /description|merchant|name|memo/i.test(header)) || '',
+                              source: headers.find((header) => /source|payer|employer|description|name/i.test(header)) || '',
+                              amount: headers.find((header) => /amount|debit|charge/i.test(header)) || '',
+                              category: headers.find((header) => /category/i.test(header)) || '',
+                              walletName: headers.find((header) => /wallet|account/i.test(header)) || '',
+                              fromWalletName: headers.find((header) => /from/i.test(header)) || '',
+                              toWalletName: headers.find((header) => /to/i.test(header)) || '',
+                              notes: headers.find((header) => /note|memo/i.test(header)) || ''
+                            })
+                            openBottomSheet({ type: 'importMapping', data })
+                          } else {
+                            openBottomSheet({ type: 'importData', data })
+                          }
                         } catch (err) {
+                          reportAppError('import.file', err)
                           alert('Failed to import file: ' + err.message)
                         }
                       }
@@ -2391,6 +2715,31 @@ function ModernApp() {
                   style={{ justifyContent: 'flex-start' }}
                 >
                   <TemplateIcon size={16} /> Download Import Template
+                </button>
+
+                <button
+                  onClick={downloadJsonBackup}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <DownloadIcon size={16} /> Download JSON Backup
+                </button>
+
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = '.json'
+                    input.onchange = (e) => {
+                      const file = e.target.files[0]
+                      if (file) restoreJsonBackup(file)
+                    }
+                    input.click()
+                  }}
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start' }}
+                >
+                  <UploadIcon size={16} /> Restore JSON Backup
                 </button>
               </div>
             </div>
@@ -2447,7 +2796,8 @@ function ModernApp() {
         return (
           <ExpenseForm
             onAddExpense={async (expense) => {
-              await addExpense(expense)
+              if (Array.isArray(expense)) await Promise.all(expense.map(addExpense))
+              else await addExpense(expense)
               closeBottomSheet()
             }}
             editingExpense={editingExpense}
@@ -2762,6 +3112,134 @@ function ModernApp() {
               onCancelEdit={closeBottomSheet}
             />
           ) : null
+        } else if (bottomSheetContent?.type === 'importMapping') {
+          const headers = bottomSheetContent.data.unmapped?.headers || []
+          const rows = bottomSheetContent.data.unmapped?.rows || []
+          const getCell = (row, header) => {
+            const index = headers.indexOf(header)
+            return index >= 0 ? row[index] : ''
+          }
+          const fieldsByType = {
+            expenses: [
+              ['date', 'Date'],
+              ['description', 'Description'],
+              ['amount', 'Amount'],
+              ['category', 'Category'],
+              ['walletName', 'Wallet'],
+              ['notes', 'Notes']
+            ],
+            incomes: [
+              ['date', 'Date'],
+              ['source', 'Source'],
+              ['amount', 'Amount'],
+              ['walletName', 'Wallet'],
+              ['notes', 'Notes']
+            ],
+            transfers: [
+              ['date', 'Date'],
+              ['fromWalletName', 'From Wallet'],
+              ['toWalletName', 'To Wallet'],
+              ['amount', 'Amount'],
+              ['notes', 'Notes']
+            ]
+          }
+          const fields = fieldsByType[importMappingType] || fieldsByType.expenses
+
+          return (
+            <div className="form-container">
+              <h3 className="card-title"><UploadIcon size={18} /> Map CSV Columns</h3>
+              <p className="card-subtitle">Map a plain CSV into Pitaka records.</p>
+              <div className="form" style={{ marginTop: '16px' }}>
+                <div className="form-group">
+                  <label>Import As</label>
+                  <select value={importMappingType} onChange={(event) => setImportMappingType(event.target.value)}>
+                    <option value="expenses">Expenses</option>
+                    <option value="incomes">Income</option>
+                    <option value="transfers">Transfers</option>
+                  </select>
+                </div>
+                {fields.map(([key, label]) => (
+                  <div key={key} className="form-group">
+                    <label>{label}</label>
+                    <select
+                      value={importColumnMapping[key] || ''}
+                      onChange={(event) => setImportColumnMapping((current) => ({ ...current, [key]: event.target.value }))}
+                    >
+                      <option value="">Skip</option>
+                      {headers.map((header) => <option key={header} value={header}>{header}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div className="form-buttons" style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" onClick={closeBottomSheet} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                  disabled={
+                    !importColumnMapping.amount ||
+                    (importMappingType === 'expenses' && !importColumnMapping.description) ||
+                    (importMappingType === 'incomes' && !importColumnMapping.source) ||
+                    (importMappingType === 'transfers' && (!importColumnMapping.fromWalletName || !importColumnMapping.toWalletName))
+                  }
+                  onClick={() => {
+                    const mappedRows = rows.map((row) => {
+                      const common = {
+                        date: getCell(row, importColumnMapping.date) || getLocalDateInputValue(),
+                        amount: Math.abs(parseFloat(getCell(row, importColumnMapping.amount)) || 0),
+                        notes: getCell(row, importColumnMapping.notes)
+                      }
+
+                      if (importMappingType === 'incomes') {
+                        return {
+                          ...common,
+                          source: getCell(row, importColumnMapping.source),
+                          walletName: getCell(row, importColumnMapping.walletName)
+                        }
+                      }
+
+                      if (importMappingType === 'transfers') {
+                        return {
+                          ...common,
+                          fromWalletName: getCell(row, importColumnMapping.fromWalletName),
+                          toWalletName: getCell(row, importColumnMapping.toWalletName)
+                        }
+                      }
+
+                      return {
+                        ...common,
+                        description: getCell(row, importColumnMapping.description),
+                        category: getCell(row, importColumnMapping.category),
+                        walletName: getCell(row, importColumnMapping.walletName)
+                      }
+                    }).filter((row) => (
+                      row.amount > 0 &&
+                      (
+                        row.description ||
+                        row.source ||
+                        (row.fromWalletName && row.toWalletName)
+                      )
+                    ))
+
+                    openBottomSheet({
+                      type: 'importData',
+                      data: {
+                        incomes: importMappingType === 'incomes' ? mappedRows : [],
+                        expenses: importMappingType === 'expenses' ? mappedRows : [],
+                        transfers: importMappingType === 'transfers' ? mappedRows : [],
+                        investments: [],
+                        wallets: [],
+                        categories: []
+                      }
+                    })
+                  }}
+                >
+                  Preview Import
+                </button>
+              </div>
+            </div>
+          )
         } else if (bottomSheetContent?.type === 'importData') {
           return (
             <div className="form-container">
@@ -2834,6 +3312,7 @@ function ModernApp() {
                       let successCount = 0
                       let errorCount = 0
                       let skippedCount = 0
+                      const importedRows = []
 
                       // Import wallets first (needed for incomes/expenses/transfers)
                       if (importData.wallets?.length > 0) {
@@ -2843,10 +3322,11 @@ function ModernApp() {
                               skippedCount++
                               continue
                             }
-                            await addWallet(wallet)
+                            const id = await addWallet(wallet)
+                            if (id) importedRows.push({ type: 'wallets', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import wallet:', err)
+                            reportAppError('import.wallet', err)
                             errorCount++
                           }
                         }
@@ -2860,10 +3340,11 @@ function ModernApp() {
                               skippedCount++
                               continue
                             }
-                            await addCategory(category)
+                            const id = await addCategory(category)
+                            if (id) importedRows.push({ type: 'categories', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import category:', err)
+                            reportAppError('import.category', err)
                             errorCount++
                           }
                         }
@@ -2877,10 +3358,11 @@ function ModernApp() {
                               skippedCount++
                               continue
                             }
-                            await addIncome(income)
+                            const id = await addIncome(income)
+                            if (id) importedRows.push({ type: 'incomes', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import income:', err)
+                            reportAppError('import.income', err)
                             errorCount++
                           }
                         }
@@ -2890,14 +3372,18 @@ function ModernApp() {
                       if (importData.expenses?.length > 0) {
                         for (const expense of importData.expenses) {
                           try {
-                            if (expenseExists(expense)) {
+                            const nextExpense = expense.category
+                              ? expense
+                              : { ...expense, category: suggestCategory(expense.description, categories) }
+                            if (expenseExists(nextExpense)) {
                               skippedCount++
                               continue
                             }
-                            await addExpense(expense)
+                            const id = await addExpense(nextExpense)
+                            if (id) importedRows.push({ type: 'expenses', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import expense:', err)
+                            reportAppError('import.expense', err)
                             errorCount++
                           }
                         }
@@ -2911,10 +3397,11 @@ function ModernApp() {
                               skippedCount++
                               continue
                             }
-                            await addTransfer(transfer)
+                            const id = await addTransfer(transfer)
+                            if (id) importedRows.push({ type: 'transfers', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import transfer:', err)
+                            reportAppError('import.transfer', err)
                             errorCount++
                           }
                         }
@@ -2928,23 +3415,26 @@ function ModernApp() {
                               skippedCount++
                               continue
                             }
-                            await addInvestment(investment)
+                            const id = await addInvestment(investment)
+                            if (id) importedRows.push({ type: 'investments', id })
                             successCount++
                           } catch (err) {
-                            console.error('Failed to import investment:', err)
+                            reportAppError('import.investment', err)
                             errorCount++
                           }
                         }
                       }
 
-                      // Show result message
-                      if (errorCount === 0) {
-                        alert(`Import finished.\nImported: ${successCount}\nSkipped duplicates: ${skippedCount}`)
-                      } else {
-                        alert(`Import completed with some errors:\nImported: ${successCount}\nSkipped duplicates: ${skippedCount}\nFailed: ${errorCount}`)
-                      }
-                      closeBottomSheet()
+                      setLastImportBatch(importedRows)
+                      setBottomSheetContent({
+                        type: 'importResult',
+                        successCount,
+                        skippedCount,
+                        errorCount,
+                        importedRows
+                      })
                     } catch (err) {
+                      reportAppError('import.run', err)
                       alert('Failed to import data: ' + err.message)
                     }
                   }}
@@ -2952,6 +3442,61 @@ function ModernApp() {
                   style={{ flex: 1 }}
                 >
                   Import Now
+                </button>
+              </div>
+            </div>
+          )
+        } else if (bottomSheetContent?.type === 'importResult') {
+          const importedCount = bottomSheetContent.importedRows?.length || 0
+
+          return (
+            <div className="form-container">
+              <h3 className="card-title"><UploadIcon size={18} /> Import Finished</h3>
+              <div style={{
+                background: 'var(--card-background)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                fontSize: '0.875rem',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Imported</span>
+                  <strong>{bottomSheetContent.successCount}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Skipped duplicates</span>
+                  <strong>{bottomSheetContent.skippedCount}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Failed</span>
+                  <strong>{bottomSheetContent.errorCount}</strong>
+                </div>
+              </div>
+              <div className="form-buttons" style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={closeBottomSheet}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Done
+                </button>
+                <button
+                  type="button"
+                  disabled={importedCount === 0 || lastImportBatch.length === 0}
+                  onClick={async () => {
+                    const { undone, failed } = await undoImportedRows(bottomSheetContent.importedRows || [])
+                    alert(`Undo finished.\nRemoved: ${undone}\nFailed: ${failed}`)
+                    closeBottomSheet()
+                  }}
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  Undo Import
                 </button>
               </div>
             </div>
@@ -3045,7 +3590,7 @@ function ModernApp() {
         </div>
       )}
 
-      {(!isOnline || syncState.hasPendingWrites) && (
+      {(!isOnline || syncState.hasPendingWrites || syncState.isFromCache) && (
         <div className="status-strip">
           {!isOnline && (
             <div className="status-pill warning">
@@ -3056,6 +3601,11 @@ function ModernApp() {
           {syncState.hasPendingWrites && (
             <div className="status-pill accent">
               Sync pending: local changes are queued and waiting for Firestore confirmation.
+            </div>
+          )}
+          {syncState.isFromCache && isOnline && (
+            <div className="status-pill warning">
+              Showing cached data{syncState.lastSyncedAt ? `; last confirmed ${new Date(syncState.lastSyncedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}.
             </div>
           )}
         </div>
@@ -3160,7 +3710,13 @@ function ModernApp() {
         className={`bottom-sheet-backdrop ${showBottomSheet ? 'open' : ''}`}
         onClick={closeBottomSheet}
       />
-      <div className={`bottom-sheet ${showBottomSheet ? 'open' : ''}`}>
+      <div
+        className={`bottom-sheet ${showBottomSheet ? 'open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        ref={bottomSheetRef}
+      >
         <div className="bottom-sheet-handle" />
         <Suspense fallback={<SectionFallback label="Loading tools..." />}>
           {renderBottomSheetContent()}

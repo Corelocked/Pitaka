@@ -1,0 +1,26 @@
+# Pitaka product reference
+
+Pitaka is a personal finance application for recording income, expenses, transfers, accounts, savings goals, subscriptions, recurring income, budgets, and investments. It provides dashboard summaries, category analysis, cash-flow forecasts, net-worth history, debt payoff ordering, monthly reports, import/export tools, and offline-capable access.
+
+## Who it is for
+
+Pitaka is intended for individuals and households who want a private ledger and planning workspace. It is especially relevant to users in the Philippines because PHP is a first-class currency, while additional currencies are supported for broader use.
+
+## Free and Pro
+
+The free tier includes core budgeting, transaction tracking, account management, transfers, savings goals, and categories. Pitaka Pro is an optional one-time upgrade that adds recurring-income automation, subscription tracking, investment tracking, expanded currency support, and Android app access.
+
+## Data and security
+
+Users authenticate before accessing financial records. Firestore security rules restrict records to their owner. Pitaka supports local exports and backups. Pitaka does not hold funds, connect directly to bank accounts, execute investments, or provide regulated financial advice.
+
+## Official URLs
+
+- Product: https://pitaka-sigma.vercel.app/
+- Features: https://pitaka-sigma.vercel.app/features
+- Pricing: https://pitaka-sigma.vercel.app/pricing
+- Blog: https://pitaka-sigma.vercel.app/blogs
+- Privacy: https://pitaka-sigma.vercel.app/privacy
+- Contact: https://pitaka-sigma.vercel.app/contact
+- Sitemap: https://pitaka-sigma.vercel.app/sitemap.xml
+- RSS: https://pitaka-sigma.vercel.app/rss.xml

@@ -40,8 +40,6 @@ export function FirebaseProvider({ children }) {
           unsubscribeProfile?.()
           unsubscribeProfile = userProfileService.subscribeToUserProfile(user.uid, (profile) => {
             setUserProfile(profile)
-            // Log userProfile changes for debugging
-            console.log('[FirebaseContext] userProfile updated:', profile)
           })
         } catch (err) {
           console.error('Failed to initialize user profile:', err)
@@ -54,9 +52,6 @@ export function FirebaseProvider({ children }) {
         setUserProfile(null)
       }
       setLoading(false)
-      // Log user and userProfile for debugging
-      console.log('[FirebaseContext] user:', user)
-      console.log('[FirebaseContext] userProfile:', userProfile)
     })
 
     return () => {

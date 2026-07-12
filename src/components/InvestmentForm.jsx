@@ -89,7 +89,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         setQuantity('')
         setPurchasePrice('')
         setCurrentValue('')
-        setPurchaseDate(new Date().toISOString().split('T')[0])
+        setPurchaseDate(getLocalDateInputValue())
         setNotes('')
       }
     } catch (err) {
