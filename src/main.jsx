@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './MobileApp.css'
 import ModernApp from './ModernApp.jsx'
+import './Redesign.css'
 import { FirebaseProvider } from './contexts/FirebaseContext.jsx'
 import { ConfirmProvider } from './contexts/ConfirmContext'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -31,11 +32,18 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .catch(() => {
         // Offline installation is optional; the app still works without it.
       })
+  })
+} else if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister())
+  })
+  caches.keys().then((keys) => {
+    keys.filter((key) => key.startsWith('pitaka-')).forEach((key) => caches.delete(key))
   })
 }

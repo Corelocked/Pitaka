@@ -57,159 +57,32 @@ const InvestmentsTable = lazy(() => import('./components/InvestmentsTable'))
 
 const DASHBOARD_LAYOUTS = [
   {
-    id: 'editorial',
-    name: 'Editorial',
-    description: 'Magazine-like pacing with big lead visuals, balanced pairs, and a calm closing rail.'
+    id: 'overview',
+    name: 'Overview',
+    description: 'Your balances, recent movement, monthly plan, and essential trends in one balanced view.',
+    widgets: ['plan-ahead', 'recent-activity', 'accounts', 'spending', 'cashflow-chart', 'savings', 'monthly-closeout', 'net-worth-history']
   },
   {
-    id: 'compact',
-    name: 'Compact',
-    description: 'Dense but orderly scanning layout that keeps the most practical cards within quick reach.'
+    id: 'cashflow',
+    name: 'Cash Flow',
+    description: 'Focus on income, spending pace, categories, recurring bills, and the latest transactions.',
+    widgets: ['cashflow-chart', 'recent-activity', 'spending', 'weekly-spending-chart', 'expense-trend-chart', 'income-source-chart', 'upcoming-bills', 'monthly-closeout']
   },
   {
-    id: 'planner',
-    name: 'Planner',
-    description: 'Goal-first composition that surfaces savings, pressure points, and planning signals before activity.'
-  },
-  {
-    id: 'custom',
-    name: 'Custom',
-    description: 'Your personalized dashboard arrangement, visibility choices, and reorder decisions.'
+    id: 'growth',
+    name: 'Growth',
+    description: 'Track reserved goals, net worth, account allocation, and the plan supporting your next milestone.',
+    widgets: ['savings', 'net-worth-history', 'account-allocation-chart', 'accounts', 'plan-ahead', 'income-source-chart', 'monthly-closeout', 'recent-activity']
   }
 ]
 
-const DASHBOARD_WIDGET_LIBRARY = [
-  {
-    id: 'plan-ahead',
-    name: 'Plan Ahead',
-    description: 'Shows financial health, cash runway, upcoming bill pressure, and projected month-end.'
-  },
-  {
-    id: 'net-worth-history',
-    name: 'Net Worth History',
-    description: 'Charts saved monthly net worth snapshots.'
-  },
-  {
-    id: 'monthly-closeout',
-    name: 'Monthly Closeout',
-    description: 'Summarizes surplus, top spend, budget misses, and net worth movement.'
-  },
-  {
-    id: 'recent-activity',
-    name: 'Recent Activity',
-    description: 'Shows the latest income, expense, and transfer movements.'
-  },
-  {
-    id: 'spending',
-    name: 'Spending by Category',
-    description: 'Highlights category pressure for the current month.'
-  },
-  {
-    id: 'accounts',
-    name: 'Accounts',
-    description: 'Displays wallet balances and account health at a glance.'
-  },
-  {
-    id: 'savings',
-    name: 'Savings Goals',
-    description: 'Keeps progress toward reserved goals in view.'
-  },
-  {
-    id: 'cashflow-chart',
-    name: 'Cashflow Snapshot',
-    description: 'Compares income, expenses, and net position in one visual.'
-  },
-  {
-    id: 'income-source-chart',
-    name: 'Income by Source',
-    description: 'Breaks down income sources for the current month.'
-  },
-  {
-    id: 'weekly-spending-chart',
-    name: 'Weekly Spending Trend',
-    description: 'Shows how spending is distributed across the month.'
-  },
-  {
-    id: 'expense-trend-chart',
-    name: 'Expense Trend',
-    description: 'Tracks expense flow across the current month.'
-  },
-  {
-    id: 'account-allocation-chart',
-    name: 'Account Allocation',
-    description: 'Breaks down where total balance is currently sitting.'
-  },
-  {
-    id: 'upcoming-bills',
-    name: 'Upcoming Bills',
-    description: 'Shows the next subscription charges due soon and lets you confirm each bill before it becomes an expense.',
-    requiresPro: true
-  }
-]
-
-const DASHBOARD_LAYOUT_SECTION_DEFAULTS = {
-  editorial: {
-    mainOrder: ['plan-ahead', 'monthly-closeout', 'net-worth-history', 'cashflow-chart', 'spending', 'income-source-chart', 'accounts', 'recent-activity'],
-    sideOrder: ['savings', 'upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart'],
-    desktopTileSizes: {
-      'plan-ahead': 'large',
-      'monthly-closeout': 'medium',
-      'net-worth-history': 'medium',
-      'cashflow-chart': 'large',
-      spending: 'medium',
-      'income-source-chart': 'medium',
-      accounts: 'medium',
-      'recent-activity': 'medium',
-      savings: 'large',
-      'upcoming-bills': 'medium',
-      'weekly-spending-chart': 'small',
-      'expense-trend-chart': 'small',
-      'account-allocation-chart': 'small'
-    }
-  },
-  compact: {
-    mainOrder: ['plan-ahead', 'monthly-closeout', 'recent-activity', 'accounts', 'net-worth-history', 'spending', 'cashflow-chart', 'income-source-chart'],
-    sideOrder: ['upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart', 'savings'],
-    desktopTileSizes: {
-      'plan-ahead': 'medium',
-      'monthly-closeout': 'medium',
-      'net-worth-history': 'medium',
-      'recent-activity': 'large',
-      accounts: 'medium',
-      spending: 'medium',
-      'cashflow-chart': 'medium',
-      'income-source-chart': 'medium',
-      'upcoming-bills': 'medium',
-      'weekly-spending-chart': 'small',
-      'expense-trend-chart': 'small',
-      'account-allocation-chart': 'small',
-      savings: 'medium'
-    }
-  },
-  planner: {
-    mainOrder: ['plan-ahead', 'monthly-closeout', 'savings', 'net-worth-history', 'spending', 'cashflow-chart', 'accounts', 'recent-activity'],
-    sideOrder: ['upcoming-bills', 'weekly-spending-chart', 'expense-trend-chart', 'account-allocation-chart', 'income-source-chart'],
-    desktopTileSizes: {
-      'plan-ahead': 'large',
-      'monthly-closeout': 'medium',
-      'net-worth-history': 'medium',
-      savings: 'large',
-      spending: 'medium',
-      'cashflow-chart': 'medium',
-      accounts: 'medium',
-      'recent-activity': 'medium',
-      'upcoming-bills': 'medium',
-      'weekly-spending-chart': 'small',
-      'expense-trend-chart': 'small',
-      'account-allocation-chart': 'small',
-      'income-source-chart': 'large'
-    }
-  }
+const DEFAULT_DASHBOARD_LAYOUT = 'overview'
+const LEGACY_DASHBOARD_LAYOUTS = {
+  editorial: 'overview',
+  compact: 'cashflow',
+  planner: 'growth',
+  custom: 'overview'
 }
-
-const DASHBOARD_WIDGET_IDS = DASHBOARD_WIDGET_LIBRARY.map((widget) => widget.id)
-const DASHBOARD_DESKTOP_TILE_SIZES = ['small', 'medium', 'large']
-const BUILT_IN_DASHBOARD_LAYOUT_IDS = DASHBOARD_LAYOUTS.filter((layout) => layout.id !== 'custom').map((layout) => layout.id)
 const PUBLIC_AUTH_ROUTE_MODES = {
   '/login': 'login',
   '/signup': 'signup'
@@ -258,6 +131,48 @@ const AUTHENTICATED_PATH_VIEW_ALIASES = {
   '/settings': 'settings'
 }
 
+const VIEW_META = {
+  dashboard: { title: 'Overview', eyebrow: 'Monthly ledger' },
+  transactions: { title: 'Activity', eyebrow: 'Money in motion' },
+  accounts: { title: 'Accounts', eyebrow: 'Where money lives' },
+  wealth: { title: 'Wealth', eyebrow: 'Goals and growth' },
+  savings: { title: 'Savings', eyebrow: 'Goals and reserves' },
+  investments: { title: 'Investments', eyebrow: 'Long-term growth' },
+  categories: { title: 'Categories', eyebrow: 'Spending structure' },
+  subscriptions: { title: 'Subscriptions', eyebrow: 'Recurring costs' },
+  'recurring-income': { title: 'Recurring income', eyebrow: 'Expected cashflow' },
+  'android-app': { title: 'Mobile app', eyebrow: 'Pitaka on the go' },
+  contact: { title: 'Contact', eyebrow: 'Help and feedback' },
+  privacy: { title: 'Privacy', eyebrow: 'Your data and controls' },
+  pro: { title: 'Pitaka Pro', eyebrow: 'Advanced planning' },
+  settings: { title: 'More', eyebrow: 'Settings and tools' }
+}
+
+const BOTTOM_SHEET_TITLES = {
+  addIncome: 'Record Income',
+  addExpense: 'Log Expense',
+  addTransfer: 'Move Funds',
+  addWallet: 'Add Account',
+  addSavings: 'Create Savings Goal',
+  addToSavings: 'Add to Savings',
+  addCategory: 'Add Category',
+  addSubscription: 'Add Subscription',
+  addInvestment: 'Add Investment',
+  addRecurringIncome: 'Add Recurring Income',
+  editWallet: 'Edit Account',
+  editSavings: 'Edit Savings Goal',
+  fundSavings: 'Add to Savings',
+  editInvestment: 'Edit Investment',
+  importMapping: 'Map Import Columns',
+  importData: 'Review Import',
+  importResult: 'Import Results'
+}
+
+const getBottomSheetTitle = (content) => {
+  const key = typeof content === 'string' ? content : content?.type
+  return BOTTOM_SHEET_TITLES[key] || 'Pitaka'
+}
+
 const normalizePathname = (path = '/') => {
   const normalized = String(path || '/').replace(/\/+$/, '')
   return normalized || '/'
@@ -268,155 +183,38 @@ const resolveAuthenticatedViewFromPath = (path = '/') => {
   return AUTHENTICATED_PATH_VIEW_ALIASES[normalizedPath] || null
 }
 
-const getCompletedDashboardSections = (layoutId = 'editorial') => {
-  const defaults = DASHBOARD_LAYOUT_SECTION_DEFAULTS[layoutId] || DASHBOARD_LAYOUT_SECTION_DEFAULTS.editorial
-  const used = new Set()
-  const normalize = (list = []) => list.filter((id) => {
-    if (!DASHBOARD_WIDGET_IDS.includes(id) || used.has(id)) return false
-    used.add(id)
-    return true
-  })
-
-  const mainOrder = normalize(defaults.mainOrder)
-  const sideOrder = normalize(defaults.sideOrder)
-
-  DASHBOARD_WIDGET_IDS.forEach((id) => {
-    if (!used.has(id)) {
-      sideOrder.push(id)
-      used.add(id)
-    }
-  })
-
-  const desktopTileSizes = DASHBOARD_WIDGET_IDS.reduce((accumulator, id) => {
-    const size = defaults.desktopTileSizes?.[id]
-    accumulator[id] = DASHBOARD_DESKTOP_TILE_SIZES.includes(size) ? size : 'medium'
-    return accumulator
-  }, {})
-
-  return { mainOrder, sideOrder, desktopTileSizes }
+const resolveDashboardLayout = (layoutId) => {
+  const migratedLayoutId = LEGACY_DASHBOARD_LAYOUTS[layoutId] || layoutId
+  return DASHBOARD_LAYOUTS.some((layout) => layout.id === migratedLayoutId)
+    ? migratedLayoutId
+    : DEFAULT_DASHBOARD_LAYOUT
 }
 
-const getDefaultDesktopTileOrder = (layoutId = 'editorial') => {
-  const defaults = getCompletedDashboardSections(layoutId)
-  return [...defaults.mainOrder, ...defaults.sideOrder]
-}
-
-const getDefaultMobileWidgetOrder = (layoutId = 'editorial') => {
-  const defaults = getCompletedDashboardSections(layoutId)
-  return [...defaults.mainOrder, ...defaults.sideOrder]
-}
-
-const createDashboardCustomization = (layoutId = 'editorial') => {
-  const resolvedLayoutId = BUILT_IN_DASHBOARD_LAYOUT_IDS.includes(layoutId) ? layoutId : 'editorial'
-  const defaults = getCompletedDashboardSections(resolvedLayoutId)
-  const desktopTileOrder = getDefaultDesktopTileOrder(resolvedLayoutId)
-  const mobileWidgetOrder = getDefaultMobileWidgetOrder(resolvedLayoutId)
+const createDashboardPreset = (layoutId) => {
+  const resolvedLayoutId = resolveDashboardLayout(layoutId)
+  const preset = DASHBOARD_LAYOUTS.find((layout) => layout.id === resolvedLayoutId)
 
   return {
-    layoutStyle: resolvedLayoutId,
-    showHero: true,
-    showMetrics: true,
-    mainOrder: [...defaults.mainOrder],
-    sideOrder: [...defaults.sideOrder],
-    hiddenSectionIds: [],
-    mobileWidgetOrder,
-    desktopTileOrder,
-    desktopTileSizes: { ...defaults.desktopTileSizes }
-  }
-}
-
-const sanitizeDashboardCustomization = (layoutId, customization) => {
-  const defaults = createDashboardCustomization(layoutId)
-
-  if (!customization || typeof customization !== 'object') {
-    return defaults
-  }
-
-  const seen = new Set()
-  const normalizeOrder = (value, fallback) => {
-    if (!Array.isArray(value)) return [...fallback]
-
-    const filtered = value.filter((id) => {
-      if (!DASHBOARD_WIDGET_IDS.includes(id) || seen.has(id)) return false
-      seen.add(id)
-      return true
-    })
-
-    fallback.forEach((id) => {
-      if (!seen.has(id)) {
-        filtered.push(id)
-        seen.add(id)
-      }
-    })
-
-    return filtered
-  }
-
-  const mainOrder = normalizeOrder(customization.mainOrder, defaults.mainOrder)
-  const sideOrder = normalizeOrder(customization.sideOrder, defaults.sideOrder)
-  const hiddenSectionIds = Array.isArray(customization.hiddenSectionIds)
-    ? customization.hiddenSectionIds.filter((id, index, list) => (
-      DASHBOARD_WIDGET_IDS.includes(id) &&
-      list.indexOf(id) === index
-    ))
-    : []
-  const desktopTileOrder = Array.isArray(customization.desktopTileOrder)
-    ? (() => {
-      const seenDesktop = new Set()
-      const filtered = customization.desktopTileOrder.filter((id) => {
-        if (!DASHBOARD_WIDGET_IDS.includes(id) || seenDesktop.has(id)) return false
-        seenDesktop.add(id)
-        return true
-      })
-      DASHBOARD_WIDGET_IDS.forEach((id) => {
-        if (!seenDesktop.has(id)) filtered.push(id)
-      })
-      return filtered
-    })()
-    : getDefaultDesktopTileOrder(layoutId)
-  const mobileWidgetOrder = Array.isArray(customization.mobileWidgetOrder)
-    ? (() => {
-      const seenMobile = new Set()
-      const filtered = customization.mobileWidgetOrder.filter((id) => {
-        if (!DASHBOARD_WIDGET_IDS.includes(id) || seenMobile.has(id)) return false
-        seenMobile.add(id)
-        return true
-      })
-      DASHBOARD_WIDGET_IDS.forEach((id) => {
-        if (!seenMobile.has(id)) filtered.push(id)
-      })
-      return filtered
-    })()
-    : getDefaultMobileWidgetOrder(layoutId)
-  const desktopTileSizes = DASHBOARD_WIDGET_IDS.reduce((accumulator, id) => {
-    const size = customization.desktopTileSizes?.[id]
-    accumulator[id] = DASHBOARD_DESKTOP_TILE_SIZES.includes(size) ? size : 'medium'
-    return accumulator
-  }, {})
-
-  return {
-    layoutStyle: BUILT_IN_DASHBOARD_LAYOUT_IDS.includes(customization.layoutStyle) ? customization.layoutStyle : defaults.layoutStyle,
-    showHero: customization.showHero !== false,
-    showMetrics: customization.showMetrics !== false,
-    mainOrder,
-    sideOrder,
-    hiddenSectionIds,
-    mobileWidgetOrder,
-    desktopTileOrder,
-    desktopTileSizes
+    id: resolvedLayoutId,
+    widgetOrder: preset.widgets
   }
 }
 
 const THEME_OPTIONS = [
   {
+    id: 'system',
+    name: 'System',
+    description: 'Follows your device appearance automatically as lighting and preferences change.'
+  },
+  {
     id: 'light',
     name: 'Light',
-    description: 'Warm atelier palette with bright paper surfaces and emerald accents.'
+    description: 'A bright ledger with cool paper surfaces and clear blue-teal accents.'
   },
   {
     id: 'dark',
     name: 'Dark',
-    description: 'Low-glare workspace with deep surfaces and softened contrast for evening use.'
+    description: 'A low-glare ledger with deep navy surfaces and softened contrast.'
   }
 ]
 
@@ -533,8 +331,6 @@ function ModernApp() {
   const [lastImportBatch, setLastImportBatch] = useState([])
   const [importColumnMapping, setImportColumnMapping] = useState({})
   const [importMappingType, setImportMappingType] = useState('expenses')
-  const [isDesktopDashboardEditMode, setIsDesktopDashboardEditMode] = useState(false)
-  const [isMobileDashboardEditMode, setIsMobileDashboardEditMode] = useState(false)
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null)
   const [billingStatus, setBillingStatus] = useState(null)
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
@@ -564,30 +360,11 @@ function ModernApp() {
       return {}
     }
   })
-  const [dashboardCustomizationPreferences, setDashboardCustomizationPreferences] = useState(() => {
-    if (typeof window === 'undefined') return {}
-
-    try {
-      const raw = window.localStorage.getItem('pitaka.dashboardCustomizationPreferences')
-      return raw ? JSON.parse(raw) : {}
-    } catch {
-      return {}
-    }
-  })
-
-  const dashboardLayout = user?.uid && dashboardLayoutPreferences[user.uid]
-    ? dashboardLayoutPreferences[user.uid]
-    : 'editorial'
-  const savedCustomDashboardCustomization = user?.uid ? dashboardCustomizationPreferences[user.uid] : null
-  const effectiveDashboardLayout = dashboardLayout === 'custom'
-    ? sanitizeDashboardCustomization(
-        savedCustomDashboardCustomization?.layoutStyle || 'editorial',
-        savedCustomDashboardCustomization
-      )
-    : createDashboardCustomization(dashboardLayout)
+  const dashboardLayout = resolveDashboardLayout(user?.uid && dashboardLayoutPreferences[user.uid])
+  const dashboardPreset = createDashboardPreset(dashboardLayout)
   const themePreference = user?.uid && themePreferences[user.uid]
     ? themePreferences[user.uid]
-    : 'light'
+    : 'system'
 
   useEffect(() => {
     const updatePrivacyShield = () => document.body.classList.toggle('privacy-shielded', privacyShieldEnabled && document.hidden)
@@ -598,12 +375,6 @@ function ModernApp() {
       document.body.classList.remove('privacy-shielded')
     }
   }, [privacyShieldEnabled])
-  const dashboardCustomization = effectiveDashboardLayout
-  const dashboardLayoutStyle = dashboardLayout === 'custom'
-    ? dashboardCustomization.layoutStyle || 'editorial'
-    : dashboardLayout
-  const availableDashboardWidgets = DASHBOARD_WIDGET_LIBRARY.filter((widget) => !widget.requiresPro || isPro)
-
   const storePendingQuickAction = (action) => {
     if (typeof window === 'undefined' || !action) return
     window.localStorage.setItem('pitaka.pendingQuickAction', action)
@@ -665,59 +436,16 @@ function ModernApp() {
     expensesByCategory
   })
 
-  const persistDashboardCustomization = (nextCustomization) => {
-    if (!user?.uid) return
-
-    const baseLayoutStyle = dashboardLayout === 'custom'
-      ? dashboardLayoutStyle
-      : dashboardLayout
-    const sanitizedCustomization = sanitizeDashboardCustomization(baseLayoutStyle, {
-      ...nextCustomization,
-      layoutStyle: nextCustomization.layoutStyle || baseLayoutStyle
-    })
-    const nextCustomizationPreferences = {
-      ...dashboardCustomizationPreferences,
-      [user.uid]: sanitizedCustomization
-    }
-    const nextLayoutPreferences = {
-      ...dashboardLayoutPreferences,
-      [user.uid]: 'custom'
-    }
-
-    setDashboardCustomizationPreferences(nextCustomizationPreferences)
-    setDashboardLayoutPreferences(nextLayoutPreferences)
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('pitaka.dashboardCustomizationPreferences', JSON.stringify(nextCustomizationPreferences))
-      window.localStorage.setItem('pitaka.dashboardLayouts', JSON.stringify(nextLayoutPreferences))
-    }
-  }
-
   const updateDashboardLayout = (layoutId) => {
     if (!user?.uid) return
+    const resolvedLayoutId = resolveDashboardLayout(layoutId)
 
     const nextLayoutPreferences = {
       ...dashboardLayoutPreferences,
-      [user.uid]: layoutId
+      [user.uid]: resolvedLayoutId
     }
 
     setDashboardLayoutPreferences(nextLayoutPreferences)
-
-    if (layoutId === 'custom' && !savedCustomDashboardCustomization) {
-      const nextCustomizationPreferences = {
-        ...dashboardCustomizationPreferences,
-        [user.uid]: sanitizeDashboardCustomization(dashboardLayoutStyle, {
-          ...dashboardCustomization,
-          layoutStyle: dashboardLayoutStyle
-        })
-      }
-
-      setDashboardCustomizationPreferences(nextCustomizationPreferences)
-
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('pitaka.dashboardCustomizationPreferences', JSON.stringify(nextCustomizationPreferences))
-      }
-    }
 
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('pitaka.dashboardLayouts', JSON.stringify(nextLayoutPreferences))
@@ -739,81 +467,9 @@ function ModernApp() {
     }
   }
 
-  const toggleDashboardArea = (areaKey) => {
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      [areaKey]: !dashboardCustomization[areaKey]
-    })
-  }
-
-  const toggleDashboardWidgetVisibility = (sectionId) => {
-    const isHidden = dashboardCustomization.hiddenSectionIds.includes(sectionId)
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      hiddenSectionIds: isHidden
-        ? dashboardCustomization.hiddenSectionIds.filter((id) => id !== sectionId)
-        : [...dashboardCustomization.hiddenSectionIds, sectionId]
-    })
-  }
-
   const deleteMany = async (rows, deleteHandler) => {
     if (!Array.isArray(rows) || rows.length === 0 || typeof deleteHandler !== 'function') return
     await Promise.all(rows.map((row) => deleteHandler(row.id)))
-  }
-
-  const moveDashboardDesktopTile = (draggedId, targetId) => {
-    if (!draggedId || !targetId || draggedId === targetId) return
-
-    const nextOrder = [...dashboardCustomization.desktopTileOrder]
-    const draggedIndex = nextOrder.indexOf(draggedId)
-    const targetIndex = nextOrder.indexOf(targetId)
-    if (draggedIndex === -1 || targetIndex === -1) return
-
-    nextOrder.splice(draggedIndex, 1)
-    nextOrder.splice(targetIndex, 0, draggedId)
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      desktopTileOrder: nextOrder
-    })
-  }
-
-  const updateDashboardDesktopTileSize = (tileId, size) => {
-    if (!DASHBOARD_WIDGET_IDS.includes(tileId) || !DASHBOARD_DESKTOP_TILE_SIZES.includes(size)) return
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      desktopTileSizes: {
-        ...dashboardCustomization.desktopTileSizes,
-        [tileId]: size
-      }
-    })
-  }
-
-  const moveMobileDashboardWidget = (draggedId, targetId, placement = 'before') => {
-    if (!draggedId || !targetId || draggedId === targetId) return
-
-    const nextOrder = [...dashboardCustomization.mobileWidgetOrder]
-    const draggedIndex = nextOrder.indexOf(draggedId)
-    const targetIndex = nextOrder.indexOf(targetId)
-    if (draggedIndex === -1 || targetIndex === -1) return
-
-    nextOrder.splice(draggedIndex, 1)
-
-    const adjustedTargetIndex = nextOrder.indexOf(targetId)
-    if (adjustedTargetIndex === -1) return
-
-    const insertionIndex = placement === 'after'
-      ? adjustedTargetIndex + 1
-      : adjustedTargetIndex
-
-    nextOrder.splice(insertionIndex, 0, draggedId)
-
-    persistDashboardCustomization({
-      ...dashboardCustomization,
-      mobileWidgetOrder: nextOrder
-    })
   }
 
   useEffect(() => {
@@ -838,10 +494,23 @@ function ModernApp() {
   }, [])
 
   useEffect(() => {
-    if (typeof document === 'undefined') return
+    if (typeof document === 'undefined' || typeof window === 'undefined') return undefined
 
-    document.body.dataset.theme = themePreference
-    document.documentElement.style.colorScheme = themePreference
+    const systemAppearance = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = () => {
+      const resolvedTheme = themePreference === 'system'
+        ? (systemAppearance.matches ? 'dark' : 'light')
+        : themePreference
+
+      document.body.dataset.theme = resolvedTheme
+      document.body.dataset.themePreference = themePreference
+      document.documentElement.style.colorScheme = resolvedTheme
+    }
+
+    applyTheme()
+    systemAppearance.addEventListener('change', applyTheme)
+
+    return () => systemAppearance.removeEventListener('change', applyTheme)
   }, [themePreference])
 
   useEffect(() => {
@@ -1009,6 +678,16 @@ function ModernApp() {
     setShowBottomSheet(false)
     setTimeout(() => setBottomSheetContent(null), 300)
   }, [])
+
+  const requestLogout = async () => {
+    const ok = await confirm({
+      title: 'Sign out?',
+      description: 'Your Pitaka data stays safely stored for your next visit.',
+      confirmText: 'Sign Out',
+      cancelText: 'Stay Signed In'
+    })
+    if (ok) logout()
+  }
 
   useEffect(() => {
     if (!showBottomSheet) return undefined
@@ -1333,9 +1012,9 @@ function ModernApp() {
 
   // Desktop sidebar renderer
   const renderDesktopSidebar = () => (
-    <div className="desktop-sidebar">
+    <aside className="desktop-sidebar" aria-label="Primary navigation">
       <div className="sidebar-header">
-        <div className="sidebar-kicker">Financial Atelier</div>
+        <div className="sidebar-kicker">Your money, in place</div>
         <div className="sidebar-title-row">
           <h1>Pitaka</h1>
           <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>{isPro ? 'Pro' : 'Basic'}</div>
@@ -1347,23 +1026,27 @@ function ModernApp() {
 
       <nav className="sidebar-nav">
         <div className="sidebar-nav-scroll">
+          <div className="sidebar-nav-label">Overview</div>
           <button
             className={`sidebar-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
             onClick={() => setCurrentView('dashboard')}
+            aria-current={currentView === 'dashboard' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><HomeIcon size={20} /></div>
-            <div>Dashboard</div>
+            <div>Overview</div>
           </button>
           <button
             className={`sidebar-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
             onClick={() => setCurrentView('transactions')}
+            aria-current={currentView === 'transactions' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
-            <div>Transactions</div>
+            <div>Activity</div>
           </button>
           <button
             className={`sidebar-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
             onClick={() => setCurrentView('accounts')}
+            aria-current={currentView === 'accounts' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><WalletIcon size={20} /></div>
             <div>Accounts</div>
@@ -1371,13 +1054,16 @@ function ModernApp() {
           <button
             className={`sidebar-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
             onClick={() => setCurrentView('wealth')}
+            aria-current={['savings', 'investments', 'wealth'].includes(currentView) ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
             <div>Wealth</div>
           </button>
+          <div className="sidebar-nav-label">Plan</div>
           <button
             className={`sidebar-nav-item ${currentView === 'categories' ? 'active' : ''}`}
             onClick={() => setCurrentView('categories')}
+            aria-current={currentView === 'categories' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
             <div>Categories</div>
@@ -1385,6 +1071,7 @@ function ModernApp() {
           <button
             className={`sidebar-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`}
             onClick={() => setCurrentView('subscriptions')}
+            aria-current={currentView === 'subscriptions' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
             <div>Subscriptions</div>
@@ -1393,14 +1080,17 @@ function ModernApp() {
             <button
               className={`sidebar-nav-item ${currentView === 'recurring-income' ? 'active' : ''}`}
               onClick={() => setCurrentView('recurring-income')}
+              aria-current={currentView === 'recurring-income' ? 'page' : undefined}
             >
               <div className="sidebar-nav-icon"><IncomeIcon size={20} /></div>
               <div>Recurring Income</div>
             </button>
           )}
+          <div className="sidebar-nav-label">Pitaka</div>
           <button
             className={`sidebar-nav-item ${currentView === 'android-app' ? 'active' : ''}`}
             onClick={() => setCurrentView('android-app')}
+            aria-current={currentView === 'android-app' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><DownloadIcon size={20} /></div>
             <div>Android App</div>
@@ -1408,6 +1098,7 @@ function ModernApp() {
           <button
             className={`sidebar-nav-item ${currentView === 'contact' ? 'active' : ''}`}
             onClick={() => setCurrentView('contact')}
+            aria-current={currentView === 'contact' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
             <div>Contact Pitaka</div>
@@ -1416,6 +1107,7 @@ function ModernApp() {
             <button
               className={`sidebar-nav-item ${currentView === 'pro' ? 'active' : ''}`}
               onClick={() => setCurrentView('pro')}
+              aria-current={currentView === 'pro' ? 'page' : undefined}
             >
               <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
               <div>Unlock Pro</div>
@@ -1424,59 +1116,12 @@ function ModernApp() {
           <button
             className={`sidebar-nav-item ${currentView === 'settings' ? 'active' : ''}`}
             onClick={() => setCurrentView('settings')}
+            aria-current={currentView === 'settings' ? 'page' : undefined}
           >
             <div className="sidebar-nav-icon"><SettingsIcon size={20} /></div>
             <div>Settings</div>
           </button>
 
-          {currentView === 'dashboard' && (
-          <button
-            type="button"
-            className={`sidebar-nav-item ${isDesktopDashboardEditMode ? 'active' : ''}`}
-            onClick={() => setIsDesktopDashboardEditMode((current) => !current)}
-          >
-            <div className="sidebar-nav-icon"><TemplateIcon size={20} /></div>
-            <div>{isDesktopDashboardEditMode ? 'Done Editing' : 'Edit Dashboard'}</div>
-          </button>
-
-          )}
-
-          {currentView === 'dashboard' && isDesktopDashboardEditMode && (
-            <div className="sidebar-visualizer-list">
-              <button
-                type="button"
-                className={`sidebar-visualizer-item ${dashboardCustomization.showHero ? 'active' : ''}`}
-                onClick={() => toggleDashboardArea('showHero')}
-              >
-                <span>Hero Summary</span>
-                <span>{dashboardCustomization.showHero ? 'Shown' : 'Hidden'}</span>
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-visualizer-item ${dashboardCustomization.showMetrics ? 'active' : ''}`}
-                onClick={() => toggleDashboardArea('showMetrics')}
-              >
-                <span>Metric Cards</span>
-                <span>{dashboardCustomization.showMetrics ? 'Shown' : 'Hidden'}</span>
-              </button>
-
-              {availableDashboardWidgets.map((widget) => {
-                const isHidden = dashboardCustomization.hiddenSectionIds.includes(widget.id)
-                return (
-                  <button
-                    key={widget.id}
-                    type="button"
-                    className={`sidebar-visualizer-item ${isHidden ? '' : 'active'}`}
-                    onClick={() => toggleDashboardWidgetVisibility(widget.id)}
-                  >
-                    <span>{widget.name}</span>
-                    <span>{isHidden ? 'Hidden' : 'Shown'}</span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
         </div>
       </nav>
 
@@ -1497,14 +1142,14 @@ function ModernApp() {
           </div>
         )}
         <button
-          onClick={logout}
+          onClick={requestLogout}
           className="btn btn-secondary"
           style={{ width: '100%', justifyContent: 'center' }}
         >
-          <LogoutIcon size={16} /> Logout
+          <LogoutIcon size={16} /> Sign Out
         </button>
       </div>
-    </div>
+    </aside>
   )
 
   // Show loading screen
@@ -1582,13 +1227,9 @@ function ModernApp() {
             expensesByCategory={expensesByCategory}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
-            layoutPreference={dashboardLayoutStyle}
-            customization={dashboardCustomization}
-            isMobileEditMode={isMobileDashboardEditMode}
-            isDesktopEditMode={isDesktopDashboardEditMode}
-            onMoveMobileWidget={moveMobileDashboardWidget}
-            onMoveDesktopTile={moveDashboardDesktopTile}
-            onResizeDesktopTile={updateDashboardDesktopTileSize}
+            preset={dashboardPreset}
+            presets={DASHBOARD_LAYOUTS}
+            onPresetChange={updateDashboardLayout}
           />
         )
 
@@ -1690,7 +1331,6 @@ function ModernApp() {
                 <button
                   onClick={() => openBottomSheet('addWallet')}
                   className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
                   + Add Account
                 </button>
@@ -1740,14 +1380,12 @@ function ModernApp() {
                 <button
                   onClick={() => openBottomSheet('addSavings')}
                   className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
                   + New Goal
                 </button>
                 <button
                   onClick={() => openBottomSheet('addToSavings')}
                   className="btn btn-secondary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                   disabled={savings.length === 0}
                 >
                   Add Funds
@@ -1790,7 +1428,7 @@ function ModernApp() {
                     <div className="savings-card-actions">
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-primary"
                         onClick={() => openBottomSheet({ type: 'fundSavings', savingsId: goal.id })}
                       >
                         Add Funds
@@ -1889,7 +1527,6 @@ function ModernApp() {
                   <button
                     onClick={() => openBottomSheet('addInvestment')}
                     className="btn btn-primary"
-                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                   >
                     + Add Investment
                   </button>
@@ -1897,7 +1534,6 @@ function ModernApp() {
                   <button
                     onClick={() => setCurrentView('pro')}
                     className="btn btn-primary"
-                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                   >
                     Unlock Pro
                   </button>
@@ -1955,7 +1591,6 @@ function ModernApp() {
                 <button
                   onClick={() => openBottomSheet('addRecurringIncome')}
                   className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
                   + Add Recurring Income
                 </button>
@@ -2010,7 +1645,6 @@ function ModernApp() {
                 <button
                   onClick={() => openCategorySheet()}
                   className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
                   + Add Category
                 </button>
@@ -2074,7 +1708,6 @@ function ModernApp() {
                 <button
                   onClick={() => openSubscriptionSheet()}
                   className="btn btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                 >
                   + Add Subscription
                 </button>
@@ -2381,14 +2014,13 @@ function ModernApp() {
                 </div>
               </div>
 
-              <div className="form-buttons" style={{ display: 'flex', gap: '10px', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+              <div className="form-buttons android-app-actions">
                 {isPro ? (
                   <>
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={openAndroidAppInvite}
-                      style={{ flex: 1, minWidth: '220px' }}
                     >
                       Open Download Link
                     </button>
@@ -2399,7 +2031,6 @@ function ModernApp() {
                       type="button"
                       className="btn btn-primary"
                       onClick={() => setCurrentView('pro')}
-                      style={{ flex: 1, minWidth: '220px' }}
                     >
                       Unlock with Pro
                     </button>
@@ -2407,7 +2038,6 @@ function ModernApp() {
                       type="button"
                       className="btn btn-secondary"
                       onClick={() => setCurrentView('settings')}
-                      style={{ flex: 1, minWidth: '220px' }}
                     >
                       Back to Settings
                     </button>
@@ -2494,18 +2124,18 @@ function ModernApp() {
             {renderPageIntro({
               eyebrow: 'Controls & Tools',
               title: 'More',
-              description: 'Adjust your workspace layout, theme, and data tools from one place.',
+              description: 'Choose your dashboard focus, theme, and data tools from one place.',
               stats: [
-                { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'Light' },
-                { label: 'Layout', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Editorial' }
+                { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'System' },
+                { label: 'View', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Overview' }
               ]
             })}
 
             <div className="card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><HomeIcon size={18} /> Dashboard Layout</h3>
-                  <p className="card-subtitle">Choose a starting preset. Selecting one also resets your widget arrangement to match it.</p>
+                  <h3 className="card-title"><HomeIcon size={18} /> Dashboard View</h3>
+                  <p className="card-subtitle">Choose the focus that matches what you want to review. Every view uses the same consistent card grid.</p>
                 </div>
               </div>
 
@@ -2578,12 +2208,12 @@ function ModernApp() {
 
             <div className="card page-hero-card">
               <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
+
+              <div className="settings-action-list">
+                <h4 className="settings-action-heading">Plan and organize</h4>
                 <button
                   onClick={() => setCurrentView(isPro ? 'subscriptions' : 'pro')}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <ExpenseIcon size={16} /> {isPro ? 'Manage Subscriptions' : 'Subscriptions (Pro)'}
                 </button>
@@ -2592,7 +2222,6 @@ function ModernApp() {
                   <button
                     onClick={() => setCurrentView('recurring-income')}
                     className="btn btn-secondary"
-                    style={{ justifyContent: 'flex-start' }}
                   >
                     <IncomeIcon size={16} /> Manage Recurring Income
                   </button>
@@ -2600,7 +2229,6 @@ function ModernApp() {
                   <button
                     disabled
                     className="btn btn-secondary"
-                    style={{ justifyContent: 'flex-start', opacity: 0.5 }}
                   >
                     <IncomeIcon size={16} /> Recurring Income (Pro)
                   </button>
@@ -2609,7 +2237,6 @@ function ModernApp() {
                 <button
                   onClick={() => setCurrentView('categories')}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <CategoryIcon size={16} /> Manage Categories
                 </button>
@@ -2617,7 +2244,6 @@ function ModernApp() {
                 <button
                   onClick={() => setCurrentView('android-app')}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <DownloadIcon size={16} /> {isPro ? 'Android App Download' : 'Android App (Pro)'}
                 </button>
@@ -2625,7 +2251,6 @@ function ModernApp() {
                 <button
                   onClick={() => setCurrentView('contact')}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <ActivityIcon size={16} /> Contact Pitaka
                 </button>
@@ -2633,11 +2258,11 @@ function ModernApp() {
                 <button
                   onClick={() => setCurrentView('privacy')}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <SettingsIcon size={16} /> Privacy & Security
                 </button>
 
+                <h4 className="settings-action-heading">Move your data</h4>
                 <button
                   onClick={() => {
                     exportToExcel({
@@ -2652,7 +2277,6 @@ function ModernApp() {
                     })
                   }}
                   className="btn btn-primary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <DownloadIcon size={16} /> Export to Excel
                 </button>
@@ -2694,7 +2318,6 @@ function ModernApp() {
                     input.click()
                   }}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <UploadIcon size={16} /> Import from Excel
                 </button>
@@ -2702,7 +2325,6 @@ function ModernApp() {
                 <button
                   onClick={downloadImportTemplate}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <TemplateIcon size={16} /> Download Import Template
                 </button>
@@ -2710,7 +2332,6 @@ function ModernApp() {
                 <button
                   onClick={downloadJsonBackup}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <DownloadIcon size={16} /> Download JSON Backup
                 </button>
@@ -2727,11 +2348,20 @@ function ModernApp() {
                     input.click()
                   }}
                   className="btn btn-secondary"
-                  style={{ justifyContent: 'flex-start' }}
                 >
                   <UploadIcon size={16} /> Restore JSON Backup
                 </button>
               </div>
+            </div>
+
+            <div className="card account-settings-card">
+              <div>
+                <h3 className="card-title">Signed in as {user?.displayName || user?.email || 'Pitaka user'}</h3>
+                <p className="card-subtitle">Sign out on this device without removing your saved records.</p>
+              </div>
+              <button type="button" onClick={requestLogout} className="btn btn-secondary account-signout-btn">
+                <LogoutIcon size={16} /> Sign Out
+              </button>
             </div>
 
             {!isInstalled && deferredInstallPrompt && (
@@ -2745,7 +2375,6 @@ function ModernApp() {
                     type="button"
                     onClick={installApp}
                     className="btn btn-primary"
-                    style={{ padding: '8px 16px', fontSize: '0.875rem', minHeight: 'auto' }}
                   >
                     Install
                   </button>
@@ -2979,74 +2608,6 @@ function ModernApp() {
             >
               Upgrade to Pro
             </button>
-          </div>
-        )
-
-      case 'customizeMobileDashboard':
-        return (
-          <div className="form-container">
-            <h3 className="card-title"><TemplateIcon size={18} /> Mobile Dashboard</h3>
-            <p className="card-subtitle" style={{ marginTop: '0.75rem' }}>
-              Show or hide visualizers and turn on long-press drag mode to reorder the mobile stack.
-            </p>
-
-            <div className="dashboard-mobile-controls">
-              <button
-                type="button"
-                className={`layout-preference-card dashboard-toggle-card ${dashboardCustomization.showHero ? 'active' : ''}`}
-                onClick={() => toggleDashboardArea('showHero')}
-              >
-                <div className="layout-preference-top">
-                  <span className="layout-preference-name">Hero Summary</span>
-                  <span className="layout-preference-state">{dashboardCustomization.showHero ? 'Shown' : 'Hidden'}</span>
-                </div>
-                <div className="layout-preference-description">Show or hide the large monthly overview banner at the top of the dashboard.</div>
-              </button>
-
-              <button
-                type="button"
-                className={`layout-preference-card dashboard-toggle-card ${dashboardCustomization.showMetrics ? 'active' : ''}`}
-                onClick={() => toggleDashboardArea('showMetrics')}
-              >
-                <div className="layout-preference-top">
-                  <span className="layout-preference-name">Metric Cards</span>
-                  <span className="layout-preference-state">{dashboardCustomization.showMetrics ? 'Shown' : 'Hidden'}</span>
-                </div>
-                <div className="layout-preference-description">Show or hide the balance, income, expense, and net insight cards below the hero.</div>
-              </button>
-
-              <button
-                type="button"
-                className={`layout-preference-card dashboard-toggle-card ${isMobileDashboardEditMode ? 'active' : ''}`}
-                onClick={() => setIsMobileDashboardEditMode((current) => !current)}
-              >
-                <div className="layout-preference-top">
-                  <span className="layout-preference-name">Reorder Mode</span>
-                  <span className="layout-preference-state">{isMobileDashboardEditMode ? 'On' : 'Off'}</span>
-                </div>
-                <div className="layout-preference-description">Long-press any dashboard card, then drag it higher or lower in the stack.</div>
-              </button>
-            </div>
-
-            <div className="dashboard-mobile-visualizer-list">
-              {availableDashboardWidgets.map((widget) => {
-                const isHidden = dashboardCustomization.hiddenSectionIds.includes(widget.id)
-                return (
-                  <button
-                    key={widget.id}
-                    type="button"
-                    className={`layout-preference-card dashboard-mobile-visualizer-card ${isHidden ? '' : 'active'}`}
-                    onClick={() => toggleDashboardWidgetVisibility(widget.id)}
-                  >
-                    <div className="layout-preference-top">
-                      <span className="layout-preference-name">{widget.name}</span>
-                      <span className="layout-preference-state">{isHidden ? 'Hidden' : 'Shown'}</span>
-                    </div>
-                    <div className="layout-preference-description">{widget.description}</div>
-                  </button>
-                )
-              })}
-            </div>
           </div>
         )
 
@@ -3507,8 +3068,8 @@ function ModernApp() {
         <div className="mobile-header">
           <div className="mobile-header-content">
             <div className="header-title-block">
-              <span className="eyebrow">Private Banking View</span>
-              <h1>Pitaka</h1>
+              <span className="eyebrow">{VIEW_META[currentView]?.eyebrow || 'Personal ledger'}</span>
+              <h1>{VIEW_META[currentView]?.title || 'Pitaka'}</h1>
               <div className="header-period">
                 {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
                   month: 'long', 
@@ -3525,6 +3086,7 @@ function ModernApp() {
                 setSelectedYear(d.getFullYear())
               }}
               title="Previous month"
+              aria-label="Show previous month"
             >
               <ChevronLeftIcon size={18} />
             </button>
@@ -3536,79 +3098,57 @@ function ModernApp() {
                 setSelectedYear(d.getFullYear())
               }}
               title="Next month"
+              aria-label="Show next month"
             >
               <ChevronRightIcon size={18} />
             </button>
-            <button
-              className="icon-btn"
-              onClick={async () => {
-                const ok = await confirm({
-                  title: 'Logout',
-                  description: 'Are you sure you want to logout?',
-                  confirmText: 'Logout',
-                  cancelText: 'Cancel'
-                })
-                if (ok) logout()
-              }}
-              title="Logout"
-            >
-              <LogoutIcon size={18} />
-            </button>
-            {currentView === 'dashboard' && (
-              <button
-                className={`icon-btn mobile-dashboard-edit-btn ${isMobileDashboardEditMode ? 'active' : ''}`}
-                onClick={() => openBottomSheet('customizeMobileDashboard')}
-                title="Customize dashboard"
-              >
-                <TemplateIcon size={18} />
-              </button>
-            )}
           </div>
         </div>
       </div>
 
       {/* Error Banner */}
       {error && (
-        <div style={{
-          background: 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)',
-          color: 'white',
-          padding: '16px 20px',
-          fontSize: '14px',
-          fontWeight: 500
-        }}>
-          ⚠️ {error}
+        <div className="app-error-banner" role="alert">
+          <strong>Needs attention</strong>
+          <span>{error}</span>
         </div>
       )}
 
       {/* Quick Actions */}
-      <div className="quick-actions-wrap">
+      <section className="quick-actions-wrap" aria-label="Quick actions">
         <div className="quick-actions">
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addIncome')}
           >
-            <IncomeIcon className="quick-action-icon" size={16} /> Record Income
+            <IncomeIcon className="quick-action-icon" size={16} />
+            <span className="quick-action-label-long">Record Income</span>
+            <span className="quick-action-label-short">Income</span>
           </button>
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addExpense')}
           >
-            <ExpenseIcon className="quick-action-icon" size={16} /> Log Expense
+            <ExpenseIcon className="quick-action-icon" size={16} />
+            <span className="quick-action-label-long">Log Expense</span>
+            <span className="quick-action-label-short">Expense</span>
           </button>
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addTransfer')}
           >
-            <TransferIcon className="quick-action-icon" size={16} /> Move Funds
+            <TransferIcon className="quick-action-icon" size={16} />
+            <span className="quick-action-label-long">Move Funds</span>
+            <span className="quick-action-label-short">Transfer</span>
           </button>
           <button
-            className="quick-action-btn"
+            className="quick-action-btn quick-action-btn--secondary"
             onClick={() => openBottomSheet('addSavings')}
           >
             <TrendUpIcon className="quick-action-icon" size={16} /> New Goal
           </button>
           <button
-            className="quick-action-btn"
+            className="quick-action-btn quick-action-btn--secondary"
             onClick={() => {
               if (isPro) openSubscriptionSheet()
               else setCurrentView('pro')
@@ -3617,7 +3157,7 @@ function ModernApp() {
             <ExpenseIcon className="quick-action-icon" size={16} /> {isPro ? 'New Subscription' : 'Subscriptions Pro'}
           </button>
         </div>
-      </div>
+      </section>
 
       {/* Main Content */}
       <Suspense fallback={<SectionFallback label="Loading view..." />}>
@@ -3625,10 +3165,11 @@ function ModernApp() {
       </Suspense>
 
       {/* Bottom Navigation */}
-      <div className="bottom-nav">
+      <nav className="bottom-nav" aria-label="Primary navigation">
         <button
           className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
           onClick={() => setCurrentView('dashboard')}
+          aria-current={currentView === 'dashboard' ? 'page' : undefined}
         >
           <div className="bottom-nav-icon"><HomeIcon size={22} /></div>
           <div>Home</div>
@@ -3636,6 +3177,7 @@ function ModernApp() {
         <button
           className={`bottom-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
           onClick={() => setCurrentView('transactions')}
+          aria-current={currentView === 'transactions' ? 'page' : undefined}
         >
           <div className="bottom-nav-icon"><ActivityIcon size={22} /></div>
           <div>Activity</div>
@@ -3643,6 +3185,7 @@ function ModernApp() {
         <button
           className={`bottom-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
           onClick={() => setCurrentView('accounts')}
+          aria-current={currentView === 'accounts' ? 'page' : undefined}
         >
           <div className="bottom-nav-icon"><WalletIcon size={22} /></div>
           <div>Accounts</div>
@@ -3650,27 +3193,20 @@ function ModernApp() {
         <button
           className={`bottom-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('wealth')}
+          aria-current={['savings', 'investments', 'wealth'].includes(currentView) ? 'page' : undefined}
         >
           <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
           <div>Wealth</div>
         </button>
         <button
-          className={`bottom-nav-item ${!isPro && currentView === 'pro' ? '' : ['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', ...(isPro ? ['pro'] : [])].includes(currentView) ? 'active' : ''}`}
+          className={`bottom-nav-item ${['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', 'pro'].includes(currentView) ? 'active' : ''}`}
           onClick={() => setCurrentView('settings')}
+          aria-current={['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', 'pro'].includes(currentView) ? 'page' : undefined}
         >
           <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>
           <div>More</div>
         </button>
-        {!isPro && (
-          <button
-            className={`bottom-nav-item ${currentView === 'pro' ? 'active' : ''}`}
-            onClick={() => setCurrentView('pro')}
-          >
-            <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
-            <div>Pro</div>
-          </button>
-        )}
-      </div>
+      </nav>
       
       </div> {/* End desktop-main-wrapper */}
 
@@ -3683,10 +3219,20 @@ function ModernApp() {
         className={`bottom-sheet ${showBottomSheet ? 'open' : ''}`}
         role="dialog"
         aria-modal="true"
+        aria-label={bottomSheetContent ? undefined : 'Pitaka action sheet'}
+        aria-labelledby={bottomSheetContent ? 'bottom-sheet-title' : undefined}
         tabIndex={-1}
         ref={bottomSheetRef}
       >
         <div className="bottom-sheet-handle" />
+        {bottomSheetContent && (
+          <div className="bottom-sheet-header">
+            <h2 id="bottom-sheet-title">{getBottomSheetTitle(bottomSheetContent)}</h2>
+            <button type="button" className="bottom-sheet-close" onClick={closeBottomSheet} aria-label="Close sheet">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        )}
         <Suspense fallback={<SectionFallback label="Loading tools..." />}>
           {renderBottomSheetContent()}
         </Suspense>

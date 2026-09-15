@@ -471,31 +471,42 @@
 .table-mobile-summary {
   width: 100%;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 12px 14px;
   border: none;
   background: transparent;
   color: inherit;
   text-align: left;
-  cursor: pointer;
   font: inherit;
 }
 
-.table-mobile-summary-main {
+.table-mobile-summary-button {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
   min-width: 0;
+  min-height: 44px;
   flex: 1;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .table-mobile-select {
   display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   align-items: center;
   justify-content: center;
-  padding-top: 2px;
+  margin: -4px 0 -4px -8px;
+  cursor: pointer;
 }
 
 .table-mobile-select input[type='checkbox'] {

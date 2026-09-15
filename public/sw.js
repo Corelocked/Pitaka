@@ -1,5 +1,6 @@
-const APP_SHELL_CACHE = 'pitaka-app-shell-v1'
-const RUNTIME_CACHE = 'pitaka-runtime-v1'
+const APP_SHELL_CACHE = 'pitaka-app-shell-v2'
+const RUNTIME_CACHE = 'pitaka-runtime-v2'
+const IS_LOCAL_DEVELOPMENT = ['localhost', '127.0.0.1'].includes(self.location.hostname)
 const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +9,11 @@ const APP_SHELL_ASSETS = [
 ]
 
 self.addEventListener('install', (event) => {
+  if (IS_LOCAL_DEVELOPMENT) {
+    self.skipWaiting()
+    return
+  }
+
   event.waitUntil(
     caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_ASSETS))
   )
@@ -18,7 +24,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
       keys
-        .filter((key) => ![APP_SHELL_CACHE, RUNTIME_CACHE].includes(key))
+        .filter((key) => IS_LOCAL_DEVELOPMENT || ![APP_SHELL_CACHE, RUNTIME_CACHE].includes(key))
         .map((key) => caches.delete(key))
     ))
   )
@@ -30,6 +36,10 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   if (request.method !== 'GET') {
+    return
+  }
+
+  if (IS_LOCAL_DEVELOPMENT) {
     return
   }
 

@@ -996,8 +996,24 @@ export default function Blog({ onBackToLanding }) {
   }, [selectedSlug])
 
   useEffect(() => {
-    document.body.dataset.theme = 'dark'
-    document.documentElement.style.colorScheme = 'dark'
+    const previousTheme = document.body.dataset.theme
+    const appearance = window.matchMedia('(prefers-color-scheme: dark)')
+    const applySystemAppearance = () => {
+      const theme = appearance.matches ? 'dark' : 'light'
+      document.body.dataset.theme = theme
+      document.documentElement.style.colorScheme = theme
+    }
+
+    applySystemAppearance()
+    appearance.addEventListener('change', applySystemAppearance)
+
+    return () => {
+      appearance.removeEventListener('change', applySystemAppearance)
+      if (previousTheme) {
+        document.body.dataset.theme = previousTheme
+        document.documentElement.style.colorScheme = previousTheme
+      }
+    }
   }, [])
 
   useEffect(() => {

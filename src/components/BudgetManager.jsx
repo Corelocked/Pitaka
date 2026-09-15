@@ -67,8 +67,8 @@ export default function BudgetManager({
   }
 
   return (
-    <div style={{ display: 'grid', gap: '1rem' }}>
-      <form onSubmit={handleSubmit} className="form" style={{ marginBottom: 0 }}>
+    <div className="budget-manager">
+      <form onSubmit={handleSubmit} className="form budget-manager-form">
         <div className="form-group">
           <label htmlFor="budget-category">Category</label>
           <select
@@ -123,49 +123,29 @@ export default function BudgetManager({
         </div>
       </form>
 
-      <div className="card" style={{ padding: '1rem 1.1rem' }}>
-        <div className="card-header" style={{ marginBottom: '0.75rem' }}>
+      <div className="card budget-coverage-card">
+        <div className="card-header">
           <div>
             <h3 className="card-title">Budget Coverage</h3>
             <p className="card-subtitle">Track how each category is pacing against your budget for {formatMonthLabel(monthKey)}.</p>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gap: '0.75rem' }}>
+        <div className="budget-coverage-list">
           {categoryBudgets.length === 0 && (
             <div className="card-subtitle">No categories yet.</div>
           )}
 
           {categoryBudgets.map((entry) => {
-            const tone = entry.status === 'over'
-              ? 'rgba(215, 131, 120, 0.16)'
-              : entry.status === 'warning'
-                ? 'rgba(209, 178, 121, 0.16)'
-                : entry.status === 'healthy'
-                  ? 'rgba(99, 178, 127, 0.12)'
-                  : 'rgba(255, 255, 255, 0.04)'
-            const borderColor = entry.status === 'over'
-              ? 'rgba(215, 131, 120, 0.34)'
-              : entry.status === 'warning'
-                ? 'rgba(209, 178, 121, 0.34)'
-                : entry.status === 'healthy'
-                  ? 'rgba(99, 178, 127, 0.22)'
-                  : 'var(--border-color)'
             const progressWidth = entry.amount > 0 ? `${Math.min(entry.utilization, 100)}%` : '0%'
 
             return (
               <div
                 key={entry.categoryId}
-                style={{
-                  border: `1px solid ${borderColor}`,
-                  background: tone,
-                  borderRadius: '18px',
-                  padding: '0.9rem 1rem',
-                  display: 'grid',
-                  gap: '0.7rem'
-                }}
+                className="budget-coverage-item"
+                data-status={entry.status}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="budget-coverage-header">
                   <div>
                     <div style={{ fontWeight: 700 }}>{entry.categoryName}</div>
                     <div className="card-subtitle" style={{ marginTop: '0.2rem' }}>
@@ -194,19 +174,12 @@ export default function BudgetManager({
                   ) : null}
                 </div>
 
-                <div style={{ display: 'grid', gap: '0.35rem' }}>
-                  <div style={{ height: '10px', borderRadius: '999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <div className="budget-coverage-progress">
+                  <div className="budget-progress-track">
                     <div
-                      style={{
-                        width: progressWidth,
-                        height: '100%',
-                        borderRadius: '999px',
-                        background: entry.status === 'over'
-                          ? 'linear-gradient(135deg, #d78378, #9f3d34)'
-                          : entry.status === 'warning'
-                            ? 'linear-gradient(135deg, #d1b279, #8a6a36)'
-                            : 'linear-gradient(135deg, #78b287, #1f6a39)'
-                      }}
+                      className="budget-progress-fill"
+                      data-status={entry.status}
+                      style={{ '--budget-progress': progressWidth }}
                     />
                   </div>
                   <div className="card-subtitle">

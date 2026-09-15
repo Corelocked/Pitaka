@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import {
   ActivityIcon,
   ChartIcon,
@@ -26,52 +26,11 @@ function Dashboard({
   selectedMonth,
   selectedYear,
   isPro = false,
-  layoutPreference = 'editorial',
-  customization,
-  isMobileEditMode = false,
-  isDesktopEditMode = false,
-  onMoveMobileWidget,
-  onMoveDesktopTile,
-  onResizeDesktopTile
+  preset,
+  presets = [],
+  onPresetChange
 }) {
-  const [draggedTileId, setDraggedTileId] = useState(null)
-  const [draggedMobileWidgetId, setDraggedMobileWidgetId] = useState(null)
-  const [mobileDropTargetId, setMobileDropTargetId] = useState(null)
-  const [mobileDropEdge, setMobileDropEdge] = useState('before')
-  const [mobileDragPreview, setMobileDragPreview] = useState(null)
-  const draggedMobileWidgetIdRef = useRef(null)
-  const mobileAutoScrollFrameRef = useRef(null)
-  const mobileAutoScrollVelocityRef = useRef(0)
-  const mobileTouchPointRef = useRef({ x: 0, y: 0 })
   const monthName = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-
-  useEffect(() => {
-    draggedMobileWidgetIdRef.current = draggedMobileWidgetId
-  }, [draggedMobileWidgetId])
-
-  useEffect(() => {
-    if (!draggedMobileWidgetId) return undefined
-
-    const handleWindowTouchMove = (event) => {
-      if (event.cancelable) {
-        event.preventDefault()
-      }
-    }
-
-    window.addEventListener('touchmove', handleWindowTouchMove, { passive: false })
-
-    return () => {
-      window.removeEventListener('touchmove', handleWindowTouchMove)
-    }
-  }, [draggedMobileWidgetId])
-
-  useEffect(() => {
-    return () => {
-      if (mobileAutoScrollFrameRef.current) {
-        window.cancelAnimationFrame(mobileAutoScrollFrameRef.current)
-      }
-    }
-  }, [])
 
   const recentTransactions = useMemo(() => {
     const transactions = [
@@ -387,6 +346,8 @@ function Dashboard({
         <div className="dashboard-breakdown-chart-wrap">
           <div
             className="dashboard-donut-chart dashboard-breakdown-donut"
+            role="img"
+            aria-label={`Breakdown chart. Total ${totalLabel}.`}
             style={{
               background: items.length === 1
                 ? 'conic-gradient(var(--chart-color-1) 0deg 360deg)'
@@ -628,45 +589,29 @@ function Dashboard({
 
   const metricCards = (
     <section className="balance-grid dashboard-metrics-grid">
-      <div className="balance-card dashboard-balance-feature">
-        <div className="balance-label"><WalletIcon size={14} /> Total Balance</div>
-        <div className="balance-amount balance-amount--string">{totalBalanceLabel}</div>
-        <div className="balance-change">{walletBalances.length} accounts</div>
-      </div>
+      <article className="balance-card income">
+        <div className="balance-label"><IncomeIcon size={16} /> Income</div>
+        <div className="balance-amount balance-amount--string">{totalIncomeLabel}</div>
+        <div className="balance-change">Received this month</div>
+      </article>
 
-      <div className="dashboard-stat-column">
-        <div className="balance-card income">
-          <div className="balance-label"><IncomeIcon size={14} /> Income</div>
-          <div className="balance-amount balance-amount--string">{totalIncomeLabel}</div>
-          <div className="balance-change">{monthName}</div>
-        </div>
+      <article className="balance-card expense">
+        <div className="balance-label"><ExpenseIcon size={16} /> Expenses</div>
+        <div className="balance-amount balance-amount--string">{totalExpensesLabel}</div>
+        <div className="balance-change">Spent this month</div>
+      </article>
 
-        <div className="balance-card expense">
-          <div className="balance-label"><ExpenseIcon size={14} /> Expenses</div>
-          <div className="balance-amount balance-amount--string">{totalExpensesLabel}</div>
-          <div className="balance-change">{monthName}</div>
-        </div>
-      </div>
+      <article className="balance-card net">
+        <div className="balance-label"><ChartIcon size={16} /> Net Position</div>
+        <div className="balance-amount balance-amount--string">{netIncomeLabel}</div>
+        <div className={`balance-change value-chip ${focusedNetIncome >= 0 ? 'positive' : 'negative'}`}>{netLabel}</div>
+      </article>
 
-      <div className="card dashboard-insight-panel">
-        <div className="dashboard-insight-item">
-          <span className="dashboard-kicker">Net Position</span>
-            <div className="dashboard-insight-value">{netIncomeLabel}</div>
-            <div className={`balance-change value-chip ${focusedNetIncome >= 0 ? 'positive' : 'negative'}`}>
-              {netLabel}
-          </div>
-        </div>
-
-        <div className="dashboard-insight-item">
-          <span className="dashboard-kicker">Funds Reserved</span>
-          <div className="dashboard-insight-value">
-            {totalSavingsLabel}
-          </div>
-          <div className="dashboard-insight-note">
-            {savings.length} funded goal{savings.length === 1 ? '' : 's'}
-          </div>
-        </div>
-      </div>
+      <article className="balance-card reserved">
+        <div className="balance-label"><TrendUpIcon size={16} /> Reserved</div>
+        <div className="balance-amount balance-amount--string">{totalSavingsLabel}</div>
+        <div className="balance-change">{savings.length} funded goal{savings.length === 1 ? '' : 's'}</div>
+      </article>
     </section>
   )
 
@@ -738,20 +683,18 @@ function Dashboard({
   const accountsCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><WalletIcon size={18} /> Accounts</h3>
-        </div>
+        <h3 className="card-title"><WalletIcon size={18} /> Accounts</h3>
         <span className="card-subtitle">{walletBalances.length} total</span>
       </div>
       {walletBalances.length > 0 ? (
         <div className="account-grid dashboard-account-grid">
-          {walletBalances.slice(0, 6).map((wallet) => (
+          {walletBalances.map((wallet) => (
             <div
               key={wallet.id}
               className={getAccountCardClassName(wallet)}
             >
               <div className="account-card-meta">
-                <div className="account-name">{wallet.name}</div>
+                <div className="account-name" title={wallet.name}>{wallet.name}</div>
                 <div className="account-pill">{getAccountPillLabel(wallet)}</div>
               </div>
               <div className="account-balance">{formatCurrency(parseFloat(wallet.balance || 0), getWalletCurrency(wallet))}</div>
@@ -768,21 +711,25 @@ function Dashboard({
   const cashflowChartCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><ChartIcon size={18} /> Cashflow Over Time</h3>
-          <span className="card-subtitle">{monthName}</span>
-        </div>
+        <h3 className="card-title"><ChartIcon size={18} /> Cashflow Over Time</h3>
+        <span className="card-subtitle">{monthName}</span>
       </div>
       {cashflowTrendRows.some((row) => row.income > 0 || row.expenses > 0) ? (
-        <div className="dashboard-cashflow-trend">
+        <div className="dashboard-cashflow-trend" role="list" aria-label={`Weekly income and expenses for ${monthName}`}>
           {cashflowTrendRows.map((row) => (
-            <div key={row.id} className="dashboard-cashflow-trend-column">
+            <div
+              key={row.id}
+              className="dashboard-cashflow-trend-column"
+              role="listitem"
+              aria-label={`${row.label}: income ${formatCurrency(row.income, incomeSummary[0]?.currency || DEFAULT_CURRENCY)}, expenses ${formatCurrency(row.expenses, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}, net ${formatCurrency(row.net, incomeSummary[0]?.currency || expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}
+            >
               <div className="dashboard-cashflow-trend-stage">
                 {row.income > 0 ? (
                   <div
                     className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--income"
                     style={{ height: `${row.incomeHeight}%` }}
                     title={`Income: ${formatCurrency(row.income, incomeSummary[0]?.currency || DEFAULT_CURRENCY)}`}
+                    aria-hidden="true"
                   />
                 ) : null}
                 {row.expenses > 0 ? (
@@ -790,6 +737,7 @@ function Dashboard({
                     className="dashboard-cashflow-trend-bar dashboard-cashflow-trend-bar--expense"
                     style={{ height: `${row.expenseHeight}%` }}
                     title={`Expenses: ${formatCurrency(row.expenses, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}
+                    aria-hidden="true"
                   />
                 ) : null}
               </div>
@@ -810,10 +758,8 @@ function Dashboard({
   const incomeSourceChartCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><IncomeIcon size={18} /> Income by Source</h3>
-          <span className="card-subtitle">{monthName}</span>
-        </div>
+        <h3 className="card-title"><IncomeIcon size={18} /> Income by Source</h3>
+        <span className="card-subtitle">{monthName}</span>
       </div>
       {renderBreakdownChart({
         items: incomeSourceRows.map((row) => ({
@@ -836,20 +782,19 @@ function Dashboard({
   const weeklySpendingChartCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><ExpenseIcon size={18} /> Weekly Spending Trend</h3>
-          <span className="card-subtitle">Distribution across {monthName}</span>
-        </div>
+        <h3 className="card-title"><ExpenseIcon size={18} /> Weekly Spending Trend</h3>
+        <span className="card-subtitle">Distribution across {monthName}</span>
       </div>
       {weeklySpendingRows.some((row) => row.amount > 0) ? (
-        <div className="dashboard-column-chart">
+        <div className="dashboard-column-chart" role="list" aria-label={`Weekly spending for ${monthName}`}>
           {weeklySpendingRows.map((row) => (
-            <div key={row.id} className="dashboard-column-chart-item">
+            <div key={row.id} className="dashboard-column-chart-item" role="listitem" aria-label={`${row.label}: ${formatCurrency(row.amount, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}>
               <div className="dashboard-column-chart-stage">
                 {row.amount > 0 ? (
                   <div
                     className="dashboard-column-chart-bar"
                     style={{ height: `${row.height}%` }}
+                    aria-hidden="true"
                   />
                 ) : null}
               </div>
@@ -872,20 +817,19 @@ function Dashboard({
   const expenseTrendChartCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><ExpenseIcon size={18} /> Expense Trend</h3>
-          <span className="card-subtitle">{monthName}</span>
-        </div>
+        <h3 className="card-title"><ExpenseIcon size={18} /> Expense Trend</h3>
+        <span className="card-subtitle">{monthName}</span>
       </div>
       {expenseTrendRows.some((row) => row.amount > 0) ? (
-        <div className="dashboard-column-chart dashboard-column-chart--four-up">
+        <div className="dashboard-column-chart dashboard-column-chart--four-up" role="list" aria-label={`Expense trend for ${monthName}`}>
           {expenseTrendRows.map((row) => (
-            <div key={row.id} className="dashboard-column-chart-item">
+            <div key={row.id} className="dashboard-column-chart-item" role="listitem" aria-label={`Days ${row.label}: ${formatCurrency(row.amount, expenseSummary[0]?.currency || DEFAULT_CURRENCY)}`}>
               <div className="dashboard-column-chart-stage">
                 {row.amount > 0 ? (
                   <div
                     className="dashboard-column-chart-bar"
                     style={{ height: `${row.height}%` }}
+                    aria-hidden="true"
                   />
                 ) : null}
               </div>
@@ -907,26 +851,26 @@ function Dashboard({
 
   const accountAllocationChartCard = (
     <div className="card">
-      <div className="card-header dashboard-card-header--stacked">
-        <div>
-          <h3 className="card-title"><WalletIcon size={18} /> Account Allocation</h3>
-          <span className="card-subtitle">Share of positive balances</span>
-        </div>
+      <div className="card-header">
+        <h3 className="card-title"><WalletIcon size={18} /> Account Allocation</h3>
+        <span className="card-subtitle">Share of positive balances</span>
       </div>
       {accountAllocationRows.length > 0 ? (
         <div className="dashboard-breakdown-layout">
           <div className="dashboard-breakdown-chart-wrap">
             <div
               className="dashboard-donut-chart dashboard-breakdown-donut"
-            style={{
-              background: accountAllocationRows.length === 1
-                ? 'conic-gradient(var(--chart-color-1) 0deg 360deg)'
-                : `conic-gradient(${accountAllocationRows.map((row, index, array) => {
-                  const start = array.slice(0, index).reduce((sum, entry) => sum + entry.share, 0)
-                  const end = start + row.share
-                  return `var(--chart-color-${index + 1}) ${(start / 100) * 360}deg ${(end / 100) * 360}deg`
-                }).join(', ')})`
-            }}
+              role="img"
+              aria-label={`Account allocation chart. Total ${totalBalanceLabel}.`}
+              style={{
+                background: accountAllocationRows.length === 1
+                  ? 'conic-gradient(var(--chart-color-1) 0deg 360deg)'
+                  : `conic-gradient(${accountAllocationRows.map((row, index, array) => {
+                    const start = array.slice(0, index).reduce((sum, entry) => sum + entry.share, 0)
+                    const end = start + row.share
+                    return `var(--chart-color-${index + 1}) ${(start / 100) * 360}deg ${(end / 100) * 360}deg`
+                  }).join(', ')})`
+              }}
             >
               <div className="dashboard-donut-center">
                 <span>Total</span>
@@ -955,9 +899,7 @@ function Dashboard({
   const savingsCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
-        </div>
+        <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
         <span className="card-subtitle">{totalSavingsLabel} reserved</span>
       </div>
       {featuredSavingsGoals.length > 0 ? (
@@ -995,10 +937,8 @@ function Dashboard({
   const upcomingBillsCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><ExpenseIcon size={18} /> Upcoming Bills</h3>
-          <span className="card-subtitle">Next subscription charges on deck</span>
-        </div>
+        <h3 className="card-title"><ExpenseIcon size={18} /> Upcoming Bills</h3>
+        <span className="card-subtitle">Next subscription charges on deck</span>
       </div>
       {upcomingBills.length > 0 ? (
         <div className="transaction-list">
@@ -1030,20 +970,18 @@ function Dashboard({
   const netWorthHistoryCard = (
     <div className="card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><TrendUpIcon size={18} /> Net Worth History</h3>
-          <span className="card-subtitle">Monthly trend</span>
-        </div>
+        <h3 className="card-title"><TrendUpIcon size={18} /> Net Worth History</h3>
+        <span className="card-subtitle">Monthly trend</span>
       </div>
       {netWorthRows.length >= 2 ? (
-        <div className="dashboard-bar-chart">
+        <div className="dashboard-bar-chart" role="list" aria-label="Net worth by month">
           {netWorthRows.map((snapshot) => {
             const maxTotal = Math.max(...netWorthRows.map((row) => Math.abs(Number(row.total || 0))), 1)
             const height = `${Math.max((Math.abs(Number(snapshot.total || 0)) / maxTotal) * 100, 6)}%`
             return (
-              <div key={snapshot.id || snapshot.monthKey} className="dashboard-bar-item">
+              <div key={snapshot.id || snapshot.monthKey} className="dashboard-bar-item" role="listitem" aria-label={`${snapshot.monthKey || 'Current snapshot'}: ${formatCurrency(snapshot.total, snapshot.currency || DEFAULT_CURRENCY)}`}>
                 <div className="dashboard-bar-track">
-                  <div className="dashboard-bar-fill income" style={{ height }} />
+                  <div className="dashboard-bar-fill income" style={{ height }} aria-hidden="true" />
                 </div>
                 <span>{snapshot.monthKey ? new Date(`${snapshot.monthKey}-01T00:00:00`).toLocaleDateString('en-US', { month: 'short' }) : 'Now'}</span>
                 <strong>{formatCurrency(snapshot.total, snapshot.currency || DEFAULT_CURRENCY, { maximumFractionDigits: 0 })}</strong>
@@ -1063,12 +1001,10 @@ function Dashboard({
   )
 
   const monthlyCloseoutCard = (
-    <div className="card dashboard-plan-card">
+    <div className="card dashboard-plan-card dashboard-closeout-card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><ChartIcon size={18} /> Monthly Closeout</h3>
-          <span className="card-subtitle">{monthName}</span>
-        </div>
+        <h3 className="card-title"><ChartIcon size={18} /> Monthly Closeout</h3>
+        <span className="card-subtitle">{monthName}</span>
       </div>
       <div className="dashboard-plan-list">
         <div className="atelier-metric-chip dashboard-rail-chip">
@@ -1098,10 +1034,8 @@ function Dashboard({
   const planAheadCard = (
     <div className="card dashboard-plan-card">
       <div className="card-header">
-        <div>
-          <h3 className="card-title"><TrendUpIcon size={18} /> Plan Ahead</h3>
-          <span className="card-subtitle">Forecast and financial health</span>
-        </div>
+        <h3 className="card-title"><TrendUpIcon size={18} /> Plan Ahead</h3>
+        <span className="card-subtitle">Forecast and financial health</span>
       </div>
       {financeInsights ? (
         <div className="dashboard-plan-grid">
@@ -1156,280 +1090,36 @@ function Dashboard({
     'expense-trend-chart': expenseTrendChartCard,
     'account-allocation-chart': accountAllocationChartCard
   }
-  const sectionLabels = {
-    'plan-ahead': 'Plan Ahead',
-    'monthly-closeout': 'Monthly Closeout',
-    'net-worth-history': 'Net Worth History',
-    'recent-activity': 'Recent Activity',
-    spending: 'Spending Overview',
-    accounts: 'Accounts',
-    savings: 'Savings Goals',
-    ...(isPro ? { 'upcoming-bills': 'Upcoming Bills' } : {}),
-    'cashflow-chart': 'Cashflow Trend',
-    'income-source-chart': 'Income Sources',
-    'weekly-spending-chart': 'Weekly Spending',
-    'expense-trend-chart': 'Expense Trend',
-    'account-allocation-chart': 'Account Allocation'
-  }
-  const hiddenSectionIds = customization?.hiddenSectionIds || []
-  const mainSections = (customization?.mainOrder || [])
-    .filter((sectionId) => !hiddenSectionIds.includes(sectionId))
+  const dashboardSections = (preset?.widgetOrder || [])
     .map((sectionId) => ({ id: sectionId, node: sectionNodes[sectionId] }))
     .filter((section) => Boolean(section.node))
-  const sideSections = (customization?.sideOrder || [])
-    .filter((sectionId) => !hiddenSectionIds.includes(sectionId))
-    .map((sectionId) => ({ id: sectionId, node: sectionNodes[sectionId] }))
-    .filter((section) => Boolean(section.node))
-  const shouldShowHero = customization?.showHero !== false
-  const shouldShowMetrics = customization?.showMetrics !== false
-  const hasVisibleSections = mainSections.length > 0 || sideSections.length > 0
-  const contentGridClassName = [
-    'dashboard-content-grid',
-    `dashboard-content-grid--${layoutPreference}`,
-    mainSections.length === 0 ? 'dashboard-content-grid--main-empty' : '',
-    sideSections.length === 0 ? 'dashboard-content-grid--side-empty' : '',
-    mainSections.length > 0 && sideSections.length > 0 ? 'dashboard-content-grid--split' : 'dashboard-content-grid--single'
-  ].filter(Boolean).join(' ')
-  const mobileSections = (customization?.mobileWidgetOrder || [])
-    .filter((sectionId) => !hiddenSectionIds.includes(sectionId))
-    .map((sectionId) => ({ id: sectionId, label: sectionLabels[sectionId] || 'Dashboard Card', node: sectionNodes[sectionId] }))
-    .filter((section) => Boolean(section.node))
-  const desktopTileSections = (customization?.desktopTileOrder || [])
-    .filter((sectionId) => !hiddenSectionIds.includes(sectionId))
-    .map((sectionId) => ({
-      id: sectionId,
-      node: sectionNodes[sectionId],
-      tileSize: customization?.desktopTileSizes?.[sectionId] || 'medium'
-    }))
-    .filter((section) => Boolean(section.node))
-  const desktopTileLayout = (() => {
-    const rows = []
-    let currentRow = []
-    let currentWidth = 0
-
-    const getBaseSpan = (size) => {
-      if (size === 'small') return 2
-      if (size === 'large') return 6
-      return 3
-    }
-
-    const pushRow = () => {
-      if (currentRow.length === 0) return
-
-      const normalizedRow = currentRow.map((item) => ({
-        ...item,
-        effectiveSize: item.tileSize
-      }))
-
-      if (
-        normalizedRow.length === 2 &&
-        normalizedRow.some((item) => item.tileSize === 'medium') &&
-        normalizedRow.some((item) => item.tileSize === 'small')
-      ) {
-        normalizedRow.forEach((item) => {
-          if (item.tileSize === 'small') {
-            item.effectiveSize = 'small-fill'
-          }
-        })
-      }
-
-      rows.push(...normalizedRow)
-      currentRow = []
-      currentWidth = 0
-    }
-
-    desktopTileSections.forEach((section) => {
-      const span = getBaseSpan(section.tileSize)
-      if (currentWidth + span > 6) {
-        pushRow()
-      }
-
-      currentRow.push(section)
-      currentWidth += span
-
-      if (currentWidth >= 6) {
-        pushRow()
-      }
-    })
-
-    pushRow()
-    return rows
-  })()
-  const clearMobileDragState = () => {
-    if (mobileAutoScrollFrameRef.current) {
-      window.cancelAnimationFrame(mobileAutoScrollFrameRef.current)
-      mobileAutoScrollFrameRef.current = null
-    }
-    mobileAutoScrollVelocityRef.current = 0
-    setDraggedMobileWidgetId(null)
-    setMobileDropTargetId(null)
-    setMobileDropEdge('before')
-    setMobileDragPreview(null)
-  }
-
-  const stepMobileAutoScroll = () => {
-    const velocity = mobileAutoScrollVelocityRef.current
-    if (!velocity) {
-      mobileAutoScrollFrameRef.current = null
-      return
-    }
-
-    window.scrollBy(0, velocity)
-    resolveMobileDropState(mobileTouchPointRef.current.x, mobileTouchPointRef.current.y)
-    mobileAutoScrollFrameRef.current = window.requestAnimationFrame(stepMobileAutoScroll)
-  }
-
-  const updateMobileAutoScroll = (clientY) => {
-    if (typeof window === 'undefined') return
-
-    const edgeThreshold = Math.min(120, Math.max(window.innerHeight * 0.14, 72))
-    const minVelocity = 6
-    const maxVelocity = 30
-    let nextVelocity = 0
-
-    const getVelocity = (intensity) => {
-      const easedIntensity = Math.min(1, Math.max(0, intensity)) ** 1.85
-      return Math.round(minVelocity + (easedIntensity * (maxVelocity - minVelocity)))
-    }
-
-    if (clientY < edgeThreshold) {
-      const intensity = 1 - (clientY / edgeThreshold)
-      nextVelocity = -getVelocity(intensity)
-    } else if (clientY > window.innerHeight - edgeThreshold) {
-      const distanceFromBottom = window.innerHeight - clientY
-      const intensity = 1 - (distanceFromBottom / edgeThreshold)
-      nextVelocity = getVelocity(intensity)
-    }
-
-    mobileAutoScrollVelocityRef.current = nextVelocity
-
-    if (nextVelocity && !mobileAutoScrollFrameRef.current) {
-      mobileAutoScrollFrameRef.current = window.requestAnimationFrame(stepMobileAutoScroll)
-    }
-  }
-
-  const resolveMobileDropState = (clientX, clientY) => {
-    const dropTarget = document.elementFromPoint(clientX, clientY)?.closest('[data-mobile-widget-id]')
-    const targetId = dropTarget?.getAttribute('data-mobile-widget-id')
-
-    if (!targetId || targetId === draggedMobileWidgetIdRef.current) {
-      setMobileDropTargetId(null)
-      setMobileDropEdge('before')
-      return
-    }
-
-    const rect = dropTarget.getBoundingClientRect()
-    const edge = clientY >= rect.top + (rect.height / 2) ? 'after' : 'before'
-    setMobileDropTargetId(targetId)
-    setMobileDropEdge(edge)
-  }
-
-  const handleMobileTouchStart = (section) => (event) => {
-    if (!isMobileEditMode) return
-
-    const target = event.currentTarget
-    const touch = event.touches[0]
-
-    const timer = window.setTimeout(() => {
-      setDraggedMobileWidgetId(section.id)
-      target.dataset.mobileDragging = 'true'
-      mobileTouchPointRef.current = { x: touch.clientX, y: touch.clientY }
-      setMobileDragPreview({
-        id: section.id,
-        label: section.label,
-        x: touch.clientX,
-        y: touch.clientY
-      })
-    }, 320)
-
-    target.dataset.mobileDragTimer = String(timer)
-    target.dataset.mobileStartX = String(touch.clientX)
-    target.dataset.mobileStartY = String(touch.clientY)
-  }
-
-  const handleMobileTouchMove = (event) => {
-    if (!isMobileEditMode) return
-
-    const target = event.currentTarget
-    const timer = Number(target.dataset.mobileDragTimer || 0)
-    const startX = Number(target.dataset.mobileStartX || 0)
-    const startY = Number(target.dataset.mobileStartY || 0)
-    const touch = event.touches[0]
-
-    if (!draggedMobileWidgetId) {
-      const moved = Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10
-      if (moved && timer) {
-        window.clearTimeout(timer)
-        target.dataset.mobileDragTimer = ''
-      }
-      return
-    }
-
-    setMobileDragPreview((current) => (
-      current
-        ? {
-            ...current,
-            x: touch.clientX,
-            y: touch.clientY
-          }
-        : current
-    ))
-    mobileTouchPointRef.current = { x: touch.clientX, y: touch.clientY }
-    resolveMobileDropState(touch.clientX, touch.clientY)
-    updateMobileAutoScroll(touch.clientY)
-  }
-  const handleMobileTouchEnd = () => (event) => {
-    const target = event.currentTarget
-    const timer = Number(target.dataset.mobileDragTimer || 0)
-    if (timer) {
-      window.clearTimeout(timer)
-      target.dataset.mobileDragTimer = ''
-    }
-
-    target.dataset.mobileDragging = ''
-
-    if (!isMobileEditMode || !draggedMobileWidgetIdRef.current) {
-      return
-    }
-
-    const touch = event.changedTouches[0]
-    mobileTouchPointRef.current = { x: touch.clientX, y: touch.clientY }
-    resolveMobileDropState(touch.clientX, touch.clientY)
-    const targetId = mobileDropTargetId || document.elementFromPoint(touch.clientX, touch.clientY)?.closest('[data-mobile-widget-id]')?.getAttribute('data-mobile-widget-id')
-    if (targetId) {
-      const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('[data-mobile-widget-id]')
-      const rect = dropTarget?.getBoundingClientRect()
-      const edge = mobileDropTargetId === targetId
-        ? mobileDropEdge
-        : rect && touch.clientY >= rect.top + (rect.height / 2)
-          ? 'after'
-          : 'before'
-      onMoveMobileWidget?.(draggedMobileWidgetIdRef.current, targetId, edge)
-    }
-
-    clearMobileDragState()
-  }
-
-  const handleMobileTouchCancel = () => (event) => {
-    const target = event.currentTarget
-    const timer = Number(target.dataset.mobileDragTimer || 0)
-    if (timer) {
-      window.clearTimeout(timer)
-      target.dataset.mobileDragTimer = ''
-    }
-
-    target.dataset.mobileDragging = ''
-    clearMobileDragState()
-  }
-
   return (
     <div className="mobile-content">
-      <div className={`dashboard-layout dashboard-layout--${layoutPreference}`}>
-        {shouldShowHero && (
-          <section className="atelier-hero card dashboard-hero">
+      <div className={`dashboard-layout dashboard-layout--${preset?.id || 'overview'}`}>
+        <nav className="dashboard-preset-switcher" aria-label="Dashboard view">
+          <div className="dashboard-preset-switcher-copy">
+            <span>Dashboard View</span>
+            <strong>{presets.find((option) => option.id === preset?.id)?.description}</strong>
+          </div>
+          <div className="dashboard-preset-segments" role="group" aria-label="Choose dashboard view">
+            {presets.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={preset?.id === option.id ? 'active' : ''}
+                onClick={() => onPresetChange?.(option.id)}
+                aria-pressed={preset?.id === option.id}
+              >
+                {option.name}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <section className="atelier-hero card dashboard-hero">
             <div className="dashboard-hero-main">
               <div className="atelier-hero-copy">
-                <span className="eyebrow">Private Ledger</span>
+                <span className="eyebrow">Your monthly ledger</span>
                 <h2 className="atelier-hero-title">{monthName}</h2>
               </div>
 
@@ -1454,104 +1144,35 @@ function Dashboard({
                 <strong>{comparableExpenseAndSavings ? `${savingsCoverage.toFixed(0)}%` : hasMixedExpenseCurrencies || hasMixedSavingsCurrencies ? 'Mixed' : '0%'}</strong>
               </div>
             </div>
-          </section>
-        )}
+        </section>
 
-        {shouldShowMetrics && metricCards}
+        {metricCards}
 
-        {desktopTileLayout.length > 0 && (
+        {dashboardSections.length > 0 && (
           <section className="dashboard-desktop-editor">
-            <section className={`dashboard-desktop-grid ${isDesktopEditMode ? 'is-editing' : ''}`}>
-              {desktopTileLayout.map((section) => {
-                const tileSize = section.tileSize
-                const effectiveSize = section.effectiveSize || tileSize
-
-                return (
-                  <article
-                    key={section.id}
-                    className={`dashboard-desktop-tile dashboard-desktop-tile--${effectiveSize} ${draggedTileId === section.id ? 'is-dragging' : ''}`}
-                    draggable={isDesktopEditMode}
-                    onDragStart={() => setDraggedTileId(section.id)}
-                    onDragEnd={() => setDraggedTileId(null)}
-                    onDragOver={(event) => {
-                      if (!isDesktopEditMode) return
-                      event.preventDefault()
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault()
-                      if (!isDesktopEditMode || !draggedTileId) return
-                      onMoveDesktopTile?.(draggedTileId, section.id)
-                      setDraggedTileId(null)
-                    }}
-                  >
-                    {isDesktopEditMode && (
-                      <div className="dashboard-tile-controls">
-                        <div className="dashboard-tile-handle">Drag</div>
-                        <div className="dashboard-tile-size-group">
-                          {[
-                            { id: 'small', label: 'S' },
-                            { id: 'medium', label: 'M' },
-                            { id: 'large', label: 'L' }
-                          ].map((option) => (
-                            <button
-                              key={option.id}
-                              type="button"
-                              className={`dashboard-tile-size-btn ${tileSize === option.id ? 'active' : ''}`}
-                              onClick={() => onResizeDesktopTile?.(section.id, option.id)}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {section.node}
-                  </article>
-                )
-              })}
+            <section className="dashboard-desktop-columns">
+              {dashboardSections.map((section) => (
+                <article key={section.id} className={`dashboard-desktop-tile dashboard-desktop-tile--${section.id}`}>
+                  {section.node}
+                </article>
+              ))}
             </section>
           </section>
         )}
 
-        {hasVisibleSections && (
-          <section className={`${contentGridClassName} dashboard-mobile-layout`}>
-            <div className={`dashboard-mobile-stack ${isMobileEditMode ? 'is-editing' : ''}`}>
-              {mobileSections.map((section) => (
-                <div
-                  key={section.id}
-                  data-mobile-widget-id={section.id}
-                  className={`dashboard-mobile-widget ${draggedMobileWidgetId === section.id ? 'is-dragging' : ''} ${mobileDropTargetId === section.id ? `is-drop-target is-drop-target-${mobileDropEdge}` : ''}`}
-                  onTouchStart={handleMobileTouchStart(section)}
-                  onTouchMove={handleMobileTouchMove}
-                  onTouchEnd={handleMobileTouchEnd()}
-                  onTouchCancel={handleMobileTouchCancel()}
-                >
-                  {isMobileEditMode && (
-                    <div className="dashboard-mobile-widget-handle">Hold and drag</div>
-                  )}
+        {dashboardSections.length > 0 && (
+          <section className="dashboard-content-grid dashboard-mobile-layout">
+            <div className="dashboard-mobile-stack">
+              {dashboardSections.map((section) => (
+                <div key={section.id} className="dashboard-mobile-widget">
                   {section.node}
                 </div>
               ))}
             </div>
-            {mobileDragPreview && (
-              <div
-                className="dashboard-mobile-drag-preview"
-                aria-hidden="true"
-                style={{
-                  transform: `translate(${mobileDragPreview.x}px, ${mobileDragPreview.y}px)`
-                }}
-              >
-                <span className="dashboard-mobile-drag-preview-kicker">Moving card</span>
-                <strong>{mobileDragPreview.label}</strong>
-                <span className="dashboard-mobile-drag-preview-meta">
-                  {mobileDropTargetId ? `Drop ${mobileDropEdge === 'after' ? 'after' : 'before'} target` : 'Drag higher or lower to reorder'}
-                </span>
-              </div>
-            )}
           </section>
         )}
 
-        {recentTransactions.length === 0 && walletBalances.length === 0 && !hasVisibleSections && (
+        {recentTransactions.length === 0 && walletBalances.length === 0 && dashboardSections.length === 0 && (
           <div className="empty-state">
             <div className="empty-state-icon"><WalletIcon size={56} /></div>
             <div className="empty-state-title">Welcome to Pitaka!</div>
@@ -1561,15 +1182,6 @@ function Dashboard({
           </div>
         )}
 
-        {recentTransactions.length > 0 && walletBalances.length > 0 && !shouldShowHero && !shouldShowMetrics && !hasVisibleSections && (
-          <div className="empty-state">
-            <div className="empty-state-icon"><WalletIcon size={56} /></div>
-            <div className="empty-state-title">Dashboard is fully hidden</div>
-            <div className="empty-state-description">
-              Open Settings and turn a section back on to rebuild your home view.
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

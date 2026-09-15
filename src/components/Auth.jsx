@@ -12,13 +12,19 @@ function Auth({ initialMode = 'login' }) {
   }, [initialMode])
 
   useEffect(() => {
-    // Set dark theme for auth pages
     const previousTheme = document.body.dataset.theme
-    document.body.dataset.theme = 'dark'
-    document.documentElement.style.colorScheme = 'dark'
+    const appearance = window.matchMedia('(prefers-color-scheme: dark)')
+    const applySystemAppearance = () => {
+      const theme = appearance.matches ? 'dark' : 'light'
+      document.body.dataset.theme = theme
+      document.documentElement.style.colorScheme = theme
+    }
+
+    applySystemAppearance()
+    appearance.addEventListener('change', applySystemAppearance)
 
     return () => {
-      // Restore previous theme on unmount
+      appearance.removeEventListener('change', applySystemAppearance)
       if (previousTheme) {
         document.body.dataset.theme = previousTheme
         document.documentElement.style.colorScheme = previousTheme

@@ -340,23 +340,23 @@ export default function DataTable({
 
             return (
               <section key={id} className={`table-mobile-item${isExpanded ? ' is-expanded' : ''}`} role="listitem">
-                <button
-                  type="button"
-                  className="table-mobile-summary"
-                  onClick={() => toggleExpandedRow(id)}
-                  aria-expanded={isExpanded}
-                >
-                  <div className="table-mobile-summary-main">
-                    {selectable && (
-                      <span className="table-mobile-select" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(id)}
-                          onChange={() => toggleSelect(id)}
-                          aria-label={`Select row ${i + 1}`}
-                        />
-                      </span>
-                    )}
+                <div className="table-mobile-summary">
+                  {selectable && (
+                    <label className="table-mobile-select">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(id)}
+                        onChange={() => toggleSelect(id)}
+                        aria-label={`Select row ${i + 1}`}
+                      />
+                    </label>
+                  )}
+                  <button
+                    type="button"
+                    className="table-mobile-summary-button"
+                    onClick={() => toggleExpandedRow(id)}
+                    aria-expanded={isExpanded}
+                  >
                     <div className="table-mobile-summary-copy">
                       <div className="table-mobile-summary-label">{primarySummaryColumn?.header || 'Entry'}</div>
                       <div className="table-mobile-summary-value">{primaryContent}</div>
@@ -367,9 +367,9 @@ export default function DataTable({
                         </div>
                       )}
                     </div>
-                  </div>
-                  <span className="table-mobile-summary-toggle">{isExpanded ? 'Hide' : 'Details'}</span>
-                </button>
+                    <span className="table-mobile-summary-toggle">{isExpanded ? 'Hide' : 'Details'}</span>
+                  </button>
+                </div>
 
                 {isExpanded && (
                   <div className="table-mobile-details">
