@@ -52,3 +52,4 @@ android/app/google-services.json
 # Native build outputs
 *.apk
 *.aab
+.vercel
