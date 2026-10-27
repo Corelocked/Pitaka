@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 
 function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCancelEdit }) {
@@ -16,22 +15,25 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
     }
   }, [editingCategory])
 
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (name.trim()) {
-      try {
-        if (editingCategory) {
-          await onUpdateCategory({ ...editingCategory, name: name.trim(), description: description.trim() })
-        } else {
-          await onAddCategory({ name: name.trim(), description: description.trim() })
-          setName('')
-          setDescription('')
-        }
+    if (saving) return
+    if (!name.trim()) return
+    setSaving(true)
+    setError('')
+    try {
+      if (editingCategory) {
+        await onUpdateCategory({ ...editingCategory, name: name.trim(), description: description.trim() })
+      } else {
+        await onAddCategory({ name: name.trim(), description: description.trim() })
+        setName('')
+        setDescription('')
+      }
     } catch (err) {
-      console.error('CategoryForm submit error:', err)
-      try { alert(err?.message || 'Failed to save category') } catch { /* ignore */ }
-    }
-  }
+      setError(err.message || 'Could not save category. Please try again.')
+    } finally { setSaving(false) }
   }
 
   const handleCancel = () => {
@@ -42,6 +44,7 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-group">
         <label htmlFor="category-name">Category Name</label>
         <input
@@ -64,7 +67,7 @@ function CategoryForm({ onAddCategory, editingCategory, onUpdateCategory, onCanc
         />
       </div>
       <div className="form-buttons">
-        <button type="submit">{editingCategory ? 'Update' : 'Add'} Category</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : editingCategory ? 'Save category' : 'Add category'}</button>
         {editingCategory && <button type="button" onClick={handleCancel}>Cancel</button>}
       </div>
     </form>

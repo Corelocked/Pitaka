@@ -67,70 +67,70 @@
 
 .wallet-color-option-swatch--auto-cash,
 .wallet-color-preview--auto-cash {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: #325e49;
 }
 
 .wallet-color-option-swatch--auto-ewallet,
 .wallet-color-preview--auto-ewallet {
-  background: linear-gradient(135deg, #34d399 0%, #14b8a6 100%);
+  background: #0b6673;
 }
 
 .wallet-color-option-swatch--auto-bank,
 .wallet-color-preview--auto-bank {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #365f84;
 }
 
 .wallet-color-option-swatch--auto-credit,
 .wallet-color-preview--auto-credit {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: #79516c;
 }
 
 .wallet-color-option-swatch--auto-investment,
 .wallet-color-preview--auto-investment {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: #665f91;
 }
 
 .wallet-color-option-swatch--auto-savings,
 .wallet-color-preview--auto-savings {
-  background: linear-gradient(135deg, #0ea5a4 0%, #2dd4bf 100%);
+  background: #416f68;
 }
 
 .wallet-color-option-swatch--auto-other,
 .wallet-color-preview--auto-other {
-  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  background: #526579;
 }
 
 .wallet-color-option-swatch--moss,
 .wallet-color-preview--moss {
-  background: linear-gradient(135deg, #4d7b57 0%, #7ca38a 100%);
+  background: #456a4b;
 }
 
 .wallet-color-option-swatch--sea,
 .wallet-color-preview--sea {
-  background: linear-gradient(135deg, #3d7b78 0%, #69a7a0 100%);
+  background: #356b68;
 }
 
 .wallet-color-option-swatch--sky,
 .wallet-color-preview--sky {
-  background: linear-gradient(135deg, #537a99 0%, #7ea3bf 100%);
+  background: #406681;
 }
 
 .wallet-color-option-swatch--plum,
 .wallet-color-preview--plum {
-  background: linear-gradient(135deg, #6d5a88 0%, #9680af 100%);
+  background: #665278;
 }
 
 .wallet-color-option-swatch--amber,
 .wallet-color-preview--amber {
-  background: linear-gradient(135deg, #8d6b3d 0%, #b28c59 100%);
+  background: #7c5b32;
 }
 
 .wallet-color-option-swatch--rose,
 .wallet-color-preview--rose {
-  background: linear-gradient(135deg, #8b5a67 0%, #b07c89 100%);
+  background: #7a4d5c;
 }
 
 .wallet-color-option-swatch--slate,
 .wallet-color-preview--slate {
-  background: linear-gradient(135deg, #586472 0%, #8391a0 100%);
+  background: #4e5c6b;
 }

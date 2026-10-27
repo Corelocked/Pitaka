@@ -1,6 +1,7 @@
 import express from 'express'
 import { getPaymentsConfig } from './config.js'
 import { handleCheckoutSessionRequest, handlePaymongoWebhookRequest } from './handlers.js'
+import accountDeletionHandler from '../../api/account/delete.js'
 
 const app = express()
 const config = getPaymentsConfig()
@@ -23,6 +24,8 @@ app.get('/health', (_req, res) => {
     amount: config.priceAmount
   })
 })
+
+app.all('/account/delete', accountDeletionHandler)
 
 app.post('/billing/paymongo/checkout-session', async (req, res) => {
   try {

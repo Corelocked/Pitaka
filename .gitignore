@@ -53,3 +53,7 @@ android/app/google-services.json
 *.apk
 *.aab
 .vercel
+.audit-local.json
+playwright-report/
+test-results/
+.cache/

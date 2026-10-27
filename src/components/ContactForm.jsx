@@ -65,7 +65,7 @@ export default function ContactForm() {
     if (!isEmailJsConfigured()) {
       setSubmitState({
         type: 'error',
-        message: 'This contact form is not configured yet. Add the EmailJS environment variables before using it.'
+        message: 'Messaging is temporarily unavailable. Please try again later.'
       })
       return
     }
@@ -218,7 +218,7 @@ export default function ContactForm() {
         </button>
         {!isConfigured && (
           <p className="landing-contact-note">
-            Configure `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID`, and `VITE_EMAILJS_PUBLIC_KEY` to enable submissions.
+            Messaging is temporarily unavailable. Please try again later.
           </p>
         )}
       </div>

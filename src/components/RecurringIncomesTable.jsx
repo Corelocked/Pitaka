@@ -43,7 +43,7 @@ export default function RecurringIncomesTable({
   onBulkDelete
 }) {
   const confirm = useConfirm()
-  const walletNameById = (walletId) => wallets.find((wallet) => wallet.id === walletId)?.name || 'No wallet'
+  const walletNameById = (walletId) => wallets.find((wallet) => wallet.id === walletId)?.name || 'No account'
   const currencyFor = (row) => {
     const wallet = wallets.find((entry) => entry.id === row.walletId)
     return row.currency || getWalletCurrency(wallet) || DEFAULT_CURRENCY
@@ -59,8 +59,8 @@ export default function RecurringIncomesTable({
       sortable: true,
       sortValue: (row) => row.source
     },
-    { key: 'walletId', header: 'Wallet', className: 'col-wallet', width: '160px', render: (row) => walletNameById(row.walletId), sortable: true, sortValue: (row) => walletNameById(row.walletId) },
-    { key: 'amount', header: 'Amount', className: 'amount', width: '120px', render: (row) => formatCurrency(row.amount || 0, currencyFor(row)), sortable: true, sortValue: (row) => Number(row.amount || 0) },
+    { key: 'walletId', header: 'Account', className: 'col-wallet', width: '160px', render: (row) => walletNameById(row.walletId), sortable: true, sortValue: (row) => walletNameById(row.walletId) },
+    { key: 'amount', header: 'Amount', className: 'amount', width: '120px', render: (row) => formatCurrency(row.amount || 0, currencyFor(row)), sortable: true, sortValue: (row) => Number(row.amount || 0), mobileSummary: true },
     { key: 'startDate', header: 'First Payout', className: 'col-date', width: '140px', render: (row) => row.startDate, sortable: true },
     { key: 'interval', header: 'Interval', className: 'col-interval', width: '140px', render: (row) => formatInterval(row), sortable: true, sortValue: (row) => formatInterval(row) },
     { key: 'nextDueDate', header: 'Next Run', className: 'col-date', width: '140px', render: (row) => row.nextDueDate || 'Pending', sortable: true },

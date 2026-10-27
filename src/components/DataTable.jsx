@@ -70,6 +70,7 @@ export default function DataTable({
   const [pendingDeleteRows, setPendingDeleteRows] = useState([])
   const [toastOpen, setToastOpen] = useState(false)
   const [lastDeletedRows, setLastDeletedRows] = useState([])
+  const [mutationError, setMutationError] = useState('')
 
   // Sorting
   const [sortBy, setSortBy] = useState(null)
@@ -225,11 +226,14 @@ export default function DataTable({
 
   const confirmDelete = async () => {
     setConfirmOpen(false)
+    setMutationError('')
     if (onBulkDelete) {
       try {
         await onBulkDelete(pendingDeleteRows)
       } catch (err) {
         console.error('Bulk delete failed', err)
+        setMutationError(err.message || 'Some records could not be deleted. Review your selection and try again.')
+        return
       }
     } else {
       console.warn('No onBulkDelete handler provided for selected rows', pendingDeleteRows)
@@ -258,6 +262,7 @@ export default function DataTable({
   }
 
   const handleRowKeyDown = (e, row, id = rowKey(row)) => {
+    if (e.target !== e.currentTarget) return
     if (e.key === 'Enter') {
       toggleSelect(id)
     } else if (e.key === 'e' || e.key === 'E') {
@@ -275,7 +280,7 @@ export default function DataTable({
     [localCols]
   )
   const primarySummaryColumn = dataColumns[0] || localCols[0]
-  const secondarySummaryColumn = dataColumns[1] || null
+  const secondarySummaryColumn = dataColumns.find((col) => col.mobileSummary) || dataColumns[1] || null
 
   const getCellContent = useCallback((row, col, rowId) => {
     if (!col) return null
@@ -308,6 +313,7 @@ export default function DataTable({
 
   return (
     <div ref={wrapperRef} className={`table-wrapper${isCompactMobile ? ' table-wrapper--compact-mobile' : ''}`}>
+      {mutationError && <p className="form-error" role="alert">{mutationError}</p>}
       <div className="table-search-bar">
         <input
           type="search"
@@ -316,7 +322,6 @@ export default function DataTable({
           placeholder={searchPlaceholder}
           aria-label="Search table"
         />
-        <span>{filteredData.length} / {data.length}</span>
       </div>
 
       {selectable && selected.size > 0 && (
@@ -412,12 +417,13 @@ export default function DataTable({
                   onDragStart={onDragStart(i)}
                   onDragOver={onDragOver(i)}
                   onDrop={onDrop(i)}
+                  aria-sort={col.sortable ? (sortBy === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}
               >
                 <div className="th-content">
-                  <button type="button" onClick={() => col.sortable && toggleSort(col.key)} className="th-btn" aria-sort={sortBy === col.key ? sortDir : 'none'}>
+                  {col.sortable ? <button type="button" onClick={() => toggleSort(col.key)} className="th-btn" aria-label={`Sort by ${col.header}`}>
                     <span>{col.header}</span>
                     {col.sortable && <span className={`sort-icon ${sortBy === col.key ? sortDir : ''}`}></span>}
-                  </button>
+                  </button> : <span className="th-btn">{col.header}</span>}
                   <div className="col-resizer" onMouseDown={(e) => startResize(col.key, e)} />
                 </div>
               </th>
@@ -447,15 +453,15 @@ export default function DataTable({
       )}
 
       <div className="table-footer">
-        <div className="pager">
-          <button type="button" className="btn" onClick={() => setPage(0)} disabled={page === 0}>«</button>
-          <button type="button" className="btn" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+        {pageCount > 1 ? <div className="pager">
+          <button type="button" className="btn" aria-label="First page" onClick={() => setPage(0)} disabled={page === 0}>«</button>
+          <button type="button" className="btn" aria-label="Previous page" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
           <div className="page-info">Page {page + 1} / {pageCount}</div>
-          <button type="button" className="btn" onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>›</button>
-          <button type="button" className="btn" onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
-        </div>
+          <button type="button" className="btn" aria-label="Next page" onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>›</button>
+          <button type="button" className="btn" aria-label="Last page" onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
+        </div> : <span className="table-result-count">{filteredData.length} record{filteredData.length === 1 ? '' : 's'}</span>}
         <div className="page-size">
-          <select value={pageSize} onChange={(e) => setPageSize(parseInt(e.target.value, 10))}>
+          <select aria-label="Rows per page" value={pageSize} onChange={(e) => setPageSize(parseInt(e.target.value, 10))}>
             {pageSizeOptions.map(s => <option key={s} value={s}>{s} / page</option>)}
           </select>
         </div>
@@ -474,8 +480,8 @@ export default function DataTable({
       <Toast
         open={toastOpen}
         message={`${lastDeletedRows.length} item(s) deleted`}
-        actionText="Undo"
-        onAction={undoDelete}
+        actionText={onUndoBulkDelete ? 'Undo' : undefined}
+        onAction={onUndoBulkDelete ? undoDelete : undefined}
         onClose={() => setToastOpen(false)}
       />
 

@@ -1,41 +1,27 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useId, useRef } from 'react'
+import { useDialogFocus } from '../hooks/useDialogFocus'
+import { createPortal } from 'react-dom'
 import './Modal.css'
 
 export default function Modal({ open, title, description, children, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) {
   const modalRef = useRef(null)
-  const previousFocusRef = useRef(null)
-
-  useEffect(() => {
-    if (!open) return undefined
-
-    previousFocusRef.current = document.activeElement
-    modalRef.current?.focus()
-
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape' && typeof onCancel === 'function') onCancel()
-    }
-
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      previousFocusRef.current?.focus?.()
-    }
-  }, [onCancel, open])
+  const titleId = useId()
+  useDialogFocus(modalRef, open, onCancel)
 
   if (!open) return null
-  return (
+  return createPortal(
     <div className="modal-backdrop" role="presentation" onClick={onCancel}>
       <div
         className="modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
         tabIndex={-1}
         ref={modalRef}
         onClick={e => e.stopPropagation()}
         onMouseDown={e => e.stopPropagation()}
       >
-        <h3 id="modal-title">{title}</h3>
+        <h3 id={titleId}>{title}</h3>
         <div className="modal-body">{children ?? description}</div>
         {/* Only show default actions when explicit onConfirm/onCancel are provided and no children form handles actions itself */}
         {(!children || (children && typeof onConfirm === 'function')) && (
@@ -57,6 +43,6 @@ export default function Modal({ open, title, description, children, onConfirm, o
           </div>
         )}
       </div>
-    </div>
+    </div>, document.body
   )
 }

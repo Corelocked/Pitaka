@@ -57,7 +57,7 @@ firestore.indexes.json        Firestore composite indexes
 
 ### Prerequisites
 
-- Node.js 20 or newer is recommended.
+- Node.js 22 or newer is required (see `package.json`).
 - An npm-compatible environment.
 - A Firebase project with Firestore and Authentication enabled.
 
@@ -123,6 +123,9 @@ npm run preview
 npm run lint
 npm run webhooks:dev
 npm run webhooks:test
+npm run verify
+npm run test:ui
+npm run test:rules
 ```
 
 ## Frontend architecture
@@ -158,16 +161,17 @@ Each document is scoped by `userId`, and the checked-in Firestore rules enforce 
 
 ### Current UI surface
 
-The main navigation currently exposes these views:
+The primary navigation is shared between the desktop sidebar and mobile bottom bar:
 
-- Dashboard
-- Transactions
-- Accounts
-- Categories
-- Investments
-- Settings and import/export tools
+- **Home**: current account balances, the selected month's activity, spending, and savings.
+- **Activity**: one searchable timeline for income, expenses, and transfers, with account/type filters and expandable editing controls.
+- **Accounts**: cash, bank accounts, e-wallets, cards, and balance management.
+- **Plan**: budgets and categories, savings goals, recurring bills, recurring income, and investments.
+- **More**: account controls, import/export, backups, privacy, support, and optional display preferences.
 
-There are additional components and data services in the repo for savings and lendings, but they are not part of the main `ModernApp.jsx` navigation at the moment.
+`src/components/AppNavigation.jsx` and `src/utils/navigation.js` keep active destinations consistent. `Dashboard.jsx`, `TransactionFeed.jsx`, and `PlanHub.jsx` own the principal screens. `FinanceWorkspace.css` owns their styles; the older sheets still supply shared forms, tables, and secondary screens.
+
+Account deletion is available in More and at `/delete-account`. It reauthenticates the user, calls `POST /api/account/delete`, locks new finance writes, removes owned records, and then removes the sign-in. Deploy the endpoint and the updated Firestore rules together. See [the app review](docs/APP_REVIEW.md) and [the Play Store release checklist](docs/PLAY_STORE_RELEASE.md) for verification and remaining release work.
 
 ## Firebase setup
 
@@ -199,7 +203,9 @@ The current auth provider supports:
 
 - Email/password login
 - Email/password signup
-- Google sign-in popup
+- Google sign-in popup on the web and the existing native Google sign-in plugin on Android
+- Password reset by email
+- Reauthentication before account deletion
 
 Authentication state is managed in `src/contexts/FirebaseContext.jsx`.
 
@@ -298,7 +304,8 @@ This assumes the Firebase CLI is installed and authenticated in your environment
 - The frontend Firebase config is currently hardcoded in `src/firebase.js`.
 - The webhook docs mention local environment setup, but provider verification for real production traffic should still be reviewed carefully before relying on it.
 - GCash support is scaffolded and depends on the exact partner-approved webhook requirements.
-- Some legacy or partially wired components remain in the repo alongside the current `ModernApp.jsx` flow.
+- Native Pro purchases are unavailable in this build; web checkout remains available on the web.
+- Release backend deployment, signed builds, device testing, and store declarations are tracked in `docs/PLAY_STORE_RELEASE.md`.
 
 ## Useful files to read next
 

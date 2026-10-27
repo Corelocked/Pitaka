@@ -5,6 +5,7 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPasswords, setShowPasswords] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState(null)
 
@@ -68,17 +69,19 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
 
         <div className="auth-card">
           <div className="auth-header">
-            <h1>Create Account</h1>
-            <p>Start with your email and password, then move into Pitaka with a workspace ready for real monthly use.</p>
+            <div className="auth-app-mark"><img src="/pitaka-logo.png" alt="" /> Pitaka</div>
+            <h1>Create your account</h1>
+            <p>A clearer view of your money starts here.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {(formError || error) && <div className="auth-error">{formError || error}</div>}
+            {(formError || error) && <div className="auth-error" role="alert">{formError || error}</div>}
 
             <div className="auth-group">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
+                autoComplete="email"
                 className="auth-input"
                 type="email"
                 placeholder="you@example.com"
@@ -90,11 +93,12 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
             </div>
 
             <div className="auth-group">
-              <label htmlFor="password">Password</label>
+              <div className="auth-label-row"><label htmlFor="password">Password</label><button type="button" className="auth-password-toggle" aria-pressed={showPasswords} onClick={() => setShowPasswords(!showPasswords)}>{showPasswords ? 'Hide passwords' : 'Show passwords'}</button></div>
               <input
                 id="password"
+                autoComplete="new-password"
                 className="auth-input"
-                type="password"
+                type={showPasswords ? 'text' : 'password'}
                 placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -109,26 +113,30 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
               <input
                 id="confirmPassword"
                 className={`auth-input ${!passwordsMatch && confirmPassword ? 'error' : ''}`}
-                type="password"
+                type={showPasswords ? 'text' : 'password'}
+                autoComplete="new-password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                aria-invalid={Boolean(confirmPassword && !passwordsMatch)}
+                aria-describedby={confirmPassword && !passwordsMatch ? 'password-match-error' : undefined}
               />
               {!passwordsMatch && confirmPassword && (
-                <span className="password-error">Passwords do not match</span>
+                <span className="password-error" id="password-match-error">Passwords do not match</span>
               )}
             </div>
 
             <button type="submit" className="auth-button" disabled={loading || !passwordsMatch}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating account…' : 'Create account'}
             </button>
           </form>
 
           <div className="auth-switch">
             <p>Already have an account? <button onClick={onSwitchToLogin} className="auth-link">Sign in</button></p>
           </div>
+          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
         </div>
       </div>
     </div>

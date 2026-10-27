@@ -1,21 +1,41 @@
 import { useConfirm } from '../contexts/useConfirm'
-import { ActivityIcon, ChartIcon, EditIcon, TrendUpIcon, TrashIcon, WalletIcon } from './Icons'
-import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, getCurrencyCode, summarizeByCurrency } from '../utils/currency'
+import { useState } from 'react'
+import {
+  ActivityIcon,
+  ChartIcon,
+  EditIcon,
+  TrendUpIcon,
+  TrashIcon,
+  WalletIcon
+} from './Icons'
+import {
+  DEFAULT_CURRENCY,
+  formatCurrency,
+  formatCurrencySummary,
+  getCurrencyCode,
+  summarizeByCurrency
+} from '../utils/currency'
 import './Table.css'
 
 function InvestmentsTable({ investments, onEdit, onDelete }) {
   const confirm = useConfirm()
+  const [error, setError] = useState('')
 
   const handleDelete = async (investment) => {
     const ok = await confirm({
-      title: 'Delete Investment',
+      title: 'Delete investment',
       description: `Are you sure you want to delete "${investment.name}"? This action cannot be undone.`,
       confirmText: 'Delete',
       cancelText: 'Cancel'
     })
 
     if (ok) {
-      onDelete(investment.id)
+      setError('')
+      try {
+        await onDelete(investment.id)
+      } catch (err) {
+        setError(err.message || 'Could not delete this investment.')
+      }
     }
   }
 
@@ -49,21 +69,28 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
   }
 
   const calculateMetrics = (investment) => {
-    const cost = parseFloat(investment.quantity || 0) * parseFloat(investment.purchasePrice || 0)
-    const current = parseFloat(investment.quantity || 0) * Number(investment.currentValue ?? investment.purchasePrice ?? 0)
+    const cost =
+      parseFloat(investment.quantity || 0) *
+      parseFloat(investment.purchasePrice || 0)
+    const current =
+      parseFloat(investment.quantity || 0) *
+      Number(investment.currentValue ?? investment.purchasePrice ?? 0)
     const gainLoss = current - cost
-    const gainLossPercent = cost > 0 ? ((gainLoss / cost) * 100) : 0
+    const gainLossPercent = cost > 0 ? (gainLoss / cost) * 100 : 0
 
     return { cost, current, gainLoss, gainLossPercent }
   }
 
-  const getInvestmentCurrency = (investment) => investment.currency || DEFAULT_CURRENCY
+  const getInvestmentCurrency = (investment) =>
+    investment.currency || DEFAULT_CURRENCY
 
   if (!investments || investments.length === 0) {
     return (
       <div className="table-container">
         <div className="empty-state">
-          <div className="empty-state-icon"><TrendUpIcon size={56} /></div>
+          <div className="empty-state-icon">
+            <TrendUpIcon size={56} />
+          </div>
           <div className="empty-state-title">No investments yet</div>
           <div className="empty-state-description">
             Start tracking your stocks, bonds, and other investments
@@ -94,122 +121,96 @@ function InvestmentsTable({ investments, onEdit, onDelete }) {
 
   return (
     <div className="table-container">
-      {/* Portfolio Summary */}
-      <div style={{
-        background: 'var(--gradient-primary)',
-        borderRadius: '16px',
-        padding: '20px',
-        color: 'white',
-        marginBottom: '20px'
-      }}>
-        <h4 style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '8px', fontWeight: 500 }}>
-          Total Portfolio Value
-        </h4>
-        <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '12px' }}>
-          {formatCurrencySummary(totalValueSummary)}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="workspace-summary-stats portfolio-totals">
+        <div className="workspace-stat">
+          <span>Portfolio value</span>
+          <strong>{formatCurrencySummary(totalValueSummary)}</strong>
         </div>
-        <div style={{ display: 'flex', gap: '20px', fontSize: '0.875rem' }}>
-          <div>
-            <div style={{ opacity: 0.8 }}>Cost Basis</div>
-            <div style={{ fontWeight: 600, marginTop: '4px' }}>{formatCurrencySummary(totalCostSummary)}</div>
-          </div>
-          <div>
-            <div style={{ opacity: 0.8 }}>Gain/Loss</div>
-            <div style={{ fontWeight: 700, marginTop: '4px' }}>
-              {totalGainLossSummary.map(({ currency, total }) => (
-                <div key={currency}>
-                  {total >= 0 ? '+' : ''}{formatCurrency(total, currency)}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="workspace-stat">
+          <span>Cost basis</span>
+          <strong>{formatCurrencySummary(totalCostSummary)}</strong>
+        </div>
+        <div className="workspace-stat">
+          <span>Gain / loss</span>
+          <strong>
+            {totalGainLossSummary.map(({ currency, total }) => (
+              <span
+                className={total >= 0 ? 'amount-income' : 'amount-loss'}
+                key={currency}
+              >
+                {total >= 0 ? '+' : ''}
+                {formatCurrency(total, currency)}
+              </span>
+            ))}
+          </strong>
         </div>
       </div>
-
-      {/* Investments List */}
-      <div className="transaction-list">
+      <div className="investment-list">
         {investments.map((investment) => {
           const metrics = calculateMetrics(investment)
           const currency = getInvestmentCurrency(investment)
-
           return (
-            <div key={investment.id} className="transaction-item" style={{ cursor: 'pointer' }}>
-              <div className="transaction-icon" style={{
-                background: 'var(--gradient-primary)'
-              }}>
+            <article className="investment-row" key={investment.id}>
+              <span className="investment-icon">
                 {getInvestmentIcon(investment.investmentType)}
-              </div>
-              <div className="transaction-details" style={{ flex: 1 }}>
-                <div className="transaction-title">
-                  {investment.name}
+              </span>
+              <div className="investment-copy">
+                <div className="investment-title">
+                  <strong>{investment.name}</strong>
                   {investment.ticker && (
-                    <span style={{
-                      marginLeft: '8px',
-                      padding: '2px 8px',
-                      background: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      color: 'var(--text-secondary)'
-                    }}>
+                    <span className="investment-ticker">
                       {investment.ticker}
                     </span>
                   )}
                 </div>
-                <div className="transaction-subtitle">
-                  {getInvestmentTypeLabel(investment.investmentType)} • {investment.quantity} units @ {formatCurrency(Number(investment.currentValue ?? investment.purchasePrice ?? 0), currency)} {getCurrencyCode(currency)}
-                </div>
-                <div style={{ marginTop: '8px', fontSize: '0.875rem' }}>
-                  <span style={{ color: metrics.gainLoss >= 0 ? 'var(--success-color)' : 'var(--danger-color)', fontWeight: 600 }}>
-                    {metrics.gainLoss >= 0 ? '+' : ''}{formatCurrency(metrics.gainLoss, currency)} ({metrics.gainLossPercent.toFixed(2)}%)
-                  </span>
-                </div>
+                <p>
+                  {getInvestmentTypeLabel(investment.investmentType)} ·{' '}
+                  {investment.quantity} units @{' '}
+                  {formatCurrency(
+                    Number(
+                      investment.currentValue ?? investment.purchasePrice ?? 0
+                    ),
+                    currency
+                  )}{' '}
+                  {getCurrencyCode(currency)}
+                </p>
+                <span
+                  className={
+                    metrics.gainLoss >= 0 ? 'amount-income' : 'amount-loss'
+                  }
+                >
+                  {metrics.gainLoss >= 0 ? '+' : ''}
+                  {formatCurrency(metrics.gainLoss, currency)} (
+                  {metrics.gainLossPercent.toFixed(2)}%)
+                </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {formatCurrency(metrics.current, currency)}
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onEdit(investment)
-                    }}
-                    className="icon-btn"
-                    style={{
-                      background: 'rgba(31, 106, 57, 0.14)',
-                      color: 'var(--success-color)',
-                      border: '1px solid rgba(31, 106, 57, 0.18)',
-                      width: '36px',
-                      height: '36px',
-                      fontSize: '16px'
-                    }}
-                    title="Edit investment"
-                  >
-                    <EditIcon size={16} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDelete(investment)
-                    }}
-                    className="icon-btn"
-                    style={{
-                      background: 'rgba(215, 131, 120, 0.12)',
-                      color: 'var(--danger-color)',
-                      border: '1px solid rgba(215, 131, 120, 0.16)',
-                      width: '36px',
-                      height: '36px',
-                      fontSize: '16px'
-                    }}
-                    title="Delete investment"
-                  >
-                    <TrashIcon size={16} />
-                  </button>
-                </div>
+              <strong className="investment-value">
+                {formatCurrency(metrics.current, currency)}
+              </strong>
+              <div className="investment-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => onEdit(investment)}
+                  aria-label={`Edit ${investment.name}`}
+                >
+                  <EditIcon size={18} /> Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn danger"
+                  onClick={() => handleDelete(investment)}
+                  aria-label={`Delete ${investment.name}`}
+                >
+                  <TrashIcon size={18} /> Delete
+                </button>
               </div>
-            </div>
+            </article>
           )
         })}
       </div>

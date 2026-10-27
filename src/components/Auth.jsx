@@ -5,7 +5,7 @@ import Signup from './Signup'
 
 function Auth({ initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(() => initialMode !== 'signup')
-  const { login, signup, googleSignIn, error } = useContext(FirebaseContext)
+  const { login, signup, googleSignIn, resetPassword, error } = useContext(FirebaseContext)
 
   useEffect(() => {
     setIsLogin(initialMode !== 'signup')
@@ -51,6 +51,7 @@ function Auth({ initialMode = 'login' }) {
     return (
       <Login
         onLogin={handleLogin}
+        onResetPassword={resetPassword}
         onGoogleSignIn={handleGoogleSignIn}
         onSwitchToSignup={switchToSignup}
         error={error}

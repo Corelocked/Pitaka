@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import { TrendUpIcon } from './Icons'
 import { DEFAULT_CURRENCY, formatCurrency, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
@@ -45,8 +44,10 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
     }
   }, [editingInvestment])
 
+  const [saving, setSaving] = useState(false)
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
     setError('')
 
     if (!name.trim()) {
@@ -64,6 +65,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
       return
     }
 
+    setSaving(true)
+    setError('')
     try {
       const investmentData = {
         name: name.trim(),
@@ -95,7 +98,7 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
     } catch (err) {
       console.error('Investment form error:', err)
       setError(err.message || 'Failed to save investment')
-    }
+    } finally { setSaving(false) }
   }
 
   const investmentTypes = [
@@ -117,24 +120,13 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
 
   return (
     <div className="form-container">
-      <h3 className="card-title"><TrendUpIcon size={18} /> {editingInvestment ? 'Edit Investment' : 'Add Investment'}</h3>
+      <h3 className="card-title"><TrendUpIcon size={18} /> {editingInvestment ? 'Edit investment' : 'Add investment'}</h3>
       <form onSubmit={handleSubmit} className="form">
-        {error && (
-          <div style={{
-            padding: '12px',
-            background: '#fecaca',
-            color: '#991b1b',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            fontSize: '14px'
-          }}>
-            {error}
-          </div>
-        )}
+        {error && <p className="form-error" role="alert">{error}</p>}
 
         <div className="form-group">
-          <label className="form-label">Investment Name</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-1">Investment Name</label>
+          <input id="investment-field-1"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -145,8 +137,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Investment Type</label>
-          <select
+          <label className="form-label" htmlFor="investment-field-2">Investment Type</label>
+          <select id="investment-field-2"
             value={investmentType}
             onChange={(e) => setInvestmentType(e.target.value)}
             className="form-input"
@@ -161,8 +153,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Currency</label>
-          <select
+          <label className="form-label" htmlFor="investment-field-3">Currency</label>
+          <select id="investment-field-3"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
             className="form-input"
@@ -182,8 +174,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Ticker/Symbol (Optional)</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-4">Ticker/Symbol (Optional)</label>
+          <input id="investment-field-4"
             type="text"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
@@ -194,8 +186,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Quantity/Shares</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-5">Quantity/Shares</label>
+          <input id="investment-field-5"
             type="number"
             step="0.00000001"
             value={quantity}
@@ -207,8 +199,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Purchase Price ({currency} per unit)</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-6">Purchase Price ({currency} per unit)</label>
+          <input id="investment-field-6"
             type="number"
             step="0.01"
             value={purchasePrice}
@@ -220,8 +212,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Current Value ({currency} per unit)</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-7">Current Value ({currency} per unit)</label>
+          <input id="investment-field-7"
             type="number"
             step="0.01"
             value={currentValue}
@@ -235,8 +227,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Purchase Date</label>
-          <input
+          <label className="form-label" htmlFor="investment-field-8">Purchase Date</label>
+          <input id="investment-field-8"
             type="date"
             value={purchaseDate}
             onChange={(e) => setPurchaseDate(e.target.value)}
@@ -246,8 +238,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
         </div>
 
         <div className="form-group">
-          <label className="form-label">Notes (Optional)</label>
-          <textarea
+          <label className="form-label" htmlFor="investment-field-9">Notes (Optional)</label>
+          <textarea id="investment-field-9"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="form-input"
@@ -299,8 +291,8 @@ function InvestmentForm({ onAddInvestment, editingInvestment, onUpdateInvestment
               Cancel
             </button>
           )}
-          <button type="submit" className="btn-submit" style={{ flex: 1 }}>
-            {editingInvestment ? 'Update Investment' : 'Add Investment'}
+          <button type="submit" disabled={saving} className="btn-submit" style={{ flex: 1 }}>
+            {editingInvestment ? 'Save investment' : 'Add investment'}
           </button>
         </div>
       </form>

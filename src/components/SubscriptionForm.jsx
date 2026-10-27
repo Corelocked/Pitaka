@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
@@ -51,8 +50,11 @@ export default function SubscriptionForm({
 
   const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingSubscription?.currency || DEFAULT_CURRENCY)
 
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (saving) return
 
     if (!name.trim() || !walletId || !amount || !startDate) {
       return
@@ -70,6 +72,8 @@ export default function SubscriptionForm({
       isActive: true
     }
 
+    setSaving(true)
+    setError('')
     try {
       if (editingSubscription) {
         await onUpdateSubscription({ ...editingSubscription, ...payload })
@@ -78,12 +82,13 @@ export default function SubscriptionForm({
       }
     } catch (err) {
       console.error('SubscriptionForm submit error:', err)
-      try { alert(err?.message || 'Failed to save subscription') } catch { /* ignore */ }
-    }
+      setError(err.message || 'Could not save subscription. Please try again.')
+    } finally { setSaving(false) }
   }
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-group">
         <label htmlFor="subscription-name">Subscription Name</label>
         <input
@@ -97,14 +102,14 @@ export default function SubscriptionForm({
       </div>
 
       <div className="form-group">
-        <label htmlFor="subscription-wallet">Wallet</label>
+        <label htmlFor="subscription-wallet">Account</label>
         <select
           id="subscription-wallet"
           value={walletId}
           onChange={(event) => setWalletId(event.target.value)}
           required
         >
-          <option value="">Select a wallet</option>
+          <option value="">Select an account</option>
           {wallets.map((wallet) => {
             const balance = wallet.balance ?? wallet.startingBalance
             return (
@@ -171,12 +176,12 @@ export default function SubscriptionForm({
       )}
 
       <div className="form-group">
-        <label>Category</label>
-        <input type="text" value="Subscription" disabled readOnly />
+        <label htmlFor="subscription-category-fixed">Category</label>
+        <input id="subscription-category-fixed" type="text" value="Subscription" disabled readOnly />
       </div>
 
       <div className="form-buttons">
-        <button type="submit">{editingSubscription ? 'Update' : 'Add'} Subscription</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : editingSubscription ? 'Save subscription' : 'Add subscription'}</button>
         {editingSubscription && <button type="button" onClick={onCancelEdit}>Cancel</button>}
       </div>
     </form>

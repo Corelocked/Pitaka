@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
@@ -10,6 +9,7 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
   const [date, setDate] = useState(getLocalDateInputValue())
   const [walletId, setWalletId] = useState('')
   const [message, setMessage] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const selectedWallet = wallets.find((wallet) => wallet.id === walletId)
   const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingIncome?.currency || DEFAULT_CURRENCY)
@@ -23,30 +23,31 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
     }
   }, [editingIncome])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!source || !amount) {
-      setMessage('Please fill in all required fields')
-      setTimeout(() => setMessage(''), 3000)
+    if (saving) return
+    if (!source.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || !date) {
+      setMessage('Enter a source, a date, and an amount greater than zero.')
       return
     }
-
+    setSaving(true)
+    setMessage('')
     try {
       if (editingIncome) {
-        onUpdateIncome({ ...editingIncome, source, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
+        await onUpdateIncome({ ...editingIncome, source: source.trim(), amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
         setMessage('Income updated successfully!')
       } else {
-        onAddIncome({ source, amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
+        await onAddIncome({ source: source.trim(), amount: parseFloat(amount), date, walletId: walletId || null, currency: activeCurrency })
         setMessage('Income added successfully!')
         setSource('')
         setAmount('')
         setWalletId('')
       }
-      setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       console.error('Error submitting form:', err)
       setMessage('Error: ' + (err?.message || 'Failed'))
-      setTimeout(() => setMessage(''), 5000)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -81,20 +82,21 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           step="0.01"
-          min="0"
+          min="0.01"
+          inputMode="decimal"
           required
         />
       </div>
 
       <div className="form-group">
         <label htmlFor="income-date">Date</label>
-        <input id="income-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <input id="income-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       </div>
 
       <div className="form-group">
-        <label htmlFor="income-wallet">Wallet</label>
+        <label htmlFor="income-wallet">Account <span className="field-optional">optional</span></label>
         <select id="income-wallet" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
-          <option value="">Select a wallet</option>
+          <option value="">No account · record only</option>
           {wallets && wallets.length > 0 ? (
             wallets.map(w => {
               const bal = (w.balance !== undefined && w.balance !== null) ? w.balance : w.startingBalance
@@ -103,17 +105,17 @@ function IncomeForm({ onAddIncome, editingIncome, onUpdateIncome, onCancelEdit, 
               )
             })
           ) : (
-            <option value="" disabled>No wallets available</option>
+            <option value="" disabled>No accounts available</option>
           )}
         </select>
       </div>
 
       {message && (
-        <div style={{ padding: '8px 12px', borderRadius: 4, fontSize: 14, fontWeight: 500, marginBottom: 16, backgroundColor: message.includes('Error') ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)', color: message.includes('Error') ? '#ef4444' : '#10b981', border: '1px solid ' + (message.includes('Error') ? 'rgba(239,68,68,0.14)' : 'rgba(16,185,129,0.14)') }}>{message}</div>
+        <p className="form-error" role="status">{message}</p>
       )}
 
       <div className="form-buttons">
-        <button type="submit">{editingIncome ? 'Update' : 'Add'} Income</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : editingIncome ? 'Save income' : 'Add income'}</button>
         {editingIncome && <button type="button" onClick={handleCancel}>Cancel</button>}
       </div>
     </form>

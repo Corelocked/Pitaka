@@ -22,6 +22,8 @@ function buildChart(items = [], getName, getAmount, getCurrency, walletBalances 
     .filter((item) => item.amount > 0)
     .sort((a, b) => b.amount - a.amount)
 
+  if (new Set(normalized.map((item) => item.currency)).size > 1) return { segments: [], total: 0 }
+
   const total = normalized.reduce((sum, item) => sum + item.amount, 0)
   const palette = ['#3F7B5D', '#D08B4C', '#7B8FC9', '#BE6A78', '#6F9D93']
 
@@ -113,7 +115,7 @@ function buildSnapshot({
   )
 
   const incomeChart = buildChart(
-    (() => {
+    (incomeSummary.length > 1 ? [] : (() => {
       const grouped = new Map()
       filteredIncomes.forEach((income) => {
         const key = income.source || 'Other'
@@ -122,7 +124,7 @@ function buildSnapshot({
         grouped.set(key, existing)
       })
       return Array.from(grouped.entries()).map(([name, entries]) => ({ name, entries }))
-    })(),
+    })()),
     (item) => item.name,
     (item) => item.entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0),
     (item, wallets) => item.entries[0]?.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === item.entries[0]?.walletId)) || DEFAULT_CURRENCY,
@@ -130,7 +132,7 @@ function buildSnapshot({
   )
 
   const expenseChart = buildChart(
-    expensesByCategory.filter((category) => Number(category.total || 0) > 0),
+    expenseSummary.length > 1 ? [] : expensesByCategory.filter((category) => Number(category.total || 0) > 0),
     (item) => item.category || 'Uncategorized',
     (item) => item.total || 0,
     () => expenseSummary[0]?.currency || DEFAULT_CURRENCY,
@@ -174,7 +176,9 @@ function buildSnapshot({
       .map(({ label, value, hint }) => ({ label, value, hint }))
   })()
 
-  const expenseRows = expensesByCategory
+  const expenseRows = expenseSummary.length > 1
+    ? expenseSummary.map((entry) => ({ label: entry.currency, value: formatCurrency(entry.total, entry.currency), hint: 'Currencies shown separately' }))
+    : expensesByCategory
     .filter((category) => Number(category.total || 0) > 0)
     .sort((a, b) => Number(b.total || 0) - Number(a.total || 0))
     .slice(0, 3)
@@ -198,7 +202,7 @@ function buildSnapshot({
   const allocationRows = positiveWallets.slice(0, 3).map((wallet) => ({
     label: wallet.name,
     value: formatCurrency(wallet.amount, getWalletCurrency(wallet)),
-    hint: totalPositiveWalletBalance > 0 ? `${((wallet.amount / totalPositiveWalletBalance) * 100).toFixed(0)}% allocated` : ''
+    hint: walletSummary.length > 1 ? getWalletCurrency(wallet) : totalPositiveWalletBalance > 0 ? `${((wallet.amount / totalPositiveWalletBalance) * 100).toFixed(0)}% allocated` : ''
   }))
 
   const savingsRows = [...(savings || [])]

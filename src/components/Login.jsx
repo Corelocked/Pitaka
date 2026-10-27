@@ -1,11 +1,26 @@
 import { useState } from 'react'
 import './Auth.css'
 
-function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
+function Login({ onLogin, onGoogleSignIn, onResetPassword, onSwitchToSignup, error }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState('')
+  const [resetting, setResetting] = useState(false)
+
+  const resetPassword = async () => {
+    if (!email.trim()) { setResetMessage('Enter your email address above, then request a reset link.'); return }
+    setResetting(true)
+    setResetMessage('')
+    try {
+      await onResetPassword(email)
+      setResetMessage('If an account uses this email, you’ll receive a password reset link.')
+    } catch (err) {
+      setResetMessage(err.code === 'auth/user-not-found' ? 'If an account uses this email, you’ll receive a password reset link.' : 'Could not send a reset link. Check your email address and try again.')
+    } finally { setResetting(false) }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -63,17 +78,19 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
 
         <div className="auth-card">
           <div className="auth-header">
-            <h1>Sign In</h1>
-            <p>Welcome back. Continue with your email or use Google to get into Pitaka faster.</p>
+            <div className="auth-app-mark"><img src="/pitaka-logo.png" alt="" /> Pitaka</div>
+            <h1>Welcome back</h1>
+            <p>Sign in to pick up where you left off.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {error && <div className="auth-error">{error}</div>}
+            {error && <div className="auth-error" role="alert">{error}</div>}
 
             <div className="auth-group">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
+                autoComplete="email"
                 className="auth-input"
                 type="email"
                 placeholder="you@example.com"
@@ -85,11 +102,12 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
             </div>
 
             <div className="auth-group">
-              <label htmlFor="password">Password</label>
+              <div className="auth-label-row"><label htmlFor="password">Password</label><button type="button" className="auth-password-toggle" aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'Hide password' : 'Show password'}</button></div>
               <input
                 id="password"
+                autoComplete="current-password"
                 className="auth-input"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -98,8 +116,10 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
               />
             </div>
 
-            <button type="submit" className="auth-button" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
+            <button type="button" className="auth-link auth-reset" onClick={resetPassword} disabled={resetting || loading}>{resetting ? 'Sending reset link…' : 'Forgot password?'}</button>
+            {resetMessage && <p role="status">{resetMessage}</p>}
+            <button type="submit" className="auth-button" disabled={loading || googleLoading}>
+              {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
@@ -107,7 +127,7 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
             <span>or</span>
           </div>
 
-          <button onClick={handleGoogleSignIn} className="google-button" disabled={googleLoading}>
+          <button onClick={handleGoogleSignIn} className="google-button" disabled={googleLoading || loading}>
             {googleLoading ? (
               <>
                 <div className="google-icon-loading"></div>
@@ -124,6 +144,7 @@ function Login({ onLogin, onGoogleSignIn, onSwitchToSignup, error }) {
           <div className="auth-switch">
             <p>Don&apos;t have an account? <button onClick={onSwitchToSignup} className="auth-link">Create one</button></p>
           </div>
+          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
         </div>
       </div>
     </div>

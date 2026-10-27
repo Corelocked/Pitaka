@@ -353,7 +353,102 @@
   }
 }
 
+body .auth-app-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+body .auth-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body .auth-container .auth-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 1rem;
+  box-shadow: none;
+  transform: none;
+}
+body .auth-container .auth-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+body .auth-container .auth-input:focus {
+  color: var(--text-primary);
+  background: var(--surface-muted);
+  border-color: var(--focus-color);
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+  box-shadow: none;
+  transform: none;
+}
+body .auth-container .auth-input.error {
+  border-color: var(--danger-color);
+}
+body .auth-button,
+body .google-button {
+  min-height: 48px;
+  border-radius: 12px;
+  box-shadow: none;
+  font: inherit;
+  font-weight: 600;
+}
+body .google-button {
+  color: var(--text-primary);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-color);
+}
+body .google-button:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
+body .auth-button:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+body .auth-error {
+  color: var(--danger-color);
+  background: var(--danger-light);
+  border-color: var(--danger-color);
+}
+body .auth-app-mark img {
+  width: 36px;
+  height: 36px;
+}
+body .auth-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+body .auth-password-toggle {
+  min-height: 44px;
+  padding: 8px 0 8px 12px;
+  color: var(--text-accent);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+body .password-error {
+  color: var(--danger-color);
+}
+
 @media (max-width: 900px) {
+  body .auth-showcase {
+    display: none;
+  }
   .auth-container {
     align-items: flex-start;
   }

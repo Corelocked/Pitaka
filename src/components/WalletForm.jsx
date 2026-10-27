@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react'
 import './Form.css'
 import { DEFAULT_CURRENCY, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
@@ -56,8 +55,10 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
     }
   }, [editingWallet])
 
+  const [saving, setSaving] = useState(false)
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
     setError('')
 
     if (!name.trim()) {
@@ -70,6 +71,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
       return
     }
 
+    setSaving(true)
+    setError('')
     try {
       const walletData = {
         name: name.trim(),
@@ -103,7 +106,7 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
     } catch (err) {
       console.error('Wallet form error:', err)
       setError(err.message || 'Failed to save account')
-    }
+    } finally { setSaving(false) }
   }
 
   const accountTypes = [
@@ -130,24 +133,13 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
 
   return (
     <div className="form-container">
-      <h3>{editingWallet ? 'Edit Account' : 'Add Account'}</h3>
+      <h3>{editingWallet ? 'Edit account' : 'Add account'}</h3>
       <form onSubmit={handleSubmit} className="form">
-        {error && (
-          <div style={{
-            padding: '12px',
-            background: '#fecaca',
-            color: '#991b1b',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            fontSize: '14px'
-          }}>
-            {error}
-          </div>
-        )}
+        {error && <p className="form-error" role="alert">{error}</p>}
 
         <div className="form-group">
-          <label className="form-label">Account Name</label>
-          <input
+          <label className="form-label" htmlFor="wallet-field-1">Account Name</label>
+          <input id="wallet-field-1"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -158,8 +150,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         </div>
 
         <div className="form-group">
-          <label className="form-label">Account Type</label>
-          <select
+          <label className="form-label" htmlFor="wallet-field-2">Account Type</label>
+          <select id="wallet-field-2"
             value={accountType}
             onChange={(e) => setAccountType(e.target.value)}
             className="form-input"
@@ -174,8 +166,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
         </div>
 
         <div className="form-group">
-          <label className="form-label">Currency</label>
-          <select
+          <label className="form-label" htmlFor="wallet-field-3">Currency</label>
+          <select id="wallet-field-3"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
             className="form-input"
@@ -189,14 +181,110 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
           </select>
           {!isPro && (
             <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-              Basic accounts can use `PHP` and `USD`. Upgrade to Pro to unlock more currencies.
+              Basic accounts can use PHP and USD. Upgrade to Pro to unlock more currencies.
             </small>
           )}
         </div>
 
         <div className="form-group">
-          <label className="form-label">Card Color</label>
-          <div className="wallet-color-picker" role="listbox" aria-label="Card color">
+          <label className="form-label" htmlFor="wallet-field-4">{accountType === 'credit' ? 'Current Card Balance' : 'Starting Balance'}</label>
+          <input id="wallet-field-4"
+            type="number"
+            step="0.01"
+            value={startingBalance}
+            onChange={(e) => setStartingBalance(e.target.value)}
+            className="form-input"
+            placeholder="0.00"
+          />
+          <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+            {accountType === 'credit'
+              ? `Use a negative number if this card already has an outstanding balance in ${currency}.`
+              : `Initial balance in ${currency} when you started tracking this account`}
+          </small>
+        </div>
+
+        {accountType === 'credit' && (
+          <>
+            <div className="form-group">
+              <label className="form-label" htmlFor="wallet-field-5">Credit Limit</label>
+              <input id="wallet-field-5"
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditLimit}
+                onChange={(e) => setCreditLimit(e.target.value)}
+                className="form-input"
+                placeholder="50000.00"
+                required
+              />
+              <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                This is the maximum spendable amount for the card in {currency}.
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="wallet-field-6">Utilization Warning (%)</label>
+              <input id="wallet-field-6"
+                type="number"
+                step="1"
+                min="1"
+                max="100"
+                value={creditAlertPercent}
+                onChange={(e) => setCreditAlertPercent(e.target.value)}
+                className="form-input"
+                placeholder="80"
+              />
+              <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                Pitaka will flag the card once spending reaches this percentage of the limit.
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="wallet-field-7">APR (%)</label>
+              <input id="wallet-field-7"
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditApr}
+                onChange={(e) => setCreditApr(e.target.value)}
+                className="form-input"
+                placeholder="24"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="wallet-field-8">Planned Monthly Payment</label>
+              <input id="wallet-field-8"
+                type="number"
+                step="0.01"
+                min="0"
+                value={creditMinimumPayment}
+                onChange={(e) => setCreditMinimumPayment(e.target.value)}
+                className="form-input"
+                placeholder="2500.00"
+              />
+            </div>
+          </>
+        )}
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="wallet-field-9">Description (Optional)</label>
+          <textarea id="wallet-field-9"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="form-input"
+            placeholder="Add notes about this account..."
+            rows="2"
+            style={{ resize: 'vertical', minHeight: '60px' }}
+          />
+        </div>
+
+        <details className="form-disclosure">
+          <summary>Account color</summary>
+          <div className="form-disclosure-content">
+        <div className="form-group">
+          <span className="form-label">Card Color</span>
+          <div className="wallet-color-picker" role="group" aria-label="Card color">
             {colorThemes.map((theme) => (
               <button
                 key={theme.value}
@@ -217,103 +305,12 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
               <span>{currency}</span>
             </div>
           </div>
-          <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+          <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
             Choose from Pitaka&apos;s toned-down palette or keep the default color for this account type.
           </small>
         </div>
-
-        <div className="form-group">
-          <label className="form-label">{accountType === 'credit' ? 'Current Card Balance' : 'Starting Balance'}</label>
-          <input
-            type="number"
-            step="0.01"
-            value={startingBalance}
-            onChange={(e) => setStartingBalance(e.target.value)}
-            className="form-input"
-            placeholder="0.00"
-          />
-          <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-            {accountType === 'credit'
-              ? `Use a negative number if this card already has an outstanding balance in ${currency}.`
-              : `Initial balance in ${currency} when you started tracking this account`}
-          </small>
-        </div>
-
-        {accountType === 'credit' && (
-          <>
-            <div className="form-group">
-              <label className="form-label">Credit Limit</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={creditLimit}
-                onChange={(e) => setCreditLimit(e.target.value)}
-                className="form-input"
-                placeholder="50000.00"
-                required
-              />
-              <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-                This is the maximum spendable amount for the card in {currency}.
-              </small>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Utilization Warning (%)</label>
-              <input
-                type="number"
-                step="1"
-                min="1"
-                max="100"
-                value={creditAlertPercent}
-                onChange={(e) => setCreditAlertPercent(e.target.value)}
-                className="form-input"
-                placeholder="80"
-              />
-              <small style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-                Pitaka will flag the card once spending reaches this percentage of the limit.
-              </small>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">APR (%)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={creditApr}
-                onChange={(e) => setCreditApr(e.target.value)}
-                className="form-input"
-                placeholder="24"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Planned Monthly Payment</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={creditMinimumPayment}
-                onChange={(e) => setCreditMinimumPayment(e.target.value)}
-                className="form-input"
-                placeholder="2500.00"
-              />
-            </div>
-          </>
-        )}
-
-        <div className="form-group">
-          <label className="form-label">Description (Optional)</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="form-input"
-            placeholder="Add notes about this account..."
-            rows="2"
-            style={{ resize: 'vertical', minHeight: '60px' }}
-          />
-        </div>
+          </div>
+        </details>
 
         <div className="form-buttons" style={{ display: 'flex', gap: '8px' }}>
           {editingWallet && onCancelEdit && (
@@ -326,8 +323,8 @@ function WalletForm({ onAddWallet, editingWallet, onUpdateWallet, onCancelEdit }
               Cancel
             </button>
           )}
-          <button type="submit" className="btn-submit" style={{ flex: 1 }}>
-            {editingWallet ? 'Update Account' : 'Add Account'}
+          <button type="submit" disabled={saving} className="btn-submit" style={{ flex: 1 }}>
+            {saving ? 'Saving…' : editingWallet ? 'Save account' : 'Add account'}
           </button>
         </div>
       </form>

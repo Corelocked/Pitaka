@@ -46,7 +46,10 @@ function subscribeWithMetadata(q, callback, metadataCallback, errorCallback) {
         fromCache: querySnapshot.metadata.fromCache
       })
     },
-    errorCallback
+    (error) => {
+      errorCallback?.(error)
+      metadataCallback?.({ error: error.message || 'Could not load your records.' })
+    }
   )
 }
 
@@ -152,6 +155,14 @@ export const recurringIncomeService = {
 
 // Expense operations
 export const expenseService = {
+  addExpenses: async (expenses, userId) => {
+    const batch = writeBatch(db)
+    expenses.forEach((expense) => {
+      const ref = doc(collection(db, COLLECTION_NAMES.EXPENSES))
+      batch.set(ref, { ...expense, userId, createdAt: new Date(), updatedAt: new Date() })
+    })
+    await batch.commit()
+  },
   // Get all expenses for a user
   subscribeToExpenses: (userId, callback, metadataCallback) => {
     const q = query(
@@ -371,13 +382,12 @@ export const walletService = {
           })
         } catch (err) {
           console.error('Error processing wallets snapshot:', err)
-          callback([])
+          metadataCallback?.({ error: err.message })
         }
       },
       (err) => {
         console.error('Wallets snapshot listener error:', err)
-        // report empty list to allow UI to render a fallback
-        try { callback([]) } catch { /* swallow */ }
+        metadataCallback?.({ error: err.message })
       }
     )
 

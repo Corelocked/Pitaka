@@ -10,7 +10,12 @@ service cloud.firestore {
     }
 
     function ownsIncoming() {
-      return signedIn() && request.resource.data.userId == request.auth.uid;
+      return signedIn() && accountActive() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function accountActive() {
+      let profilePath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return !exists(profilePath) || get(profilePath).data.get('deletionPending', false) != true;
     }
 
     function ownsBoth() {
@@ -31,7 +36,14 @@ service cloud.firestore {
 
     function optionalString(field) {
       return !request.resource.data.keys().hasAny([field])
+        || request.resource.data[field] == null
         || request.resource.data[field] is string;
+    }
+
+    function nullableCreditNumber(field) {
+      return !request.resource.data.keys().hasAny([field])
+        || request.resource.data[field] == null
+        || (request.resource.data[field] is number && request.resource.data[field] >= 0);
     }
 
     function validMoneyDoc() {
@@ -46,10 +58,10 @@ service cloud.firestore {
 
     function validWalletDoc() {
       return optionalNumber('startingBalance')
-        && nonNegativeNumber('creditLimit')
-        && nonNegativeNumber('creditAlertPercent')
-        && nonNegativeNumber('creditApr')
-        && nonNegativeNumber('creditMinimumPayment')
+        && nullableCreditNumber('creditLimit')
+        && nullableCreditNumber('creditAlertPercent')
+        && nullableCreditNumber('creditApr')
+        && nullableCreditNumber('creditMinimumPayment')
         && optionalString('currency');
     }
 
@@ -150,12 +162,12 @@ service cloud.firestore {
       allow get: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.plan in ['basic', 'pro']
-        && request.resource.data.tags is list;
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'plan', 'tags', 'createdAt', 'updatedAt'])
+        && request.resource.data.plan == 'basic'
+        && request.resource.data.tags == [];
       allow update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.plan in ['basic', 'pro']
-        && request.resource.data.tags is list;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'displayName', 'updatedAt']);
       allow delete: if false;
     }
   }

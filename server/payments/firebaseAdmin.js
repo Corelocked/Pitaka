@@ -42,6 +42,11 @@ export function getFirestore(config) {
   return firestoreDb
 }
 
+export function getAdminAuth(config) {
+  initializeFirebaseAdmin(config)
+  return admin.auth()
+}
+
 export async function verifyFirebaseIdToken(config, idToken) {
   initializeFirebaseAdmin(config)
   return admin.auth().verifyIdToken(idToken)
@@ -78,6 +83,10 @@ export async function markCheckoutSessionPaid(config, sessionId, eventPayload) {
   const userRef = db.collection('users').doc(userId)
   const userSnapshot = await userRef.get()
   const userData = userSnapshot.exists ? userSnapshot.data() : {}
+  if (!userSnapshot.exists || userData.deletionPending) {
+    // A delayed payment callback must not recreate a deleted account.
+    return
+  }
   const existingTags = Array.isArray(userData.tags) ? userData.tags : []
   const nextTags = Array.from(new Set([...existingTags, 'pro']))
 

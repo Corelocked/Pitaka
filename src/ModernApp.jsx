@@ -6,7 +6,12 @@ import { useConfirm } from './contexts/useConfirm'
 import { useBudget } from './hooks/useBudget'
 import { useDashboardWidgets } from './hooks/useDashboardWidgets'
 import Dashboard from './components/Dashboard'
-import TransfersTable from './components/TransfersTable'
+import AppNavigation from './components/AppNavigation'
+import SettingsPreferences from './components/SettingsPreferences'
+import Toast from './components/Toast'
+import PlanHub from './components/PlanHub'
+import TransactionFeed from './components/TransactionFeed'
+import { useDialogFocus } from './hooks/useDialogFocus'
 import {
   ActivityIcon,
   CategoryIcon,
@@ -31,7 +36,9 @@ import { DEFAULT_CURRENCY, formatCurrency, formatCurrencySummary, summarizeByCur
 import { suggestCategory } from './utils/categoryRules'
 import { getLocalDateInputValue } from './utils/date'
 import { reportAppError } from './utils/errorReporting'
+import { getPrimaryDestination } from './utils/navigation'
 
+const DeleteAccount = lazy(() => import('./components/DeleteAccount'))
 const Auth = lazy(() => import('./components/Auth'))
 const Landing = lazy(() => import('./components/Landing'))
 const Blog = lazy(() => import('./components/Blog'))
@@ -45,8 +52,6 @@ const SubscriptionForm = lazy(() => import('./components/SubscriptionForm'))
 const SavingsForm = lazy(() => import('./components/SavingsForm'))
 const AddToSavingsForm = lazy(() => import('./components/AddToSavingsForm'))
 const RecurringIncomeForm = lazy(() => import('./components/RecurringIncomeForm'))
-const IncomeTable = lazy(() => import('./components/IncomeTable'))
-const ExpenseTable = lazy(() => import('./components/ExpenseTable'))
 const WalletsTable = lazy(() => import('./components/WalletsTable'))
 const CategoryTable = lazy(() => import('./components/CategoryTable'))
 const BudgetManager = lazy(() => import('./components/BudgetManager'))
@@ -59,20 +64,20 @@ const DASHBOARD_LAYOUTS = [
   {
     id: 'overview',
     name: 'Overview',
-    description: 'Your balances, recent movement, monthly plan, and essential trends in one balanced view.',
-    widgets: ['plan-ahead', 'recent-activity', 'accounts', 'spending', 'cashflow-chart', 'savings', 'monthly-closeout', 'net-worth-history']
+    description: 'Balances, recent activity, spending, and savings goals.',
+    widgets: ['recent-activity', 'spending', 'accounts', 'savings']
   },
   {
     id: 'cashflow',
     name: 'Cash Flow',
-    description: 'Focus on income, spending pace, categories, recurring bills, and the latest transactions.',
-    widgets: ['cashflow-chart', 'recent-activity', 'spending', 'weekly-spending-chart', 'expense-trend-chart', 'income-source-chart', 'upcoming-bills', 'monthly-closeout']
+    description: 'Income and spending trends, recent activity, and upcoming bills.',
+    widgets: ['cashflow-chart', 'recent-activity', 'spending', 'upcoming-bills']
   },
   {
     id: 'growth',
     name: 'Growth',
-    description: 'Track reserved goals, net worth, account allocation, and the plan supporting your next milestone.',
-    widgets: ['savings', 'net-worth-history', 'account-allocation-chart', 'accounts', 'plan-ahead', 'income-source-chart', 'monthly-closeout', 'recent-activity']
+    description: 'Savings goals, account balances, and net worth over time.',
+    widgets: ['savings', 'accounts', 'net-worth-history', 'plan-ahead']
   }
 ]
 
@@ -98,6 +103,7 @@ const PUBLIC_LANDING_SECTION_SLUGS = {
 }
 const AUTHENTICATED_VIEW_PATHS = {
   dashboard: '/dashboard',
+  plan: '/plan',
   transactions: '/transactions',
   accounts: '/accounts',
   wealth: '/wealth',
@@ -110,13 +116,16 @@ const AUTHENTICATED_VIEW_PATHS = {
   contact: '/contact',
   privacy: '/privacy',
   pro: '/pro',
-  settings: '/settings'
+  settings: '/settings',
+  'delete-account': '/delete-account'
 }
 const AUTHENTICATED_PATH_VIEW_ALIASES = {
   '/': 'dashboard',
   '/app': 'dashboard',
   '/home': 'dashboard',
   '/dashboard': 'dashboard',
+  '/plan': 'plan',
+  '/privacy': 'privacy',
   '/transactions': 'transactions',
   '/accounts': 'accounts',
   '/wealth': 'wealth',
@@ -128,41 +137,44 @@ const AUTHENTICATED_PATH_VIEW_ALIASES = {
   '/android-app': 'android-app',
   '/contact': 'contact',
   '/pro': 'pro',
-  '/settings': 'settings'
+  '/settings': 'settings',
+  '/delete-account': 'delete-account'
 }
 
 const VIEW_META = {
-  dashboard: { title: 'Overview', eyebrow: 'Monthly ledger' },
+  dashboard: { title: 'Home', eyebrow: 'Your money, in place' },
+  plan: { title: 'Plan', eyebrow: 'Today and tomorrow' },
   transactions: { title: 'Activity', eyebrow: 'Money in motion' },
   accounts: { title: 'Accounts', eyebrow: 'Where money lives' },
-  wealth: { title: 'Wealth', eyebrow: 'Goals and growth' },
+  wealth: { title: 'Savings goals', eyebrow: 'Make room for tomorrow' },
   savings: { title: 'Savings', eyebrow: 'Goals and reserves' },
   investments: { title: 'Investments', eyebrow: 'Long-term growth' },
-  categories: { title: 'Categories', eyebrow: 'Spending structure' },
+  categories: { title: 'Budgets & categories', eyebrow: 'Your spending plan' },
   subscriptions: { title: 'Subscriptions', eyebrow: 'Recurring costs' },
   'recurring-income': { title: 'Recurring income', eyebrow: 'Expected cashflow' },
   'android-app': { title: 'Mobile app', eyebrow: 'Pitaka on the go' },
   contact: { title: 'Contact', eyebrow: 'Help and feedback' },
   privacy: { title: 'Privacy', eyebrow: 'Your data and controls' },
   pro: { title: 'Pitaka Pro', eyebrow: 'Advanced planning' },
-  settings: { title: 'More', eyebrow: 'Settings and tools' }
+  settings: { title: 'More', eyebrow: 'Settings and tools' },
+  'delete-account': { title: 'Delete account', eyebrow: 'Your data, your choice' }
 }
 
 const BOTTOM_SHEET_TITLES = {
-  addIncome: 'Record Income',
-  addExpense: 'Log Expense',
-  addTransfer: 'Move Funds',
-  addWallet: 'Add Account',
-  addSavings: 'Create Savings Goal',
+  addIncome: 'Add income',
+  addExpense: 'Add expense',
+  addTransfer: 'Transfer',
+  addWallet: 'Add account',
+  addSavings: 'Create savings goal',
   addToSavings: 'Add to Savings',
-  addCategory: 'Add Category',
-  addSubscription: 'Add Subscription',
-  addInvestment: 'Add Investment',
-  addRecurringIncome: 'Add Recurring Income',
-  editWallet: 'Edit Account',
-  editSavings: 'Edit Savings Goal',
+  addCategory: 'Add category',
+  addSubscription: 'Add subscription',
+  addInvestment: 'Add investment',
+  addRecurringIncome: 'Add recurring income',
+  editWallet: 'Edit account',
+  editSavings: 'Edit savings goal',
   fundSavings: 'Add to Savings',
-  editInvestment: 'Edit Investment',
+  editInvestment: 'Edit investment',
   importMapping: 'Map Import Columns',
   importData: 'Review Import',
   importResult: 'Import Results'
@@ -203,18 +215,15 @@ const createDashboardPreset = (layoutId) => {
 const THEME_OPTIONS = [
   {
     id: 'system',
-    name: 'System',
-    description: 'Follows your device appearance automatically as lighting and preferences change.'
+    name: 'System'
   },
   {
     id: 'light',
-    name: 'Light',
-    description: 'A bright ledger with cool paper surfaces and clear blue-teal accents.'
+    name: 'Light'
   },
   {
     id: 'dark',
-    name: 'Dark',
-    description: 'A low-glare ledger with deep navy surfaces and softened contrast.'
+    name: 'Dark'
   }
 ]
 
@@ -247,10 +256,21 @@ function ModernApp() {
     if (typeof window === 'undefined') return '/'
     return window.location.pathname || '/'
   })
-  const [currentView, setCurrentView] = useState('dashboard')
-  const shouldLoadSubscriptions = isPro && ['dashboard', 'subscriptions'].includes(currentView)
-  const shouldLoadInvestments = isPro && ['wealth', 'investments', 'settings'].includes(currentView)
-  const shouldLoadRecurringIncomes = isPro && ['dashboard', 'recurring-income', 'settings'].includes(currentView)
+  const [currentView, setCurrentView] = useState(() => resolveAuthenticatedViewFromPath(window.location.pathname) || 'dashboard')
+  const pageHeadingRef = useRef(null)
+  const previousViewRef = useRef(currentView)
+  useEffect(() => {
+    if (previousViewRef.current === currentView) return
+    previousViewRef.current = currentView
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    pageHeadingRef.current?.focus({ preventScroll: true })
+  }, [currentView])
+  useEffect(() => {
+    if (userProfile?.deletionPending && currentView !== 'delete-account') setCurrentView('delete-account')
+  }, [userProfile?.deletionPending, currentView])
+  const shouldLoadSubscriptions = isPro
+  const shouldLoadInvestments = isPro
+  const shouldLoadRecurringIncomes = isPro
   const {
     selectedMonth,
     selectedYear,
@@ -273,6 +293,7 @@ function ModernApp() {
     subscriptions,
     netWorthSnapshots,
     loading: budgetLoading,
+    syncState,
     error,
     setSelectedMonth,
     setSelectedYear,
@@ -326,6 +347,8 @@ function ModernApp() {
   })
 
   const [showBottomSheet, setShowBottomSheet] = useState(false)
+  const [notice, setNotice] = useState('')
+  const clearNotice = useCallback(() => setNotice(''), [])
   const [bottomSheetContent, setBottomSheetContent] = useState(null)
   const bottomSheetRef = useRef(null)
   const [lastImportBatch, setLastImportBatch] = useState([])
@@ -336,6 +359,8 @@ function ModernApp() {
   const [isStartingCheckout, setIsStartingCheckout] = useState(false)
   const [privacyShieldEnabled, setPrivacyShieldEnabled] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('pitaka.privacyShield') !== 'off')
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => typeof window !== 'undefined' && window.localStorage.getItem('pitaka.notifications') === 'on')
+  const [requestingNotifications, setRequestingNotifications] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
@@ -425,7 +450,7 @@ function ModernApp() {
   }
 
   useDashboardWidgets({
-    isAuthenticated,
+    isAuthenticated: isAuthenticated && !userProfile?.deletionPending,
     selectedMonth,
     selectedYear,
     filteredIncomes,
@@ -629,7 +654,7 @@ function ModernApp() {
     const currentPath = normalizePathname(window.location.pathname || '/')
     if (currentPath === nextPath) return
 
-    window.history.replaceState(null, '', `${nextPath}${window.location.search || ''}${window.location.hash || ''}`)
+    window.history.pushState(null, '', `${nextPath}${window.location.search || ''}${window.location.hash || ''}`)
   }, [currentView, isAuthenticated, isNativeMobileApp])
 
   const installApp = async () => {
@@ -644,6 +669,7 @@ function ModernApp() {
   }
 
   const startProCheckout = async () => {
+    if (isNativeMobileApp) throw new Error('Purchases are not available in this version of the app.')
     if (!user?.uid || !user?.email) {
       throw new Error('Please sign in with an email-backed account first')
     }
@@ -670,36 +696,47 @@ function ModernApp() {
 
   // Open bottom sheet with specific content
   const openBottomSheet = (content) => {
+    setNotice('')
     setBottomSheetContent(content)
     setShowBottomSheet(true)
   }
 
-  const closeBottomSheet = useCallback(() => {
+  const closeBottomSheet = useCallback((message) => {
+    if (typeof message === 'string') setNotice(message)
     setShowBottomSheet(false)
-    setTimeout(() => setBottomSheetContent(null), 300)
+    setBottomSheetContent(null)
   }, [])
 
   const requestLogout = async () => {
     const ok = await confirm({
       title: 'Sign out?',
       description: 'Your Pitaka data stays safely stored for your next visit.',
-      confirmText: 'Sign Out',
-      cancelText: 'Stay Signed In'
+      confirmText: 'Sign out',
+      cancelText: 'Stay signed in'
     })
     if (ok) logout()
   }
 
+  useDialogFocus(bottomSheetRef, showBottomSheet, closeBottomSheet)
+  const nativeBackState = useRef(null)
   useEffect(() => {
-    if (!showBottomSheet) return undefined
+    nativeBackState.current = { currentView, showBottomSheet }
+  }, [currentView, showBottomSheet])
 
-    bottomSheetRef.current?.focus()
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') closeBottomSheet()
-    }
-
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [closeBottomSheet, showBottomSheet])
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') return
+    let disposed = false
+    let listener
+    CapacitorApp.addListener('backButton', () => {
+      const { currentView, showBottomSheet } = nativeBackState.current
+      const confirmation = document.querySelector('.modal-backdrop')
+      if (confirmation) { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); return }
+      if (showBottomSheet) closeBottomSheet()
+      else if (currentView !== 'dashboard') setCurrentView(['categories', 'wealth', 'savings', 'investments', 'subscriptions', 'recurring-income'].includes(currentView) ? 'plan' : 'dashboard')
+      else CapacitorApp.exitApp()
+    }).then((handle) => { if (disposed) handle.remove(); else listener = handle }).catch((err) => reportAppError('native.back', err))
+    return () => { disposed = true; listener?.remove() }
+  }, [closeBottomSheet])
 
   const openCategorySheet = (category = null) => {
     editCategory(category)
@@ -730,19 +767,10 @@ function ModernApp() {
       return b.currentAmount - a.currentAmount
     })
 
-  const currentPeriodLabel = new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric'
-  })
-
   const currentPeriodTransfers = transfers.filter((transfer) => {
     const date = new Date(transfer.date)
     return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear
   })
-
-  const topCategory = [...expensesByCategory]
-    .filter((category) => category.total > 0)
-    .sort((a, b) => b.total - a.total)[0]
 
   const walletBalanceSummary = formatCurrencySummary(
     summarizeByCurrency(walletBalances, (wallet) => wallet.balance || 0, (wallet) => wallet.currency || DEFAULT_CURRENCY)
@@ -761,17 +789,6 @@ function ModernApp() {
     window.open(APP_DISTRIBUTION_INVITE_URL, '_blank', 'noopener,noreferrer')
   }
 
-  const investmentValueSummary = formatCurrencySummary(
-    summarizeByCurrency(
-      investments,
-      (investment) => {
-        const quantity = parseFloat(investment.quantity || 0)
-        const unitValue = Number(investment.currentValue ?? investment.purchasePrice ?? 0)
-        return quantity * unitValue
-      },
-      (investment) => investment.currency || DEFAULT_CURRENCY
-    )
-  )
   const debtSnowball = [...creditCardSummaries].filter((card) => card.spent > 0).sort((a, b) => a.spent - b.spent)
   const debtAvalanche = [...debtSnowball].sort((a, b) => b.apr - a.apr || a.spent - b.spent)
   const selectedBudgetMonthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
@@ -788,11 +805,23 @@ function ModernApp() {
   }, [categoryBudgets, creditCardSummaries, notificationsEnabled])
 
   const toggleNotifications = async () => {
-    if (typeof Notification === 'undefined') return
-    const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
-    const enabled = permission === 'granted' && !notificationsEnabled
-    setNotificationsEnabled(enabled)
-    window.localStorage.setItem('pitaka.notifications', enabled ? 'on' : 'off')
+    if (typeof Notification === 'undefined' || requestingNotifications) return
+    setNotificationMessage('')
+    setRequestingNotifications(true)
+    try {
+      const currentlyOn = notificationsEnabled && Notification.permission === 'granted'
+      const permission = currentlyOn || Notification.permission !== 'default' ? Notification.permission : await Notification.requestPermission()
+      const enabled = !currentlyOn && permission === 'granted'
+      window.localStorage.setItem('pitaka.notifications', enabled ? 'on' : 'off')
+      setNotificationsEnabled(enabled)
+      if (!currentlyOn && permission !== 'granted') {
+        setNotificationMessage(permission === 'denied' ? 'Notifications are blocked. Allow them in your browser or device settings.' : 'Notifications stayed off. You can try again when you’re ready.')
+      }
+    } catch {
+      setNotificationMessage('Could not change notifications. Please try again.')
+    } finally {
+      setRequestingNotifications(false)
+    }
   }
 
   const togglePrivacyShield = () => {
@@ -992,164 +1021,18 @@ function ModernApp() {
     reader.readAsText(file)
   }
 
-  const renderPageIntro = ({ eyebrow, title, description, stats = [] }) => (
-    <section className="page-intro card">
-      <div className="page-intro-copy">
-        <span className="eyebrow">{eyebrow}</span>
-        <h2 className="page-intro-title">{title}</h2>
-        <p className="page-intro-text">{description}</p>
-      </div>
-      <div className="page-intro-stats">
+  const renderPageSummary = ({ title, description, stats = [] }) => (
+    <section className="workspace-summary" aria-label={`${title} summary`}>
+      <p className="workspace-description">{description}</p>
+      {stats.length > 0 && <div className="workspace-summary-stats">
         {stats.map((stat) => (
-          <div key={stat.label} className="page-intro-stat">
-            <span className="page-intro-stat-label">{stat.label}</span>
-            <strong className="page-intro-stat-value">{stat.value}</strong>
+          <div key={stat.label} className="workspace-stat">
+            <span>{stat.label}</span>
+            <strong>{stat.value}</strong>
           </div>
         ))}
-      </div>
+      </div>}
     </section>
-  )
-
-  // Desktop sidebar renderer
-  const renderDesktopSidebar = () => (
-    <aside className="desktop-sidebar" aria-label="Primary navigation">
-      <div className="sidebar-header">
-        <div className="sidebar-kicker">Your money, in place</div>
-        <div className="sidebar-title-row">
-          <h1>Pitaka</h1>
-          <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>{isPro ? 'Pro' : 'Basic'}</div>
-        </div>
-        <div className="sidebar-period">
-          {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-        </div>
-      </div>
-
-      <nav className="sidebar-nav">
-        <div className="sidebar-nav-scroll">
-          <div className="sidebar-nav-label">Overview</div>
-          <button
-            className={`sidebar-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setCurrentView('dashboard')}
-            aria-current={currentView === 'dashboard' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><HomeIcon size={20} /></div>
-            <div>Overview</div>
-          </button>
-          <button
-            className={`sidebar-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
-            onClick={() => setCurrentView('transactions')}
-            aria-current={currentView === 'transactions' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
-            <div>Activity</div>
-          </button>
-          <button
-            className={`sidebar-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
-            onClick={() => setCurrentView('accounts')}
-            aria-current={currentView === 'accounts' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><WalletIcon size={20} /></div>
-            <div>Accounts</div>
-          </button>
-          <button
-            className={`sidebar-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
-            onClick={() => setCurrentView('wealth')}
-            aria-current={['savings', 'investments', 'wealth'].includes(currentView) ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
-            <div>Wealth</div>
-          </button>
-          <div className="sidebar-nav-label">Plan</div>
-          <button
-            className={`sidebar-nav-item ${currentView === 'categories' ? 'active' : ''}`}
-            onClick={() => setCurrentView('categories')}
-            aria-current={currentView === 'categories' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><CategoryIcon size={20} /></div>
-            <div>Categories</div>
-          </button>
-          <button
-            className={`sidebar-nav-item ${currentView === 'subscriptions' ? 'active' : ''}`}
-            onClick={() => setCurrentView('subscriptions')}
-            aria-current={currentView === 'subscriptions' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><ExpenseIcon size={20} /></div>
-            <div>Subscriptions</div>
-          </button>
-          {isPro && (
-            <button
-              className={`sidebar-nav-item ${currentView === 'recurring-income' ? 'active' : ''}`}
-              onClick={() => setCurrentView('recurring-income')}
-              aria-current={currentView === 'recurring-income' ? 'page' : undefined}
-            >
-              <div className="sidebar-nav-icon"><IncomeIcon size={20} /></div>
-              <div>Recurring Income</div>
-            </button>
-          )}
-          <div className="sidebar-nav-label">Pitaka</div>
-          <button
-            className={`sidebar-nav-item ${currentView === 'android-app' ? 'active' : ''}`}
-            onClick={() => setCurrentView('android-app')}
-            aria-current={currentView === 'android-app' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><DownloadIcon size={20} /></div>
-            <div>Android App</div>
-          </button>
-          <button
-            className={`sidebar-nav-item ${currentView === 'contact' ? 'active' : ''}`}
-            onClick={() => setCurrentView('contact')}
-            aria-current={currentView === 'contact' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><ActivityIcon size={20} /></div>
-            <div>Contact Pitaka</div>
-          </button>
-          {!isPro && (
-            <button
-              className={`sidebar-nav-item ${currentView === 'pro' ? 'active' : ''}`}
-              onClick={() => setCurrentView('pro')}
-              aria-current={currentView === 'pro' ? 'page' : undefined}
-            >
-              <div className="sidebar-nav-icon"><TrendUpIcon size={20} /></div>
-              <div>Unlock Pro</div>
-            </button>
-          )}
-          <button
-            className={`sidebar-nav-item ${currentView === 'settings' ? 'active' : ''}`}
-            onClick={() => setCurrentView('settings')}
-            aria-current={currentView === 'settings' ? 'page' : undefined}
-          >
-            <div className="sidebar-nav-icon"><SettingsIcon size={20} /></div>
-            <div>Settings</div>
-          </button>
-
-        </div>
-      </nav>
-
-      <div className="sidebar-footer">
-        {user && (
-          <div className="sidebar-user">
-            <div className="sidebar-user-avatar">
-              {user.email?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="sidebar-user-info">
-              <p className="sidebar-user-name">
-                {user.displayName || 'User'}
-              </p>
-              <p className="sidebar-user-email">
-                {user.email}
-              </p>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={requestLogout}
-          className="btn btn-secondary"
-          style={{ width: '100%', justifyContent: 'center' }}
-        >
-          <LogoutIcon size={16} /> Sign Out
-        </button>
-      </div>
-    </aside>
   )
 
   // Show loading screen
@@ -1174,6 +1057,9 @@ function ModernApp() {
   // Show auth screen only after Firebase has finished resolving the session
   if (!isAuthenticated) {
     const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
+    if (normalizedPublicPath === '/delete-account') return (
+      <div className="public-account-page"><a href="/">← Pitaka</a><h1>Delete your Pitaka account</h1><p>Sign in below to confirm your identity and permanently delete your account and saved finance records. You can do this here even if you’ve uninstalled the app.</p><p>Deletion removes your sign-in, accounts, transactions, budgets, goals, subscriptions, holdings, and Pitaka billing records. Payment providers may retain transaction records under their own policies.</p><Suspense fallback={<SectionFallback />}><Auth initialMode="login" /></Suspense></div>
+    )
     const publicAuthMode = PUBLIC_AUTH_ROUTE_MODES[normalizedPublicPath] || null
     const landingSection = PUBLIC_LANDING_SECTION_SLUGS[normalizedPublicPath] || null
     const showPublicBlog = !isNativeMobileApp
@@ -1230,127 +1116,83 @@ function ModernApp() {
             preset={dashboardPreset}
             presets={DASHBOARD_LAYOUTS}
             onPresetChange={updateDashboardLayout}
+            onNavigate={setCurrentView}
+            onAddAccount={() => openBottomSheet('addWallet')}
           />
         )
+
+      case 'plan':
+        return <PlanHub onNavigate={setCurrentView} onNewGoal={() => { editSavings(null); openBottomSheet('addSavings') }} categoryBudgets={categoryBudgets} savings={savings} isPro={isPro} />
 
       case 'transactions':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Activity Ledger',
-              title: 'Transactions',
-              description: `Review cash movement for ${currentPeriodLabel} across income, expenses, and transfers.`,
-              stats: [
-                { label: 'Income Rows', value: filteredIncomes.length },
-                { label: 'Expense Rows', value: filteredExpenses.length },
-                { label: 'Transfers', value: currentPeriodTransfers.length }
-              ]
-            })}
-
-            <div className="page-section-grid page-section-grid--stacked">
-              <div className={`card page-table-card ${filteredIncomes.length === 0 ? 'page-table-card--empty' : ''}`}>
-                <div className="card-header">
-                  <div>
-                    <h3 className="card-title"><IncomeIcon size={18} /> Income</h3>
-                  </div>
-                  <p className="card-subtitle">{filteredIncomes.length} entries in {currentPeriodLabel}</p>
-                </div>
-                <div className={`page-table-card-body ${filteredIncomes.length === 0 ? 'page-table-card-body--empty' : ''}`}>
-                  <IncomeTable
-                    incomes={filteredIncomes}
-                    onEditIncome={(income) => {
-                      editIncome(income)
-                      openBottomSheet('addIncome')
-                    }}
-                    onDeleteIncome={deleteIncome}
-                    wallets={walletBalances}
-                    selectable
-                    onBulkDelete={(rows) => deleteMany(rows, deleteIncome)}
-                  />
-                </div>
-              </div>
-
-              <div className={`card page-table-card ${filteredExpenses.length === 0 ? 'page-table-card--empty' : ''}`}>
-                <div className="card-header">
-                  <div>
-                    <h3 className="card-title"><ExpenseIcon size={18} /> Expenses</h3>
-                  </div>
-                  <p className="card-subtitle">{filteredExpenses.length} entries in {currentPeriodLabel}</p>
-                </div>
-                <div className={`page-table-card-body ${filteredExpenses.length === 0 ? 'page-table-card-body--empty' : ''}`}>
-                  <ExpenseTable
-                    expenses={filteredExpenses}
-                    onEditExpense={(expense) => {
-                      editExpense(expense)
-                      openBottomSheet('addExpense')
-                    }}
-                    onDeleteExpense={deleteExpense}
-                    wallets={walletBalances}
-                    selectable
-                    onBulkDelete={(rows) => deleteMany(rows, deleteExpense)}
-                  />
-                </div>
-              </div>
-
-              <div className="card page-table-card">
-                <div className="card-header">
-                  <div>
-                    <h3 className="card-title"><TransferIcon size={18} /> Transfers</h3>
-                  </div>
-                  <p className="card-subtitle">{currentPeriodTransfers.length} internal movements</p>
-                </div>
-                <TransfersTable
-                  transfers={currentPeriodTransfers}
-                  wallets={walletBalances}
-                  onDelete={deleteTransfer}
-                />
-              </div>
-            </div>
+            <TransactionFeed
+              incomes={filteredIncomes} expenses={filteredExpenses} transfers={currentPeriodTransfers} wallets={walletBalances}
+              onAdd={() => { editExpense(null); openBottomSheet('addExpense') }}
+              onEdit={(entry) => {
+                if (entry.type === 'income') { editIncome(entry); openBottomSheet('addIncome') }
+                else { editExpense(entry); openBottomSheet('addExpense') }
+              }}
+              onDelete={(entry) => entry.type === 'income' ? deleteIncome(entry.id) : entry.type === 'expense' ? deleteExpense(entry.id) : deleteTransfer(entry.id)}
+            />
           </div>
         )
 
       case 'accounts':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Account Registry',
+            {renderPageSummary({
               title: 'Accounts',
-              description: 'Manage every wallet, bank, and funding bucket from one place.',
+              description: 'Keep your cash, bank accounts, e-wallets, and cards together.',
               stats: [
                 { label: 'Accounts', value: walletBalances.length },
-                { label: 'Combined Balance', value: walletBalanceSummary }
+                { label: 'Current balance', value: walletBalanceSummary }
               ]
             })}
 
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><WalletIcon size={18} /> My Accounts</h3>
-                  <p className="card-subtitle">Track balances, edit account details, and keep your sources organized.</p>
+                  <h3 className="card-title"><WalletIcon size={18} /> Your accounts</h3>
+                  <p className="card-subtitle">Your balances at a glance. Open an account for details.</p>
                 </div>
                 <button
                   onClick={() => openBottomSheet('addWallet')}
                   className="btn btn-primary"
                 >
-                  + Add Account
+                  + Add account
                 </button>
               </div>
               <WalletsTable
                 wallets={walletBalances}
                 onEditWallet={(wallet) => openBottomSheet({ type: 'editWallet', wallet })}
-                onDeleteWallet={async (id) => {
-                  const ok = await confirm({
-                    title: 'Delete Account',
-                    description: 'Are you sure you want to delete this account? This action cannot be undone.',
-                    confirmText: 'Delete',
-                    cancelText: 'Cancel'
-                  })
-                  if (ok) deleteWallet(id)
-                }}
+                onDeleteWallet={deleteWallet}
                 selectable
                 onBulkDelete={(rows) => deleteMany(rows, deleteWallet)}
               />
             </div>
+            {debtSnowball.length > 0 && (
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <h3 className="card-title"><WalletIcon size={18} /> Debt Payoff Strategy</h3>
+                    <p className="card-subtitle">Compare the quickest psychological wins with the lowest-interest-cost order.</p>
+                  </div>
+                </div>
+                <div className="layout-preference-list layout-preference-list--two-up">
+                  <div className="layout-preference-card">
+                    <strong>Snowball</strong>
+                    <div className="layout-preference-description">{debtSnowball.map((card) => card.name).join(' → ')}</div>
+                  </div>
+                  <div className="layout-preference-card">
+                    <strong>Avalanche</strong>
+                    <div className="layout-preference-description">{debtAvalanche.map((card) => `${card.name} (${card.apr || 0}% APR)`).join(' → ')}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )
 
@@ -1359,36 +1201,27 @@ function ModernApp() {
       case 'wealth':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Wealth Planning',
-              title: 'Wealth',
-              description: 'Manage savings goals and investment positions together so future plans and invested capital stay aligned.',
-              stats: [
-                { label: 'Active Goals', value: savings.length },
-                { label: 'Reserved', value: totalSavingsSummary },
-                { label: 'Investments', value: isPro ? investmentValueSummary : 'Pro only' }
-              ]
+            {renderPageSummary({
+              title: currentView === 'investments' ? 'Investments' : 'Savings goals',
+              description: currentView === 'investments' ? 'Keep track of your holdings, cost, and current value.' : 'Give your plans a goal and build your savings, one contribution at a time.',
+              stats: currentView === 'investments'
+                ? []
+                : [{ label: 'Savings goals', value: savings.length }, { label: 'Reserved', value: totalSavingsSummary }]
             })}
 
+            {currentView !== 'investments' && <>
             <div className="card savings-overview-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><TrendUpIcon size={18} /> Savings Goals</h3>
+                  <h3 className="card-title"><TrendUpIcon size={18} /> Savings goals</h3>
                   <p className="card-subtitle">{savings.length} active goal{savings.length === 1 ? '' : 's'}</p>
                 </div>
                 <div className="savings-actions">
                 <button
-                  onClick={() => openBottomSheet('addSavings')}
+                  onClick={() => { editSavings(null); openBottomSheet('addSavings') }}
                   className="btn btn-primary"
                 >
-                  + New Goal
-                </button>
-                <button
-                  onClick={() => openBottomSheet('addToSavings')}
-                  className="btn btn-secondary"
-                  disabled={savings.length === 0}
-                >
-                  Add Funds
+                  + New goal
                 </button>
                 </div>
                 <div className="savings-summary-amount">
@@ -1410,7 +1243,7 @@ function ModernApp() {
                       <div className="savings-goal-percent">{goal.progress.toFixed(0)}%</div>
                     </div>
 
-                    <div className="savings-goal-track">
+                    <div className="savings-goal-track" role="progressbar" aria-label={`${goal.goal} progress`} aria-valuenow={Math.round(goal.progress)} aria-valuemin={0} aria-valuemax={100}>
                       <div className="savings-goal-fill" style={{ width: `${goal.progress}%` }} />
                     </div>
 
@@ -1431,21 +1264,21 @@ function ModernApp() {
                         className="btn btn-primary"
                         onClick={() => openBottomSheet({ type: 'fundSavings', savingsId: goal.id })}
                       >
-                        Add Funds
+                        Add funds
                       </button>
                       <button
                         type="button"
                         className="btn btn-secondary"
                         onClick={() => openBottomSheet({ type: 'editSavings', savings: goal })}
                       >
-                        Edit Goal
+                        Edit goal
                       </button>
                       <button
                         type="button"
-                        className="btn btn-secondary savings-delete-btn"
+                        className="btn danger savings-delete-btn"
                         onClick={async () => {
                           const ok = await confirm({
-                            title: 'Delete Savings Goal',
+                            title: 'Delete savings goal',
                             description: `Delete "${goal.goal}"? This action cannot be undone.`,
                             confirmText: 'Delete',
                             cancelText: 'Cancel'
@@ -1470,49 +1303,15 @@ function ModernApp() {
                   <div className="empty-state-description">
                     Create a goal and start funding it to watch your progress build on the dashboard.
                   </div>
-                  <button className="btn btn-primary" onClick={() => openBottomSheet('addSavings')}>
-                    Create First Goal
+                  <button className="btn btn-primary" onClick={() => { editSavings(null); openBottomSheet('addSavings') }}>
+                    Create a goal
                   </button>
                 </div>
               </div>
             )}
             </div>
-            {debtSnowball.length > 0 && (
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <h3 className="card-title"><WalletIcon size={18} /> Debt Payoff Strategy</h3>
-                    <p className="card-subtitle">Compare the quickest psychological wins with the lowest-interest-cost order.</p>
-                  </div>
-                </div>
-                <div className="layout-preference-list layout-preference-list--two-up">
-                  <div className="layout-preference-card">
-                    <strong>Snowball</strong>
-                    <div className="layout-preference-description">{debtSnowball.map((card) => card.name).join(' → ')}</div>
-                  </div>
-                  <div className="layout-preference-card">
-                    <strong>Avalanche</strong>
-                    <div className="layout-preference-description">{debtAvalanche.map((card) => `${card.name} (${card.apr || 0}% APR)`).join(' → ')}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="card">
-              <div className="card-header">
-                <div>
-                  <h3 className="card-title"><ChartIcon size={18} /> Monthly Report</h3>
-                  <p className="card-subtitle">A compact review for {currentPeriodLabel}.</p>
-                </div>
-              </div>
-              <div className="dashboard-plan-list">
-                <div className="atelier-metric-chip"><span>Income</span><strong>{formatCurrencySummary(summarizeByCurrency(filteredIncomes, (item) => item.amount, (item) => item.currency))}</strong></div>
-                <div className="atelier-metric-chip"><span>Expenses</span><strong>{formatCurrencySummary(summarizeByCurrency(filteredExpenses, (item) => item.amount, (item) => item.currency))}</strong></div>
-                <div className="atelier-metric-chip"><span>Top Category</span><strong>{topCategory?.category || 'None'}</strong></div>
-                <div className="atelier-metric-chip"><span>Budget Alerts</span><strong>{categoryBudgets.filter((budget) => ['warning', 'over'].includes(budget.status)).length}</strong></div>
-              </div>
-            </div>
-
+            </>}
+            {currentView === 'investments' &&
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
@@ -1528,7 +1327,7 @@ function ModernApp() {
                     onClick={() => openBottomSheet('addInvestment')}
                     className="btn btn-primary"
                   >
-                    + Add Investment
+                    + Add investment
                   </button>
                 ) : (
                   <button
@@ -1543,15 +1342,7 @@ function ModernApp() {
                 <InvestmentsTable
                   investments={investments}
                   onEdit={(investment) => openBottomSheet({ type: 'editInvestment', investment })}
-                  onDelete={async (id) => {
-                    const ok = await confirm({
-                      title: 'Delete Investment',
-                      description: 'Are you sure you want to delete this investment?',
-                      confirmText: 'Delete',
-                      cancelText: 'Cancel'
-                    })
-                    if (ok) deleteInvestment(id)
-                  }}
+                  onDelete={deleteInvestment}
                 />
               ) : (
                 <div className="empty-state">
@@ -1565,15 +1356,14 @@ function ModernApp() {
                   </button>
                 </div>
               )}
-            </div>
+            </div>}
           </div>
         )
 
       case 'recurring-income':
         return isPro ? (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Recurring Cashflow',
+            {renderPageSummary({
               title: 'Recurring Income',
               description: 'Manage repeating income schedules and keep the next payout dates accurate.',
               stats: [
@@ -1585,14 +1375,14 @@ function ModernApp() {
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><IncomeIcon size={18} /> Recurring Income Schedules</h3>
+                  <h3 className="card-title"><IncomeIcon size={18} /> Income schedules</h3>
                   <p className="card-subtitle">Create and maintain salary, allowance, or retainer schedules.</p>
                 </div>
                 <button
                   onClick={() => openBottomSheet('addRecurringIncome')}
                   className="btn btn-primary"
                 >
-                  + Add Recurring Income
+                  + Add recurring income
                 </button>
               </div>
               <RecurringIncomesTable
@@ -1626,52 +1416,19 @@ function ModernApp() {
       case 'categories':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Classification',
+            {renderPageSummary({
               title: 'Categories',
-              description: 'Keep spending reports clean by maintaining the labels behind every expense.',
+              description: 'Plan your monthly spending, then see what is left in each category.',
               stats: [
                 { label: 'Categories', value: categories.length },
-                { label: 'Top Spend Bucket', value: topCategory?.category || 'None yet' }
+                { label: 'Budgets set', value: categoryBudgets.filter((entry) => entry.hasBudget).length }
               ]
             })}
 
-            <div className="card page-hero-card">
-              <div className="card-header">
+            <section className="card budget-workspace">
+              <div className="card-header" >
                 <div>
-                  <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
-                  <p className="card-subtitle">Create and refine the buckets that power dashboard insights and expense tracking.</p>
-                </div>
-                <button
-                  onClick={() => openCategorySheet()}
-                  className="btn btn-primary"
-                >
-                  + Add Category
-                </button>
-              </div>
-              <CategoryTable
-                categories={categories}
-                onEditCategory={openCategorySheet}
-                onDeleteCategory={async (id) => {
-                  const ok = await confirm({
-                    title: 'Delete Category',
-                    description: 'Are you sure? Expenses with this category will become uncategorized.',
-                    confirmText: 'Delete',
-                    cancelText: 'Cancel'
-                  })
-                  if (ok) {
-                    await deleteCategory(id)
-                  }
-                }}
-                selectable
-                onBulkDelete={(rows) => deleteMany(rows, deleteCategory)}
-              />
-            </div>
-
-            <section className="page-hero-card" style={{ display: 'grid', gap: '1rem' }}>
-              <div className="card-header" style={{ marginBottom: 0 }}>
-                <div>
-                  <h3 className="card-title"><ChartIcon size={18} /> Budget Envelopes</h3>
+                  <h3 className="card-title"><ChartIcon size={18} /> Monthly budgets</h3>
                   <p className="card-subtitle">Set monthly category limits and watch what is left for the current month.</p>
                 </div>
               </div>
@@ -1683,14 +1440,38 @@ function ModernApp() {
                 onDeleteBudget={deleteBudget}
               />
             </section>
+
+            <details className="settings-preferences categories-library">
+              <summary>Manage categories<span>Create, rename, and organize your spending categories</span></summary>
+            <div className="card page-hero-card">
+              <div className="card-header">
+                <div>
+                  <h3 className="card-title"><CategoryIcon size={18} /> Categories</h3>
+                  <p className="card-subtitle">Create and refine the buckets that power dashboard insights and expense tracking.</p>
+                </div>
+                <button
+                  onClick={() => openCategorySheet()}
+                  className="btn btn-primary"
+                >
+                  + Add category
+                </button>
+              </div>
+              <CategoryTable
+                categories={categories}
+                onEditCategory={openCategorySheet}
+                onDeleteCategory={deleteCategory}
+                selectable
+                onBulkDelete={(rows) => deleteMany(rows, deleteCategory)}
+              />
+            </div>
+            </details>
           </div>
         )
 
       case 'subscriptions':
         return isPro ? (
           <div className="mobile-content page-shell">
-              {renderPageIntro({
-              eyebrow: 'Recurring Expenses',
+              {renderPageSummary({
               title: 'Subscriptions',
               description: 'Track recurring charges, monitor what is due next, and let each bill deduct automatically on schedule.',
               stats: [
@@ -1702,14 +1483,14 @@ function ModernApp() {
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><ExpenseIcon size={18} /> Subscription Schedule</h3>
+                  <h3 className="card-title"><ExpenseIcon size={18} /> Bills & subscriptions</h3>
                   <p className="card-subtitle">Manage recurring bills and let each due date log itself automatically into your expenses.</p>
                 </div>
                 <button
                   onClick={() => openSubscriptionSheet()}
                   className="btn btn-primary"
                 >
-                  + Add Subscription
+                  + Add subscription
                 </button>
               </div>
               <SubscriptionsTable
@@ -1724,8 +1505,7 @@ function ModernApp() {
           </div>
         ) : (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Recurring Expenses',
+            {renderPageSummary({
               title: 'Subscriptions',
               description: 'Track recurring charges with upcoming-bill visibility and automatic deductions on their due dates.',
               stats: [
@@ -1764,10 +1544,11 @@ function ModernApp() {
         )
 
       case 'pro':
+        if (isNativeMobileApp) return <div className="mobile-content page-shell"><section className="card finance-empty"><TrendUpIcon size={36} /><h2>Pitaka Pro</h2><p>{isPro ? 'Your Pro features are ready to use.' : 'Pro features are not available for purchase in this version. You can keep tracking accounts, transactions, budgets, and savings for free.'}</p><button className="btn btn-primary" onClick={() => setCurrentView('plan')}>Back to Plan</button></section></div>
+
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Membership',
+            {renderPageSummary({
               title: 'Pitaka Pro',
               description: 'Unlock the Android app, recurring income automation, automatic subscriptions, full currency support, and investment tracking from one upgrade page.',
               stats: [
@@ -1943,7 +1724,7 @@ function ModernApp() {
                     </div>
                     <div className="pro-purchase-meta-card">
                       <span className="pro-purchase-meta-label">Upgrade Applies</span>
-                      <strong>After webhook confirmation</strong>
+                      <strong>After payment confirmation</strong>
                     </div>
                     <div className="pro-purchase-meta-card">
                       <span className="pro-purchase-meta-label">Account</span>
@@ -1955,7 +1736,7 @@ function ModernApp() {
 
               {isPro && userProfile && (
                 <div style={{ marginTop: '1rem' }} className="card-subtitle">
-                  Pro tag stored on this user profile{userProfile.email ? ` for ${userProfile.email}` : ''}.
+                  Pro access is active on your account{userProfile.email ? ` for ${userProfile.email}` : ''}.
                 </div>
               )}
             </div>
@@ -1965,8 +1746,7 @@ function ModernApp() {
       case 'android-app':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Mobile Access',
+            {renderPageSummary({
               title: 'Pitaka Android App',
               description: 'Download the Android build through Firebase App Distribution. This perk is available to Pro members.',
               stats: [
@@ -2051,14 +1831,10 @@ function ModernApp() {
       case 'contact':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Support & Feedback',
+            {renderPageSummary({
               title: 'Contact Pitaka',
               description: 'Send feedback, feature requests, or concerns without leaving the app.',
-              stats: [
-                { label: 'Channel', value: 'EmailJS' },
-                { label: 'Response Type', value: 'Email' }
-              ]
+              stats: []
             })}
 
             <div className="card page-hero-card">
@@ -2076,14 +1852,10 @@ function ModernApp() {
       case 'privacy':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Trust',
+            {renderPageSummary({
               title: 'Privacy & Security',
               description: 'How Pitaka handles finance data, account access, and billing.',
-              stats: [
-                { label: 'Data Access', value: 'Owner Only' },
-                { label: 'Billing', value: 'Token Verified' }
-              ]
+              stats: []
             })}
 
             <div className="card page-hero-card">
@@ -2093,176 +1865,86 @@ function ModernApp() {
                   <div className="layout-preference-top">
                     <span className="layout-preference-name">Your records stay in your account</span>
                   </div>
-                  <div className="layout-preference-description">Firestore rules restrict finance documents to the signed-in owner and block owner changes on update.</div>
+                  <div className="layout-preference-description">Your finance records are stored in your account and synced across your signed-in devices.</div>
                 </div>
                 <div className="layout-preference-card active">
                   <div className="layout-preference-top">
                     <span className="layout-preference-name">Money inputs are validated</span>
                   </div>
-                  <div className="layout-preference-description">Rules reject negative amount fields for core money records and validate basic currency field types.</div>
+                  <div className="layout-preference-description">You can correct or delete entries from Activity. Account balances update with your records.</div>
                 </div>
                 <div className="layout-preference-card active">
                   <div className="layout-preference-top">
-                    <span className="layout-preference-name">Billing uses Firebase identity</span>
+                    <span className="layout-preference-name">You control your account</span>
                   </div>
-                  <div className="layout-preference-description">Checkout requests verify the Firebase ID token server-side before creating a PayMongo session.</div>
+                  <div className="layout-preference-description">You can permanently delete your account and saved records from More → Delete account & data, or visit /delete-account on the Pitaka website.</div>
                 </div>
                 <div className="layout-preference-card active">
                   <div className="layout-preference-top">
                     <span className="layout-preference-name">Backups are user controlled</span>
                   </div>
-                  <div className="layout-preference-description">CSV and JSON exports are downloaded locally from your browser when you request them.</div>
+                  <div className="layout-preference-description">You can download a copy of your records from More. Keep these files private: they contain your financial information.</div>
                 </div>
               </div>
             </div>
           </div>
         )
 
+      case 'delete-account':
+        return <div className="mobile-content page-shell"><DeleteAccount /></div>
+
       case 'settings':
         return (
           <div className="mobile-content page-shell">
-            {renderPageIntro({
-              eyebrow: 'Controls & Tools',
+            {renderPageSummary({
               title: 'More',
-              description: 'Choose your dashboard focus, theme, and data tools from one place.',
-              stats: [
-                { label: 'Theme', value: THEME_OPTIONS.find((theme) => theme.id === themePreference)?.name || 'System' },
-                { label: 'View', value: DASHBOARD_LAYOUTS.find((layout) => layout.id === dashboardLayout)?.name || 'Overview' }
-              ]
+              description: 'Manage your account, keep a backup, and make Pitaka feel like yours.',
+              stats: []
             })}
 
-            <div className="card">
-              <div className="card-header">
-                <div>
-                  <h3 className="card-title"><HomeIcon size={18} /> Dashboard View</h3>
-                  <p className="card-subtitle">Choose the focus that matches what you want to review. Every view uses the same consistent card grid.</p>
-                </div>
+            <div className="card settings-profile">
+              <span className="settings-avatar" aria-hidden="true">{(user?.displayName || user?.email || 'P')[0].toUpperCase()}</span>
+              <div className="settings-profile-copy">
+                <h3 className="card-title">{user?.displayName || 'Your account'}</h3>
+                <p className="card-subtitle">{user?.email}</p>
+                <span className="settings-plan">Pitaka {isPro ? 'Pro' : 'Basic'}</span>
               </div>
-
-              <div className="layout-preference-list">
-                {DASHBOARD_LAYOUTS.map((layout) => (
-                  <button
-                    key={layout.id}
-                    type="button"
-                    className={`layout-preference-card ${dashboardLayout === layout.id ? 'active' : ''}`}
-                    onClick={() => updateDashboardLayout(layout.id)}
-                  >
-                    <div className="layout-preference-top">
-                      <span className="layout-preference-name">{layout.name}</span>
-                      <span className="layout-preference-state">{dashboardLayout === layout.id ? 'Selected' : 'Choose'}</span>
-                    </div>
-                    <div className="layout-preference-description">{layout.description}</div>
-                  </button>
-                ))}
-              </div>
+              <button type="button" onClick={requestLogout} className="btn btn-secondary account-signout-btn"><LogoutIcon size={16} /> Sign out</button>
             </div>
 
-            <div className="card">
-              <div className="card-header">
-                <div>
-                  <h3 className="card-title"><SettingsIcon size={18} /> Appearance</h3>
-                  <p className="card-subtitle">Pick the surface theme that feels best for your workspace.</p>
-                </div>
-              </div>
-
-              <div className="layout-preference-list layout-preference-list--two-up">
-                {THEME_OPTIONS.map((theme) => (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    className={`layout-preference-card ${themePreference === theme.id ? 'active' : ''}`}
-                    onClick={() => updateThemePreference(theme.id)}
-                  >
-                    <div className="layout-preference-top">
-                      <span className="layout-preference-name">{theme.name}</span>
-                      <span className="layout-preference-state">{themePreference === theme.id ? 'Selected' : 'Choose'}</span>
-                    </div>
-                    <div className="layout-preference-description">{theme.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <div>
-                  <h3 className="card-title"><SettingsIcon size={18} /> Privacy, Alerts & Diagnostics</h3>
-                  <p className="card-subtitle">Protect backgrounded screens, receive local financial alerts, and export troubleshooting data.</p>
-                </div>
-              </div>
-              <div className="layout-preference-list">
-                <button type="button" className={`layout-preference-card ${privacyShieldEnabled ? 'active' : ''}`} onClick={togglePrivacyShield}>
-                  <div className="layout-preference-top"><span className="layout-preference-name">Privacy Shield</span><span className="layout-preference-state">{privacyShieldEnabled ? 'On' : 'Off'}</span></div>
-                  <div className="layout-preference-description">Hide financial content when Pitaka is backgrounded or shown in the app switcher.</div>
-                </button>
-                <button type="button" className={`layout-preference-card ${notificationsEnabled ? 'active' : ''}`} onClick={toggleNotifications}>
-                  <div className="layout-preference-top"><span className="layout-preference-name">Budget & Debt Alerts</span><span className="layout-preference-state">{notificationsEnabled ? 'On' : 'Off'}</span></div>
-                  <div className="layout-preference-description">Send one local daily notification when budgets or credit limits need attention.</div>
-                </button>
-                <button type="button" className="layout-preference-card" onClick={downloadDiagnostics}>
-                  <div className="layout-preference-top"><span className="layout-preference-name">Export Diagnostics</span><span className="layout-preference-state">Download</span></div>
-                  <div className="layout-preference-description">Download recent local errors and device context without financial records.</div>
-                </button>
-              </div>
-            </div>
+            <SettingsPreferences
+              layouts={DASHBOARD_LAYOUTS}
+              layout={dashboardLayout}
+              onLayoutChange={updateDashboardLayout}
+              themes={THEME_OPTIONS}
+              theme={themePreference}
+              onThemeChange={updateThemePreference}
+              privacyShieldEnabled={privacyShieldEnabled}
+              onTogglePrivacy={togglePrivacyShield}
+              notificationsEnabled={notificationsEnabled}
+              onToggleNotifications={toggleNotifications}
+              notificationPermission={typeof Notification === 'undefined' ? 'unsupported' : Notification.permission}
+              requestingNotifications={requestingNotifications}
+              notificationMessage={notificationMessage}
+              onDownloadDiagnostics={downloadDiagnostics}
+            />
 
             <div className="card page-hero-card">
-              <h3 className="card-title"><SettingsIcon size={18} /> Settings & Tools</h3>
+              <h3 className="card-title">Support & account</h3>
 
+              <div className="settings-links">
+                <button onClick={() => setCurrentView('contact')} className="settings-link"><ActivityIcon size={20} /><span>Help & feedback<small>Report an issue or share an idea</small></span><ChevronRightIcon size={18} /></button>
+                <button onClick={() => setCurrentView('privacy')} className="settings-link"><SettingsIcon size={20} /><span>Privacy & security<small>How your data is stored and protected</small></span><ChevronRightIcon size={18} /></button>
+                {!isNativeMobileApp && <button onClick={() => setCurrentView('android-app')} className="settings-link"><DownloadIcon size={20} /><span>Get the Android app<small>Take Pitaka with you</small></span><ChevronRightIcon size={18} /></button>}
+                <button onClick={() => setCurrentView('delete-account')} className="settings-link is-danger"><LogoutIcon size={20} /><span>Delete account & data<small>Permanently remove your account</small></span><ChevronRightIcon size={18} /></button>
+              </div>
+            </div>
+
+            <details className="settings-preferences settings-data">
+              <summary>Backups & transfers<span>Export records, import a file, or restore a backup</span></summary>
+              <div className="card">
+              <p className="card-subtitle">Downloaded files contain your financial records. Keep them somewhere private.</p>
               <div className="settings-action-list">
-                <h4 className="settings-action-heading">Plan and organize</h4>
-                <button
-                  onClick={() => setCurrentView(isPro ? 'subscriptions' : 'pro')}
-                  className="btn btn-secondary"
-                >
-                  <ExpenseIcon size={16} /> {isPro ? 'Manage Subscriptions' : 'Subscriptions (Pro)'}
-                </button>
-
-                {isPro ? (
-                  <button
-                    onClick={() => setCurrentView('recurring-income')}
-                    className="btn btn-secondary"
-                  >
-                    <IncomeIcon size={16} /> Manage Recurring Income
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="btn btn-secondary"
-                  >
-                    <IncomeIcon size={16} /> Recurring Income (Pro)
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setCurrentView('categories')}
-                  className="btn btn-secondary"
-                >
-                  <CategoryIcon size={16} /> Manage Categories
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('android-app')}
-                  className="btn btn-secondary"
-                >
-                  <DownloadIcon size={16} /> {isPro ? 'Android App Download' : 'Android App (Pro)'}
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('contact')}
-                  className="btn btn-secondary"
-                >
-                  <ActivityIcon size={16} /> Contact Pitaka
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('privacy')}
-                  className="btn btn-secondary"
-                >
-                  <SettingsIcon size={16} /> Privacy & Security
-                </button>
-
-                <h4 className="settings-action-heading">Move your data</h4>
                 <button
                   onClick={() => {
                     exportToExcel({
@@ -2276,7 +1958,7 @@ function ModernApp() {
                       selectedYear
                     })
                   }}
-                  className="btn btn-primary"
+                  className="btn btn-secondary"
                 >
                   <DownloadIcon size={16} /> Export to Excel
                 </button>
@@ -2326,14 +2008,14 @@ function ModernApp() {
                   onClick={downloadImportTemplate}
                   className="btn btn-secondary"
                 >
-                  <TemplateIcon size={16} /> Download Import Template
+                  <TemplateIcon size={16} /> Download import template
                 </button>
 
                 <button
                   onClick={downloadJsonBackup}
                   className="btn btn-secondary"
                 >
-                  <DownloadIcon size={16} /> Download JSON Backup
+                  <DownloadIcon size={16} /> Download JSON backup
                 </button>
 
                 <button
@@ -2349,20 +2031,14 @@ function ModernApp() {
                   }}
                   className="btn btn-secondary"
                 >
-                  <UploadIcon size={16} /> Restore JSON Backup
+                  <UploadIcon size={16} /> Restore JSON backup
                 </button>
               </div>
             </div>
 
-            <div className="card account-settings-card">
-              <div>
-                <h3 className="card-title">Signed in as {user?.displayName || user?.email || 'Pitaka user'}</h3>
-                <p className="card-subtitle">Sign out on this device without removing your saved records.</p>
-              </div>
-              <button type="button" onClick={requestLogout} className="btn btn-secondary account-signout-btn">
-                <LogoutIcon size={16} /> Sign Out
-              </button>
-            </div>
+            </details>
+
+
 
             {!isInstalled && deferredInstallPrompt && (
               <div className="card page-hero-card">
@@ -2399,12 +2075,12 @@ function ModernApp() {
           <IncomeForm
             onAddIncome={async (income) => {
               await addIncome(income)
-              closeBottomSheet()
+              closeBottomSheet('Income added')
             }}
             editingIncome={editingIncome}
             onUpdateIncome={async (income) => {
               await updateIncome(income)
-              closeBottomSheet()
+              closeBottomSheet('Income updated')
             }}
             onCancelEdit={() => editIncome(null)}
             wallets={walletBalances}
@@ -2415,14 +2091,13 @@ function ModernApp() {
         return (
           <ExpenseForm
             onAddExpense={async (expense) => {
-              if (Array.isArray(expense)) await Promise.all(expense.map(addExpense))
-              else await addExpense(expense)
-              closeBottomSheet()
+              await addExpense(expense)
+              closeBottomSheet('Expense added')
             }}
             editingExpense={editingExpense}
             onUpdateExpense={async (expense) => {
               await updateExpense(expense)
-              closeBottomSheet()
+              closeBottomSheet('Expense updated')
             }}
             onCancelEdit={() => editExpense(null)}
             categories={categories}
@@ -2435,7 +2110,7 @@ function ModernApp() {
           <TransferForm
             onAddTransfer={async (transfer) => {
               await addTransfer(transfer)
-              closeBottomSheet()
+              closeBottomSheet('Transfer recorded')
             }}
             wallets={walletBalances}
           />
@@ -2446,7 +2121,7 @@ function ModernApp() {
           <WalletForm
             onAddWallet={async (wallet) => {
               await addWallet(wallet)
-              closeBottomSheet()
+              closeBottomSheet('Account added')
             }}
           />
         )
@@ -2456,12 +2131,12 @@ function ModernApp() {
           <SavingsForm
             onAddSavings={async (goal) => {
               await addSavings(goal)
-              closeBottomSheet()
+              closeBottomSheet('Savings goal added')
             }}
             editingSavings={editingSavings}
             onUpdateSavings={async (goal) => {
               await updateSavings(goal)
-              closeBottomSheet()
+              closeBottomSheet('Savings goal updated')
             }}
             onCancelEdit={() => {
               editSavings(null)
@@ -2473,14 +2148,14 @@ function ModernApp() {
       case 'addToSavings':
         return (
           <div className="form-container">
-            <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
+            <h3 className="card-title"><TrendUpIcon size={18} /> Add funds to goal</h3>
             <AddToSavingsForm
               savings={savings}
               wallets={walletBalances}
               initialSelectedId={savings[0]?.id}
               onAddToSavings={async (savingsId, amount, options) => {
                 await addToSavingsGoal(savingsId, amount, options)
-                closeBottomSheet()
+                closeBottomSheet('Savings contribution recorded')
               }}
             />
           </div>
@@ -2491,12 +2166,12 @@ function ModernApp() {
           <CategoryForm
             onAddCategory={async (category) => {
               await addCategory(category)
-              closeBottomSheet()
+              closeBottomSheet('Category added')
             }}
             editingCategory={editingCategory}
             onUpdateCategory={async (category) => {
               await updateCategory(category)
-              closeBottomSheet()
+              closeBottomSheet('Category updated')
             }}
             onCancelEdit={() => { editCategory(null); closeBottomSheet() }}
           />
@@ -2507,12 +2182,12 @@ function ModernApp() {
           <SubscriptionForm
             onAddSubscription={async (subscription) => {
               await addSubscription(subscription)
-              closeBottomSheet()
+              closeBottomSheet('Subscription added')
             }}
             editingSubscription={editingSubscription}
             onUpdateSubscription={async (subscription) => {
               await updateSubscription(subscription)
-              closeBottomSheet()
+              closeBottomSheet('Subscription updated')
             }}
             onCancelEdit={() => {
               editSubscription(null)
@@ -2550,14 +2225,14 @@ function ModernApp() {
           <InvestmentForm
             onAddInvestment={async (investment) => {
               await addInvestment(investment)
-              closeBottomSheet()
+              closeBottomSheet('Investment added')
             }}
           />
         ) : (
           <div className="form-container">
             <h3 className="card-title"><TrendUpIcon size={18} /> Pro Required</h3>
             <p className="card-subtitle" style={{ marginTop: '0.75rem' }}>
-              Investment tracking is part of Pitaka Pro. Add the Pro tag on this user in the database to enable investment access.
+              Investment tracking is part of Pitaka Pro. View Pro features to learn more.
             </p>
             <div className="form-buttons" style={{ display: 'flex', gap: '8px', marginTop: '1rem' }}>
               <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeBottomSheet}>
@@ -2583,12 +2258,12 @@ function ModernApp() {
           <RecurringIncomeForm
             onAddRecurringIncome={async (recurringIncome) => {
               await addRecurringIncome(recurringIncome)
-              closeBottomSheet()
+              closeBottomSheet('Income schedule added')
             }}
             editingRecurringIncome={editingRecurringIncome}
             onUpdateRecurringIncome={async (recurringIncome) => {
               await updateRecurringIncome(recurringIncome)
-              closeBottomSheet()
+              closeBottomSheet('Income schedule updated')
             }}
             onCancelEdit={() => {
               editRecurringIncome(null)
@@ -2618,7 +2293,7 @@ function ModernApp() {
               editingWallet={bottomSheetContent.wallet}
               onUpdateWallet={async (wallet) => {
                 await updateWallet(wallet)
-                closeBottomSheet()
+                closeBottomSheet('Account updated')
               }}
               onCancelEdit={closeBottomSheet}
             />
@@ -2629,7 +2304,7 @@ function ModernApp() {
               editingSavings={bottomSheetContent.savings}
               onUpdateSavings={async (goal) => {
                 await updateSavings(goal)
-                closeBottomSheet()
+                closeBottomSheet('Savings goal updated')
               }}
               onCancelEdit={() => {
                 editSavings(null)
@@ -2640,14 +2315,14 @@ function ModernApp() {
         } else if (bottomSheetContent?.type === 'fundSavings') {
           return (
             <div className="form-container">
-              <h3 className="card-title"><TrendUpIcon size={18} /> Add Funds To Goal</h3>
+              <h3 className="card-title"><TrendUpIcon size={18} /> Add funds to goal</h3>
               <AddToSavingsForm
                 savings={savings}
                 wallets={walletBalances}
                 initialSelectedId={bottomSheetContent.savingsId}
                 onAddToSavings={async (savingsId, amount, options) => {
                   await addToSavingsGoal(savingsId, amount, options)
-                  closeBottomSheet()
+                  closeBottomSheet('Savings contribution recorded')
                 }}
               />
             </div>
@@ -2658,7 +2333,7 @@ function ModernApp() {
               editingInvestment={bottomSheetContent.investment}
               onUpdateInvestment={async (id, updates) => {
                 await updateInvestment(id, updates)
-                closeBottomSheet()
+                closeBottomSheet('Investment updated')
               }}
               onCancelEdit={closeBottomSheet}
             />
@@ -3060,24 +2735,22 @@ function ModernApp() {
   return (
     <div className="mobile-app">
       {/* Desktop Sidebar Navigation */}
-      {renderDesktopSidebar()}
+      <AppNavigation desktop view={currentView} onNavigate={setCurrentView} user={user} isPro={isPro} onLogout={requestLogout} inert={showBottomSheet} />
 
       {/* Main Content Wrapper for Desktop */}
-      <div className="desktop-main-wrapper">
+      <main className="desktop-main-wrapper" inert={showBottomSheet}>
         {/* Header */}
         <div className="mobile-header">
           <div className="mobile-header-content">
             <div className="header-title-block">
-              <span className="eyebrow">{VIEW_META[currentView]?.eyebrow || 'Personal ledger'}</span>
-              <h1>{VIEW_META[currentView]?.title || 'Pitaka'}</h1>
-              <div className="header-period">
-                {new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { 
-                  month: 'long', 
-                  year: 'numeric' 
-                })}
-              </div>
+              {getPrimaryDestination(currentView) !== currentView ? (
+                <button className="header-back" onClick={() => setCurrentView(getPrimaryDestination(currentView))}>
+                  <ChevronLeftIcon size={14} /> Back to {getPrimaryDestination(currentView) === 'plan' ? 'Plan' : 'More'}
+                </button>
+              ) : <span className="eyebrow">{VIEW_META[currentView]?.eyebrow || 'Personal ledger'}</span>}
+              <h1 ref={pageHeadingRef} tabIndex={-1}>{VIEW_META[currentView]?.title || 'Pitaka'}</h1>
             </div>
-            <div className="header-actions">
+            {['dashboard', 'transactions', 'categories'].includes(currentView) && <div className="header-actions" role="group" aria-label="Reporting period">
             <button
               className="icon-btn"
               onClick={() => {
@@ -3090,6 +2763,12 @@ function ModernApp() {
             >
               <ChevronLeftIcon size={18} />
             </button>
+            <input type="month" className="period-select" aria-label="Reporting month" min="1900-01" max="9999-12" value={selectedBudgetMonthKey} onChange={(event) => {
+              if (!event.target.value || !event.target.validity.valid) return
+              const [year, month] = event.target.value.split('-').map(Number)
+              setSelectedYear(year)
+              setSelectedMonth(month - 1)
+            }} />
             <button
               className="icon-btn"
               onClick={() => {
@@ -3102,62 +2781,51 @@ function ModernApp() {
             >
               <ChevronRightIcon size={18} />
             </button>
-          </div>
+            <button type="button" className="period-current" aria-label="Return to current month" onClick={() => { const today = new Date(); setSelectedMonth(today.getMonth()); setSelectedYear(today.getFullYear()) }}>Now</button>
+          </div>}
         </div>
       </div>
 
+      {(syncState.hasPendingWrites || syncState.isFromCache) && <div className="sync-status" role="status">{syncState.hasPendingWrites ? 'Syncing changes…' : 'Showing saved data. Reconnecting…'}</div>}
+
       {/* Error Banner */}
+      {userProfile?.deletionPending && <div className="sync-notice" role="status">Your account is locked while deletion finishes. If deletion was interrupted, confirm your identity below to retry.</div>}
       {error && (
         <div className="app-error-banner" role="alert">
           <strong>Needs attention</strong>
-          <span>{error}</span>
+          <span>{error}</span><button className="btn btn-secondary" onClick={() => window.location.reload()}>Try again</button>
         </div>
       )}
 
       {/* Quick Actions */}
-      <section className="quick-actions-wrap" aria-label="Quick actions">
+      {['dashboard', 'transactions', 'accounts'].includes(currentView) && <section className="quick-actions-wrap" aria-label="Quick actions">
         <div className="quick-actions">
           <button
             className="quick-action-btn"
-            onClick={() => openBottomSheet('addIncome')}
+            onClick={() => { editExpense(null); openBottomSheet('addExpense') }}
           >
-            <IncomeIcon className="quick-action-icon" size={16} />
-            <span className="quick-action-label-long">Record Income</span>
-            <span className="quick-action-label-short">Income</span>
+            <ExpenseIcon className="quick-action-icon" size={16} />
+            <span className="quick-action-label-long">Add expense</span>
+            <span className="quick-action-label-short">Expense</span>
           </button>
           <button
             className="quick-action-btn"
-            onClick={() => openBottomSheet('addExpense')}
+            onClick={() => { editIncome(null); openBottomSheet('addIncome') }}
           >
-            <ExpenseIcon className="quick-action-icon" size={16} />
-            <span className="quick-action-label-long">Log Expense</span>
-            <span className="quick-action-label-short">Expense</span>
+            <IncomeIcon className="quick-action-icon" size={16} />
+            <span className="quick-action-label-long">Add income</span>
+            <span className="quick-action-label-short">Income</span>
           </button>
           <button
             className="quick-action-btn"
             onClick={() => openBottomSheet('addTransfer')}
           >
             <TransferIcon className="quick-action-icon" size={16} />
-            <span className="quick-action-label-long">Move Funds</span>
+            <span className="quick-action-label-long">Transfer</span>
             <span className="quick-action-label-short">Transfer</span>
           </button>
-          <button
-            className="quick-action-btn quick-action-btn--secondary"
-            onClick={() => openBottomSheet('addSavings')}
-          >
-            <TrendUpIcon className="quick-action-icon" size={16} /> New Goal
-          </button>
-          <button
-            className="quick-action-btn quick-action-btn--secondary"
-            onClick={() => {
-              if (isPro) openSubscriptionSheet()
-              else setCurrentView('pro')
-            }}
-          >
-            <ExpenseIcon className="quick-action-icon" size={16} /> {isPro ? 'New Subscription' : 'Subscriptions Pro'}
-          </button>
         </div>
-      </section>
+      </section>}
 
       {/* Main Content */}
       <Suspense fallback={<SectionFallback label="Loading view..." />}>
@@ -3165,52 +2833,12 @@ function ModernApp() {
       </Suspense>
 
       {/* Bottom Navigation */}
-      <nav className="bottom-nav" aria-label="Primary navigation">
-        <button
-          className={`bottom-nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setCurrentView('dashboard')}
-          aria-current={currentView === 'dashboard' ? 'page' : undefined}
-        >
-          <div className="bottom-nav-icon"><HomeIcon size={22} /></div>
-          <div>Home</div>
-        </button>
-        <button
-          className={`bottom-nav-item ${currentView === 'transactions' ? 'active' : ''}`}
-          onClick={() => setCurrentView('transactions')}
-          aria-current={currentView === 'transactions' ? 'page' : undefined}
-        >
-          <div className="bottom-nav-icon"><ActivityIcon size={22} /></div>
-          <div>Activity</div>
-        </button>
-        <button
-          className={`bottom-nav-item ${currentView === 'accounts' ? 'active' : ''}`}
-          onClick={() => setCurrentView('accounts')}
-          aria-current={currentView === 'accounts' ? 'page' : undefined}
-        >
-          <div className="bottom-nav-icon"><WalletIcon size={22} /></div>
-          <div>Accounts</div>
-        </button>
-        <button
-          className={`bottom-nav-item ${['savings', 'investments', 'wealth'].includes(currentView) ? 'active' : ''}`}
-          onClick={() => setCurrentView('wealth')}
-          aria-current={['savings', 'investments', 'wealth'].includes(currentView) ? 'page' : undefined}
-        >
-          <div className="bottom-nav-icon"><TrendUpIcon size={22} /></div>
-          <div>Wealth</div>
-        </button>
-        <button
-          className={`bottom-nav-item ${['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', 'pro'].includes(currentView) ? 'active' : ''}`}
-          onClick={() => setCurrentView('settings')}
-          aria-current={['settings', 'categories', 'subscriptions', 'recurring-income', 'android-app', 'contact', 'pro'].includes(currentView) ? 'page' : undefined}
-        >
-          <div className="bottom-nav-icon"><SettingsIcon size={22} /></div>
-          <div>More</div>
-        </button>
-      </nav>
+      <AppNavigation view={currentView} onNavigate={setCurrentView} />
       
-      </div> {/* End desktop-main-wrapper */}
+      </main> {/* End desktop-main-wrapper */}
 
       {/* Bottom Sheet */}
+      {showBottomSheet && <>
       <div
         className={`bottom-sheet-backdrop ${showBottomSheet ? 'open' : ''}`}
         onClick={closeBottomSheet}
@@ -3237,6 +2865,8 @@ function ModernApp() {
           {renderBottomSheetContent()}
         </Suspense>
       </div>
+      </>}
+      <Toast open={Boolean(notice)} message={notice} onClose={clearNotice} />
     </div>
   )
 }

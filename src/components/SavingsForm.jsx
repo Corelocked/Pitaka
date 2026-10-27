@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import './Form.css'
 import { DEFAULT_CURRENCY, getAllowedCurrencies, isCurrencyProOnly } from '../utils/currency'
@@ -15,18 +14,25 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
   useEffect(() => {
     if (editingSavings) {
       setGoal(editingSavings.goal)
-      setTargetAmount(editingSavings.targetAmount.toString())
-      setCurrentAmount(editingSavings.currentAmount.toString())
+      setTargetAmount(String(editingSavings.targetAmount ?? ''))
+      setCurrentAmount(String(editingSavings.currentAmount ?? 0))
       setTargetDate(editingSavings.targetDate)
       setCurrency(editingSavings.currency || DEFAULT_CURRENCY)
     }
   }, [editingSavings])
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (goal && targetAmount) {
+    if (saving) return
+    if (!goal.trim() || !Number.isFinite(Number(targetAmount)) || Number(targetAmount) <= 0) { setError('Enter a goal and a target greater than zero.'); return }
+    setSaving(true)
+    setError('')
+    try {
       if (editingSavings) {
-        onUpdateSavings({
+        await onUpdateSavings({
           ...editingSavings,
           goal,
           targetAmount: parseFloat(targetAmount),
@@ -35,7 +41,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
           currency
         })
       } else {
-        onAddSavings({
+        await onAddSavings({
           goal,
           targetAmount: parseFloat(targetAmount),
           currentAmount: parseFloat(currentAmount) || 0,
@@ -48,7 +54,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
         setTargetDate('')
         setCurrency(DEFAULT_CURRENCY)
       }
-    }
+    } catch (err) { setError(err.message || 'Could not save your goal. Please try again.') } finally { setSaving(false) }
   }
 
   const handleCancel = () => {
@@ -64,6 +70,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-group">
         <label htmlFor="savings-goal">Savings Goal</label>
         <input
@@ -125,7 +132,7 @@ function SavingsForm({ onAddSavings, editingSavings, onUpdateSavings, onCancelEd
         />
       </div>
       <div className="form-buttons">
-        <button type="submit">{editingSavings ? 'Update' : 'Add'} Savings Goal</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : editingSavings ? 'Save savings goal' : 'Add savings goal'}</button>
         {editingSavings && <button type="button" onClick={handleCancel}>Cancel</button>}
       </div>
     </form>

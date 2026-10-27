@@ -15,6 +15,7 @@ import {
 } from '../services/firebaseService'
 import { summarizeByCurrency } from '../utils/currency'
 import { computeWalletBalance, computeWalletBalances, isVisibleManagedExpense, moneyNumber } from '../utils/budgetMath'
+import { getBudgetSpending } from '../utils/budgetSpending'
 
 function formatLocalDateKey(date) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
@@ -53,7 +54,8 @@ export function useBudget(options = {}) {
 
   } = options
 
-  const { user, loading: authLoading, authResolved, isPro } = useFirebase()
+  const { user, loading: authLoading, authResolved, isPro, accountDeleting, userProfile } = useFirebase()
+  const deletionPending = accountDeleting || userProfile?.deletionPending === true
   const [isAppActive, setIsAppActive] = useState(() => {
     if (typeof document === 'undefined') return true
     return document.visibilityState !== 'hidden'
@@ -81,6 +83,7 @@ export function useBudget(options = {}) {
   const [editingSubscription, setEditingSubscription] = useState(null)
   const [timePeriod, setTimePeriod] = useState('monthly')
   const [loading, setLoading] = useState(true)
+  const [dataReady, setDataReady] = useState(false)
   const [error, setError] = useState(null)
   const [transfers, setTransfers] = useState([])
   const [investments, setInvestments] = useState([])
@@ -210,7 +213,7 @@ export function useBudget(options = {}) {
       return
     }
 
-    if (!user || !isAppActive || !firestoreReady) {
+    if (!user || !isAppActive || !firestoreReady || deletionPending) {
       setLoading(false)
       return
     }
@@ -221,8 +224,13 @@ export function useBudget(options = {}) {
       if (!isMounted) return
 
       setLoading(true)
+      setDataReady(false)
       setError(null)
 
+      const required = ['incomes', 'expenses', 'savings', 'categories', 'budgets', 'wallets', 'transfers', 'netWorthSnapshots']
+      if (isPro && enableInvestments) required.push('investments')
+      if (isPro && enableSubscriptions) required.push('subscriptions')
+      if (enableRecurringIncomes) required.push('recurringIncomes')
       const metadataState = {}
       const updateSyncState = (key, metadata) => {
         metadataState[key] = metadata
@@ -230,6 +238,9 @@ export function useBudget(options = {}) {
         if (!isMounted) return
 
         const values = Object.values(metadataState)
+        const failed = values.find((entry) => entry?.error)
+        if (failed) { setError('Some records could not load. Check your connection and try again.'); setLoading(false); setDataReady(false) }
+        else if (required.every((name) => metadataState[name])) { setLoading(false); setDataReady(true) }
         const hasPendingWrites = values.some((entry) => entry?.hasPendingWrites)
         const isFromCache = values.length > 0 && values.every((entry) => entry?.fromCache)
         setSyncState((current) => ({
@@ -335,8 +346,6 @@ export function useBudget(options = {}) {
 
 
 
-        if (isMounted) setLoading(false)
-
         return () => {
           unsubscribeIncomes()
           unsubscribeExpenses()
@@ -364,7 +373,7 @@ export function useBudget(options = {}) {
       isMounted = false
       cleanup?.then?.((fn) => fn?.())
     }
-}, [user, authLoading, authResolved, firestoreReady, isPro, enableInvestments, enableSubscriptions, enableRecurringIncomes, isAppActive, selectedMonthKey])
+}, [user, authLoading, authResolved, firestoreReady, isPro, enableInvestments, enableSubscriptions, enableRecurringIncomes, isAppActive, selectedMonthKey, deletionPending])
 
   useEffect(() => {
     if (!authResolved) return
@@ -426,11 +435,13 @@ export function useBudget(options = {}) {
   }, [enableRecurringIncomes, normalizeDateKey, user])
 
   const addExpense = useCallback(async (expense) => {
-    if (!user) return
+    if (!user) throw new Error('Please sign in to add an expense')
 
     try {
       setError(null)
-      return await expenseService.addExpense(compactExpensePayload(expense), user.uid)
+      return Array.isArray(expense)
+        ? await expenseService.addExpenses(expense.map(compactExpensePayload), user.uid)
+        : await expenseService.addExpense(compactExpensePayload(expense), user.uid)
     } catch (err) {
       setError(err.message)
       throw err
@@ -652,6 +663,7 @@ export function useBudget(options = {}) {
       setError(null)
       await budgetService.upsertBudget({
         ...budgetInput,
+        amount: Number(budgetInput.amount),
         monthKey: budgetInput.monthKey || selectedMonthKey
       }, user.uid)
     } catch (err) {
@@ -716,12 +728,16 @@ export function useBudget(options = {}) {
   const deleteWallet = useCallback(async (id) => {
     try {
       setError(null)
+      if ([...incomes, ...expenses, ...subscriptions, ...recurringIncomes].some((entry) => entry.walletId === id)
+        || transfers.some((entry) => entry.fromWalletId === id || entry.toWalletId === id)) {
+        throw new Error('This account has linked records. Reassign or remove those records before deleting the account.')
+      }
       await walletService.deleteWallet(id)
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [incomes, expenses, subscriptions, recurringIncomes, transfers])
 
   const editWallet = useCallback((wallet) => {
     setEditingWallet(wallet)
@@ -987,7 +1003,7 @@ export function useBudget(options = {}) {
   }, [incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user])
 
   useEffect(() => {
-    if (!user || !isPro || subscriptions.length === 0) return
+    if (!user || deletionPending || !dataReady || !isPro || subscriptions.length === 0) return
 
     const todayKey = formatLocalDateKey(new Date())
 
@@ -1050,10 +1066,10 @@ export function useBudget(options = {}) {
           processingSubscriptionsRef.current.delete(subscription.id)
         })
     })
-  }, [ensureSubscriptionCategory, expenses, getCurrentDueDate, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user])
+  }, [ensureSubscriptionCategory, expenses, getCurrentDueDate, isPro, nextSubscriptionDate, normalizeDateKey, subscriptions, user, deletionPending, dataReady])
 
   useEffect(() => {
-    if (!user || recurringIncomes.length === 0 || !enableRecurringIncomes) return
+    if (!user || deletionPending || !dataReady || recurringIncomes.length === 0 || !enableRecurringIncomes) return
 
     const todayKey = formatLocalDateKey(new Date())
 
@@ -1115,7 +1131,7 @@ export function useBudget(options = {}) {
           processingRecurringIncomesRef.current.delete(recurringIncome.id)
         })
     })
-  }, [getCurrentRecurringIncomeDueDate, incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user, enableRecurringIncomes])
+  }, [getCurrentRecurringIncomeDueDate, incomes, nextRecurringIncomeDate, normalizeDateKey, recurringIncomes, user, enableRecurringIncomes, deletionPending, dataReady])
 
   const addTransfer = useCallback(async (transfer) => {
     if (!user) return
@@ -1253,9 +1269,8 @@ export function useBudget(options = {}) {
   const categoryBudgets = useMemo(() => (
     categories.map((category) => {
       const matchingBudget = budgets.find((budget) => budget.categoryId === category.id)
-      const spent = filteredExpenses
-        .filter((expense) => expense.categoryId === category.id || expense.category === category.name)
-        .reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0)
+      const currency = matchingBudget?.currency || 'PHP'
+      const spent = getBudgetSpending(category, filteredExpenses, wallets, currency)
       const amount = parseFloat(matchingBudget?.amount || 0)
       const carryover = parseFloat(matchingBudget?.carryover || 0)
       const effectiveAmount = amount + carryover
@@ -1268,6 +1283,7 @@ export function useBudget(options = {}) {
       return {
         categoryId: category.id,
         categoryName: category.name,
+        currency,
         budgetId: matchingBudget?.id || null,
         amount,
         carryover,
@@ -1280,7 +1296,7 @@ export function useBudget(options = {}) {
         status: !hasBudget ? 'unset' : utilization >= 100 ? 'over' : utilization >= 80 ? 'warning' : 'healthy'
       }
     })
-  ), [budgets, categories, filteredExpenses, selectedMonth, selectedYear])
+  ), [budgets, categories, filteredExpenses, wallets, selectedMonth, selectedYear])
 
   const netWorthSummary = useMemo(() => {
     const walletTotals = summarizeByCurrency(
@@ -1314,16 +1330,24 @@ export function useBudget(options = {}) {
   ), [netWorthSummary])
 
   useEffect(() => {
-    if (!user || netWorthSummary.length !== 1) return
+    if (!user || !userProfile || deletionPending || !dataReady || loading || syncState.isFromCache || syncState.hasPendingWrites || !isAppActive || netWorthSummary.length !== 1) return
 
+    const monthKey = getMonthKey(new Date().getFullYear(), new Date().getMonth())
+    const currency = netWorthSummary[0].currency
+    const total = Math.round(netWorthSummary[0].total * 100) / 100
+    const savedSnapshot = netWorthSnapshots.find((snapshot) => snapshot.monthKey === monthKey)
+    // Acknowledging this write also updates syncState; do not write the same value again.
+    if (savedSnapshot?.currency === currency && Number(savedSnapshot.total) === total) return
+
+    // Balances are current: browsing an older month must never rewrite its history.
     netWorthSnapshotService.upsertSnapshot({
-      monthKey: selectedMonthKey,
-      currency: netWorthSummary[0].currency,
-      total: netWorthSummary[0].total
+      monthKey,
+      currency,
+      total
     }, user.uid).catch((err) => {
       console.error('Failed to save net worth snapshot:', err)
     })
-  }, [netWorthSummary, selectedMonthKey, user])
+  }, [netWorthSummary, netWorthSnapshots, user, userProfile, dataReady, loading, syncState.isFromCache, syncState.hasPendingWrites, isAppActive, deletionPending])
 
   const creditCardSummaries = useMemo(() => (
     walletBalances

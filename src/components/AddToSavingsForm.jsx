@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
@@ -34,8 +33,10 @@ function AddToSavingsForm({ savings, wallets = [], onAddToSavings, initialSelect
     }
   }, [eligibleWallets, selectedWallet])
 
+  const [saving, setSaving] = useState(false)
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
     setError('')
     const value = parseFloat(amount)
 
@@ -59,6 +60,8 @@ function AddToSavingsForm({ savings, wallets = [], onAddToSavings, initialSelect
       return
     }
 
+    setSaving(true)
+    setError('')
     try {
       await onAddToSavings(selectedId, value, {
         fromWalletId: selectedWallet.id,
@@ -70,23 +73,12 @@ function AddToSavingsForm({ savings, wallets = [], onAddToSavings, initialSelect
       setDate(getLocalDateInputValue())
     } catch (err) {
       setError(err.message || 'Failed to move funds to this goal')
-    }
+    } finally { setSaving(false) }
   }
 
   return (
     <form onSubmit={handleSubmit} className="form add-to-savings-form">
-      {error && (
-        <div style={{
-          padding: '12px',
-          background: '#fecaca',
-          color: '#991b1b',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          fontSize: '14px'
-        }}>
-          {error}
-        </div>
-      )}
+      {error && <p className="form-error" role="alert">{error}</p>}
 
       <div className="form-group">
         <label htmlFor="select-saving">Select Saving</label>
@@ -155,7 +147,7 @@ function AddToSavingsForm({ savings, wallets = [], onAddToSavings, initialSelect
       </div>
 
       <div className="form-buttons">
-        <button type="submit" disabled={!selectedWallet}>Transfer to Goal</button>
+        <button type="submit" disabled={saving || !selectedWallet}>Transfer to Goal</button>
       </div>
     </form>
   )

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-/* eslint-disable react-hooks/set-state-in-effect */
 import './Form.css'
 import { DEFAULT_CURRENCY, formatCurrency, getWalletCurrency } from '../utils/currency'
 import { getLocalDateInputValue } from '../utils/date'
@@ -51,8 +50,11 @@ export default function RecurringIncomeForm({
 
   const activeCurrency = selectedWallet ? getWalletCurrency(selectedWallet) : (editingRecurringIncome?.currency || DEFAULT_CURRENCY)
 
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (saving) return
 
     if (!source.trim() || !amount || !startDate) {
       return
@@ -69,15 +71,20 @@ export default function RecurringIncomeForm({
       isActive: true
     }
 
-    if (editingRecurringIncome) {
-      await onUpdateRecurringIncome({ ...editingRecurringIncome, ...payload })
-    } else {
-      await onAddRecurringIncome(payload)
-    }
+    setSaving(true)
+    setError('')
+    try {
+      if (editingRecurringIncome) {
+        await onUpdateRecurringIncome({ ...editingRecurringIncome, ...payload })
+      } else {
+        await onAddRecurringIncome(payload)
+      }
+    } catch (err) { setError(err.message || 'Could not save recurring income. Please try again.') } finally { setSaving(false) }
   }
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-group">
         <label htmlFor="recurring-income-source">Income Source</label>
         <input
@@ -91,13 +98,13 @@ export default function RecurringIncomeForm({
       </div>
 
       <div className="form-group">
-        <label htmlFor="recurring-income-wallet">Wallet</label>
+        <label htmlFor="recurring-income-wallet">Account</label>
         <select
           id="recurring-income-wallet"
           value={walletId}
           onChange={(event) => setWalletId(event.target.value)}
         >
-          <option value="">Select a wallet</option>
+          <option value="">Select an account</option>
           {wallets.map((wallet) => {
             const balance = wallet.balance ?? wallet.startingBalance
             return (
@@ -164,7 +171,7 @@ export default function RecurringIncomeForm({
       )}
 
       <div className="form-buttons">
-        <button type="submit">{editingRecurringIncome ? 'Update' : 'Add'} Recurring Income</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : editingRecurringIncome ? 'Save recurring income' : 'Add recurring income'}</button>
         {editingRecurringIncome ? <button type="button" onClick={onCancelEdit}>Cancel</button> : null}
       </div>
     </form>

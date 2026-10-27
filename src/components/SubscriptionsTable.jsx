@@ -1,6 +1,7 @@
 import DataTable from './DataTable'
 import { useConfirm } from '../contexts/useConfirm'
 import { FolderIcon } from './Icons'
+import { formatCurrency, getWalletCurrency } from '../utils/currency'
 
 function formatInterval(subscription) {
   if (subscription.intervalType === 'custom') {
@@ -19,12 +20,12 @@ export default function SubscriptionsTable({
   onBulkDelete
 }) {
   const confirm = useConfirm()
-  const walletNameById = (walletId) => wallets.find((wallet) => wallet.id === walletId)?.name || 'Unknown wallet'
+  const walletNameById = (walletId) => wallets.find((wallet) => wallet.id === walletId)?.name || 'Unknown account'
 
   const columns = [
     { key: 'name', header: 'Subscription', className: 'col-name', width: '220px', render: (row) => row.name, sortable: true },
-    { key: 'walletId', header: 'Wallet', className: 'col-wallet', width: '160px', render: (row) => walletNameById(row.walletId), sortable: true, sortValue: (row) => walletNameById(row.walletId) },
-    { key: 'amount', header: 'Amount', className: 'amount', width: '120px', render: (row) => `${row.currency || ''} ${Number(row.amount || 0).toFixed(2)}`, sortable: true, sortValue: (row) => Number(row.amount || 0) },
+    { key: 'walletId', header: 'Account', className: 'col-wallet', width: '160px', render: (row) => walletNameById(row.walletId), sortable: true, sortValue: (row) => walletNameById(row.walletId) },
+    { key: 'amount', header: 'Amount', className: 'amount', width: '120px', render: (row) => formatCurrency(row.amount || 0, row.currency || getWalletCurrency(wallets.find((wallet) => wallet.id === row.walletId))), sortable: true, sortValue: (row) => Number(row.amount || 0), mobileSummary: true },
     { key: 'startDate', header: 'First Charge', className: 'col-date', width: '140px', render: (row) => row.startDate, sortable: true },
     { key: 'interval', header: 'Interval', className: 'col-interval', width: '140px', render: (row) => formatInterval(row), sortable: true, sortValue: (row) => formatInterval(row) },
     { key: 'actions', header: 'Actions', className: 'col-actions actions', width: '128px', render: (row) => (

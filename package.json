@@ -22,8 +22,10 @@
     "payments:dev": "node --env-file=server/payments/.env server/payments/index.js",
     "webhooks:dev": "node server/webhooks/index.js",
     "webhooks:test": "node server/webhooks/test-normalizers.mjs",
-    "budget:test": "node src/utils/budgetMath.test.mjs && node src/utils/financeInsights.test.mjs && node src/utils/savingsPlan.test.mjs && node src/utils/categoryRules.test.mjs && node src/utils/excelUtils.test.mjs && node src/utils/errorReporting.test.mjs && node firestore.rules.test.mjs",
-    "verify": "npm run lint && npm run budget:test && npm run webhooks:test && npm run build"
+    "budget:test": "node src/utils/budgetMath.test.mjs && node src/utils/financeInsights.test.mjs && node src/utils/savingsPlan.test.mjs && node src/utils/categoryRules.test.mjs && node src/utils/excelUtils.test.mjs && node src/utils/errorReporting.test.mjs && node firestore.rules.test.mjs && node src/utils/transactions.test.mjs && node server/accountDeletion.test.mjs && node src/utils/budgetSpending.test.mjs",
+    "verify": "npm run lint && npm run budget:test && npm run webhooks:test && npm run build",
+    "test:ui": "playwright test",
+    "test:rules": "firebase emulators:exec --only firestore --config firebase.test.json --project demo-pitaka-review \"node tests/firestore.emulator.test.mjs\""
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
@@ -42,6 +44,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.64.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -52,6 +56,8 @@
     "vite": "npm:rolldown-vite@7.2.5"
   },
   "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "vite": "npm:rolldown-vite@7.2.5",
+    "@grpc/grpc-js": "^1.14.6",
+    "uuid": "^11.1.1"
   }
 }
