@@ -25,9 +25,14 @@ export default function DeleteAccount() {
     <section className="card account-deletion-card">
       <h2>Delete your Pitaka account</h2>
       <p>
+        To delete individual records and keep your account, open the relevant
+        section of Pitaka, choose Delete on a record, and confirm.
+      </p>
+      <p>
         This permanently removes your sign-in, finance records, savings goals,
         and preferences from Pitaka. Download a backup in More before
-        continuing. Payment providers may retain their own transaction records.
+        continuing. Downloaded exports and copies on other devices are not
+        removed. Payment providers may retain their own transaction records.
       </p>
       <form className="form" onSubmit={handleDelete}>
         <div className="form-group">

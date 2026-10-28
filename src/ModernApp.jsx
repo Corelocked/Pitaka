@@ -1058,7 +1058,22 @@ function ModernApp() {
   if (!isAuthenticated) {
     const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
     if (normalizedPublicPath === '/delete-account') return (
-      <div className="public-account-page"><a href="/">← Pitaka</a><h1>Delete your Pitaka account</h1><p>Sign in below to confirm your identity and permanently delete your account and saved finance records. You can do this here even if you’ve uninstalled the app.</p><p>Deletion removes your sign-in, accounts, transactions, budgets, goals, subscriptions, holdings, and Pitaka billing records. Payment providers may retain transaction records under their own policies.</p><Suspense fallback={<SectionFallback />}><Auth initialMode="login" /></Suspense></div>
+      <div className="public-account-page">
+        <a href="/">← Pitaka</a>
+        <h1>Delete or remove your Pitaka data</h1>
+        <p>This page explains how to remove selected records or delete your full Pitaka account. You can use it without reinstalling the app.</p>
+        <section aria-labelledby="delete-selected-data">
+          <h2 id="delete-selected-data">Delete selected data and keep your account</h2>
+          <p>Sign in to Pitaka, open the section containing the record, choose its Delete action, and confirm. You can remove individual income, expense, transfer, account, category, budget, savings goal, recurring item, or investment records without deleting your account.</p>
+          <p>To ask for help with deleting specific data, use the <a href="https://pitaka-sigma.vercel.app/#contact">Pitaka contact form</a>. Tell us the account email and the type of data; do not include passwords or financial account numbers.</p>
+        </section>
+        <section aria-labelledby="delete-full-account">
+          <h2 id="delete-full-account">Delete your full account</h2>
+          <p>Sign in below, then confirm your email and password or Google account. A successful request deletes your Pitaka sign-in, profile, and associated cloud finance records, including accounts, transactions, categories, budgets, savings goals, recurring items, investments, lending records, snapshots, and Pitaka billing records.</p>
+          <p>Downloaded exports and copies on other devices are not removed. Payment providers may retain their own transaction records under their policies and legal requirements.</p>
+        </section>
+        <Suspense fallback={<SectionFallback />}><Auth initialMode="login" /></Suspense>
+      </div>
     )
     const publicAuthMode = PUBLIC_AUTH_ROUTE_MODES[normalizedPublicPath] || null
     const landingSection = PUBLIC_LANDING_SECTION_SLUGS[normalizedPublicPath] || null
