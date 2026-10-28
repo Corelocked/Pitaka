@@ -49,6 +49,12 @@ android/build/
 # Android/Firebase secrets
 android/app/google-services.json
 
+# Google Cloud service-account keys
+*service-account*.json
+*service_account*.json
+*serviceaccount*.json
+budgetbook-5b9c3-*.json
+
 # Native build outputs
 *.apk
 *.aab

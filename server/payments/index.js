@@ -1,6 +1,7 @@
 import express from 'express'
 import { getPaymentsConfig } from './config.js'
 import { handleCheckoutSessionRequest, handlePaymongoWebhookRequest } from './handlers.js'
+import { verifyGooglePlayPurchase } from './googlePlay.js'
 import accountDeletionHandler from '../../api/account/delete.js'
 
 const app = express()
@@ -26,6 +27,16 @@ app.get('/health', (_req, res) => {
 })
 
 app.all('/account/delete', accountDeletionHandler)
+
+app.post('/billing/google-play/verify-purchase', async (req, res) => {
+  try {
+    const result = await verifyGooglePlayPurchase(config, req.get('Authorization') || '', req.body?.purchaseToken)
+    res.status(result.status).json(result.body)
+  } catch (error) {
+    console.error('Google Play purchase verification failed', error.code || error.response?.status || 'unknown')
+    res.status(500).json({ ok: false, error: error.message || 'Could not verify this Google Play purchase.' })
+  }
+})
 
 app.post('/billing/paymongo/checkout-session', async (req, res) => {
   try {

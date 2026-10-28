@@ -10,6 +10,7 @@ import AppNavigation from './components/AppNavigation'
 import SettingsPreferences from './components/SettingsPreferences'
 import Toast from './components/Toast'
 import PlanHub from './components/PlanHub'
+import GooglePlayProPurchase from './components/GooglePlayProPurchase'
 import TransactionFeed from './components/TransactionFeed'
 import { useDialogFocus } from './hooks/useDialogFocus'
 import {
@@ -227,13 +228,12 @@ const THEME_OPTIONS = [
   }
 ]
 
-const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 19900)
+const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 50000)
 const PRO_PRICE_CURRENCY = String(import.meta.env.VITE_PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase()
 const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_METHOD_LABEL || 'QRPh')
-const APP_DISTRIBUTION_INVITE_URL = String(
-  import.meta.env.VITE_PITAKA_ANDROID_APP_LINK || 'https://appdistribution.firebase.dev/i/38bbfb06c25cca98'
+const ANDROID_APP_URL = String(
+  import.meta.env.VITE_PITAKA_ANDROID_APP_LINK || 'https://play.google.com/store/apps/details?id=com.pitaka.budgetbook'
 )
-const APP_DISTRIBUTION_INVITE_HINT = 'Private invite link hidden. Open it directly from this page.'
 
 function SectionFallback({ label = 'Loading section...' }) {
   return (
@@ -784,9 +784,9 @@ function ModernApp() {
 
   const proPriceLabel = formatCurrency(PRO_PRICE_AMOUNT / 100, PRO_PRICE_CURRENCY)
 
-  const openAndroidAppInvite = () => {
+  const openAndroidApp = () => {
     if (typeof window === 'undefined') return
-    window.open(APP_DISTRIBUTION_INVITE_URL, '_blank', 'noopener,noreferrer')
+    window.open(ANDROID_APP_URL, '_blank', 'noopener,noreferrer')
   }
 
   const debtSnowball = [...creditCardSummaries].filter((card) => card.spent > 0).sort((a, b) => a.spent - b.spent)
@@ -1559,16 +1559,17 @@ function ModernApp() {
         )
 
       case 'pro':
-        if (isNativeMobileApp) return <div className="mobile-content page-shell"><section className="card finance-empty"><TrendUpIcon size={36} /><h2>Pitaka Pro</h2><p>{isPro ? 'Your Pro features are ready to use.' : 'Pro features are not available for purchase in this version. You can keep tracking accounts, transactions, budgets, and savings for free.'}</p><button className="btn btn-primary" onClick={() => setCurrentView('plan')}>Back to Plan</button></section></div>
+        if (Capacitor.getPlatform() === 'android') return <GooglePlayProPurchase user={user} isPro={isPro} />
+        if (isNativeMobileApp) return <div className="mobile-content page-shell"><section className="card finance-empty"><TrendUpIcon size={36} /><h2>Pitaka Pro</h2><p>Pro purchases are available in the Android app and on the Pitaka website.</p><button className="btn btn-primary" onClick={() => setCurrentView('plan')}>Back to Plan</button></section></div>
 
         return (
           <div className="mobile-content page-shell">
             {renderPageSummary({
               title: 'Pitaka Pro',
-              description: 'Unlock the Android app, recurring income automation, automatic subscriptions, full currency support, and investment tracking from one upgrade page.',
+              description: 'Unlock recurring income automation, automatic subscription tracking, full currency support, and investment tracking with a one-time upgrade.',
               stats: [
                 { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
-                { label: 'Android Access', value: isPro ? 'Included' : 'Pro only' }
+                { label: 'Premium features', value: isPro ? 'Unlocked' : 'Available' }
               ]
             })}
 
@@ -1579,7 +1580,7 @@ function ModernApp() {
                   <p className="card-subtitle">
                     {isPro
                       ? 'Your account already has Pro access, including Android app distribution access, recurring income automation, automatic subscription logging, investment tracking, and every supported currency.'
-                      : 'Upgrade with PayMongo to unlock Android app access, recurring income automation, automatic subscription logging, full currency access, investment tracking, and future premium features.'}
+                      : 'Upgrade with PayMongo to unlock recurring income automation, automatic subscription logging, full currency access, investment tracking, and future premium features.'}
                   </p>
                 </div>
                 <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
@@ -1617,7 +1618,6 @@ function ModernApp() {
                       <div className="plan-checklist-item is-included">Category and account management</div>
                       <div className="plan-checklist-item is-included">PHP and USD currency support</div>
                       <div className="plan-checklist-item is-locked">Recurring income automation with next-due tracking</div>
-                      <div className="plan-checklist-item is-locked">Android app download and Firebase App Distribution access</div>
                       <div className="plan-checklist-item is-locked">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-locked">Investment tracking</div>
                     </div>
@@ -1631,7 +1631,6 @@ function ModernApp() {
                     <div className="plan-checklist">
                       <div className="plan-checklist-item is-included">Everything in Basic</div>
                       <div className="plan-checklist-item is-included">Recurring income automation with next-due tracking</div>
-                      <div className="plan-checklist-item is-included">Android app download through Firebase App Distribution</div>
                       <div className="plan-checklist-item is-included">Automatic subscription logging with upcoming-bill visibility</div>
                       <div className="plan-checklist-item is-included">Investment tracking alongside your budget</div>
                       <div className="plan-checklist-item is-included">All supported currencies across wallets, goals, and investments</div>
@@ -1641,70 +1640,13 @@ function ModernApp() {
                 </div>
               </section>
 
-              <section className="plan-comparison-card" style={{ marginTop: '1rem' }}>
-                <div className="card-header">
-                  <div>
-                    <h4 className="card-title"><DownloadIcon size={18} /> Android App Perk</h4>
-                    <p className="card-subtitle">
-                      {isPro
-                        ? 'Your Pro plan includes the Android app invite link and access to new mobile builds.'
-                        : 'Go Pro to unlock the private Android app invite link and install Pitaka through Firebase App Distribution.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pro-purchase-meta">
-                  <div className="pro-purchase-meta-card">
-                    <span className="pro-purchase-meta-label">Distribution</span>
-                    <strong>Firebase App Distribution</strong>
-                  </div>
-                  <div className="pro-purchase-meta-card">
-                    <span className="pro-purchase-meta-label">Widgets</span>
-                    <strong>Included on Android</strong>
-                  </div>
-                  <div className="pro-purchase-meta-card">
-                    <span className="pro-purchase-meta-label">Access</span>
-                    <strong>{isPro ? 'Ready now' : 'Unlock with Pro'}</strong>
-                  </div>
-                </div>
-
-                <div className="form-buttons" style={{ display: 'flex', gap: '10px', marginTop: '1rem', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setCurrentView('android-app')}
-                    style={{ flex: 1, minWidth: '220px' }}
-                  >
-                    {isPro ? 'Open Android App Page' : 'See Android App Perk'}
-                  </button>
-                  {!isPro && (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={async () => {
-                        try {
-                          await startProCheckout()
-                        } catch (checkoutError) {
-                          reportAppError('billing.checkout', checkoutError)
-                          alert(checkoutError.message || 'Failed to start PayMongo checkout.')
-                        }
-                      }}
-                      disabled={isStartingCheckout}
-                      style={{ flex: 1, minWidth: '220px' }}
-                    >
-                      {isStartingCheckout ? 'Opening PayMongo...' : 'Unlock Pro + Android'}
-                    </button>
-                  )}
-                </div>
-              </section>
-
               {!isPro && (
                 <section className="pro-purchase-card">
                   <div className="pro-purchase-copy">
                     <span className="eyebrow">One-Time Upgrade</span>
                     <h4 className="pro-purchase-title">Buy Pitaka Pro</h4>
                     <p className="pro-purchase-text">
-                      Get recurring income automation, Android app access, automatic subscription logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
+                      Get recurring income automation, automatic subscription logging, full currency support, investment tracking, and future Pro-only features through a one-time PayMongo checkout.
                     </p>
                     <div className="pro-purchase-price-row">
                       <div className="pro-purchase-price-block">
@@ -1763,81 +1705,42 @@ function ModernApp() {
           <div className="mobile-content page-shell">
             {renderPageSummary({
               title: 'Pitaka Android App',
-              description: 'Download the Android build through Firebase App Distribution. This perk is available to Pro members.',
+              description: 'Install Pitaka on Android, including its home-screen widgets and quick actions.',
               stats: [
-                { label: 'Current Plan', value: isPro ? 'Pro' : 'Basic' },
-                { label: 'Delivery', value: 'Firebase App Distribution' }
+                { label: 'Android app', value: 'Google Play' },
+                { label: 'Plan', value: isPro ? 'Pro' : 'Basic' }
               ]
             })}
 
             <div className="card page-hero-card">
               <div className="card-header">
                 <div>
-                  <h3 className="card-title"><DownloadIcon size={18} /> Android App Access</h3>
+                  <h3 className="card-title"><DownloadIcon size={18} /> Get Pitaka for Android</h3>
                   <p className="card-subtitle">
-                    {isPro
-                      ? 'Your Pro plan includes access to the Android build. Use the invite link below to join the tester flow and install Pitaka on your phone.'
-                      : 'The Android app download is currently included with Pitaka Pro. Upgrade first, then use the invite link to install the app from Firebase App Distribution.'}
+                    Download the free app from Google Play. Pro features can be purchased separately inside the app.
                   </p>
                 </div>
-                <div className={`sidebar-plan-badge ${isPro ? 'pro' : 'basic'}`}>
-                  {isPro ? 'Pro Access' : 'Pro Only'}
-                </div>
+                <div className="sidebar-plan-badge basic">Free download</div>
               </div>
 
               <div className="plan-comparison-grid" style={{ marginTop: '1rem' }}>
                 <div className="plan-tier-card is-active">
                   <div className="plan-tier-header">
                     <span className="plan-tier-name">What you get</span>
-                    <span className="plan-tier-badge">Android beta access</span>
+                    <span className="plan-tier-badge">Google Play</span>
                   </div>
                   <div className="plan-checklist">
                     <div className="plan-checklist-item is-included">Install Pitaka as a native Android app</div>
                     <div className="plan-checklist-item is-included">Use home screen widgets and quick actions</div>
-                    <div className="plan-checklist-item is-included">Get new test builds through Firebase App Distribution</div>
+                    <div className="plan-checklist-item is-included">Install and update from Google Play</div>
                   </div>
                 </div>
 
-                <div className={`plan-tier-card plan-tier-card--pro ${isPro ? 'is-active' : ''}`}>
-                  <div className="plan-tier-header">
-                    <span className="plan-tier-name">Invite link</span>
-                    <span className="plan-tier-badge">{isPro ? 'Ready to use' : 'Unlock with Pro'}</span>
-                  </div>
-                  <div className="card-subtitle" style={{ marginTop: '0.5rem', wordBreak: 'break-word' }}>
-                    {isPro ? APP_DISTRIBUTION_INVITE_HINT : 'Upgrade to Pro to unlock the private Android app invite link.'}
-                  </div>
-                </div>
               </div>
 
               <div className="form-buttons android-app-actions">
-                {isPro ? (
-                  <>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={openAndroidAppInvite}
-                    >
-                      Open Download Link
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setCurrentView('pro')}
-                    >
-                      Unlock with Pro
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setCurrentView('settings')}
-                    >
-                      Back to Settings
-                    </button>
-                  </>
-                )}
+                <button type="button" className="btn btn-primary" onClick={openAndroidApp}>Open Google Play</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('settings')}>Back to Settings</button>
               </div>
             </div>
           </div>

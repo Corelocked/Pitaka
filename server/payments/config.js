@@ -5,7 +5,7 @@ export function getPaymentsConfig() {
     apiBase: process.env.PAYMONGO_API_BASE || 'https://api.paymongo.com/v1',
     secretKey: process.env.PAYMONGO_SECRET_KEY || '',
     webhookSecret: process.env.PAYMONGO_WEBHOOK_SECRET || '',
-    priceAmount: Number(process.env.PITAKA_PRO_PRICE_AMOUNT || 19900),
+    priceAmount: Number(process.env.PITAKA_PRO_PRICE_AMOUNT || 50000),
     priceCurrency: String(process.env.PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase(),
     planCode: process.env.PITAKA_PRO_PLAN_CODE || 'pitaka-pro',
     planName: process.env.PITAKA_PRO_PLAN_NAME || 'Pitaka Pro',
@@ -17,6 +17,11 @@ export function getPaymentsConfig() {
     allowInsecureWebhooks: String(process.env.ALLOW_INSECURE_PAYMONGO_WEBHOOKS || 'false').toLowerCase() === 'true',
     firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
     firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY
+    firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY,
+    googlePlayPackageName: process.env.GOOGLE_PLAY_PACKAGE_NAME || 'com.pitaka.budgetbook',
+    googlePlayProductId: process.env.GOOGLE_PLAY_PRO_PRODUCT_ID || 'pitaka_pro_lifetime',
+    googlePlayServiceAccount: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT || '',
+    googlePlayPubSubAudience: process.env.GOOGLE_PLAY_PUBSUB_AUDIENCE || '',
+    googlePlayPubSubServiceAccount: process.env.GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT || ''
   }
 }

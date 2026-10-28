@@ -14,7 +14,7 @@
 ## Product facts
 
 - Core budgeting, expense tracking, income tracking, accounts, transfers, savings goals, and category management are free.
-- Pitaka Pro is a one-time upgrade for recurring income, subscriptions, investments, expanded currency support, and Android app access.
+- Pitaka Pro is a one-time upgrade for recurring income, subscriptions, investments, and expanded currency support. The Android app is free to download from Google Play.
 - Pitaka supports category budgets, carryover, transaction splitting, tags, cash-flow forecasts, debt payoff strategies, monthly reports, imports, exports, offline access, and cross-device sync.
 - Financial records are scoped to the authenticated owner through Firebase Authentication and Firestore rules.
 - Pitaka is a tracking and planning tool, not a bank, lender, investment adviser, or payment custodian.

@@ -8,7 +8,7 @@ Pitaka is intended for individuals and households who want a private ledger and 
 
 ## Free and Pro
 
-The free tier includes core budgeting, transaction tracking, account management, transfers, savings goals, and categories. Pitaka Pro is an optional one-time upgrade that adds recurring-income automation, subscription tracking, investment tracking, expanded currency support, and Android app access.
+The free tier includes core budgeting, transaction tracking, account management, transfers, savings goals, and categories. Pitaka Pro is an optional one-time upgrade that adds recurring-income automation, subscription tracking, investment tracking, and expanded currency support. The Android app is free to download from Google Play.
 
 ## Data and security
 

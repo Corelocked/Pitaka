@@ -78,7 +78,7 @@ const faqs = [
   },
   {
     question: 'What is Pitaka Pro?',
-    answer: 'Pitaka Pro is a one-time upgrade that unlocks quality-of-life features such as recurring income automation, subscription tracking, investment tracking, full currency support, and Android app access.'
+    answer: 'Pitaka Pro is a one-time upgrade that unlocks recurring income automation, subscription tracking, investment tracking, and full currency support.'
   },
   {
     question: 'Is my data secure?',
@@ -210,7 +210,7 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
               name: 'What is Pitaka Pro?',
               acceptedAnswer: {
                 '@type': 'Answer',
-                text: 'Pitaka Pro is a one-time upgrade that unlocks quality-of-life features such as recurring income automation, subscription tracking, investment tracking, full currency support, and Android app access.'
+                text: 'Pitaka Pro is a one-time upgrade that unlocks recurring income automation, subscription tracking, investment tracking, and full currency support.'
               }
             },
             {

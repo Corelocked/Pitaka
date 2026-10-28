@@ -28,7 +28,7 @@
         <li><strong>Account information:</strong> email address, user ID, and, when provided by your sign-in provider, your display name and profile information. You can sign in with email and password or Google.</li>
         <li><strong>Finance information you enter:</strong> account and wallet names and balances, income and expenses, categories, budgets, transfers, savings goals, recurring income and bills, investment records, and related dates, amounts, currencies, and notes.</li>
         <li><strong>Support messages:</strong> your name, email address, topic, subject, and message when you use the contact form.</li>
-        <li><strong>Payment records:</strong> if you buy Pro through the website, PayMongo processes the payment. Pitaka receives checkout and payment status information associated with your account. Pitaka does not receive your full card details from PayMongo.</li>
+        <li><strong>Payment records:</strong> PayMongo processes website purchases. For Android purchases, Google Play processes payment and the app sends the purchase token to Pitaka's server for verification. We retain a hash of that token, the product and order identifiers, purchase status, region, date, and the Pro entitlement associated with your account. Pitaka does not receive your full payment credentials.</li>
         <li><strong>Usage and performance information:</strong> Firebase Analytics, Vercel Analytics, and Vercel Speed Insights may receive app or page usage, browser or device details, and performance information.</li>
         <li><strong>Information stored on your device:</strong> preferences, an offline cache, summaries, and a small local error log used by the app. Downloads and exports you create are saved or shared by your device.</li>
       </ul>
@@ -43,6 +43,7 @@
         <li><strong>Vercel</strong> hosts the website and provides website analytics and performance monitoring.</li>
         <li><strong>EmailJS</strong> processes contact form messages for delivery to Pitaka.</li>
         <li><strong>PayMongo</strong> processes website checkout payments and related payment records.</li>
+        <li><strong>Google Play</strong> processes Android in-app purchases. Pitaka's server verifies purchase tokens through Google Play's developer services.</li>
       </ul>
       <p>These providers process information under their own terms and privacy policies. They may process information in countries where they or their service providers operate. We may also disclose information when required by law or when needed to protect users, the service, or our legal rights.</p>
 
@@ -51,7 +52,7 @@
 
       <h2>Retention and deletion</h2>
       <p>We retain account and finance information while your account is active and as needed to provide the service, address support issues, prevent abuse, and meet legal obligations. You can delete individual records in the app or request deletion of your account and its associated Pitaka records from <a href="https://pitaka-sigma.vercel.app/delete-account">the account deletion page</a> or from More → Delete account &amp; data in the app.</p>
-      <p>Account deletion removes your Pitaka sign-in and associated cloud records. It does not remove files you downloaded, copies on other devices, or records independently retained by payment or other service providers. Those providers apply their own retention policies and legal requirements.</p>
+      <p>Account deletion removes your Pitaka sign-in and associated cloud records, including Pitaka's purchase verification records. It does not remove files you downloaded, copies on other devices, or records independently retained by payment or other service providers. Those providers apply their own retention policies and legal requirements.</p>
 
       <h2>Your choices</h2>
       <p>You can review, edit, or delete finance entries in the app, download an export, change device-local preferences, and request account deletion using the links above. You can also clear browser storage or uninstall the app to remove some device-local information; this does not delete your cloud account.</p>

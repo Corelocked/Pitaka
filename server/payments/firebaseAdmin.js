@@ -89,12 +89,14 @@ export async function markCheckoutSessionPaid(config, sessionId, eventPayload) {
   }
   const existingTags = Array.isArray(userData.tags) ? userData.tags : []
   const nextTags = Array.from(new Set([...existingTags, 'pro']))
+  const existingSources = Array.isArray(userData.planSources) ? userData.planSources : (userData.plan === 'pro' ? ['legacy'] : [])
 
   await userRef.set(
     {
       ...userData,
       plan: 'pro',
       tags: nextTags,
+      planSources: Array.from(new Set([...existingSources, 'paymongo'])),
       updatedAt: new Date()
     },
     { merge: true }

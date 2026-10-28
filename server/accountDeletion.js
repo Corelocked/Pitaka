@@ -12,7 +12,8 @@ export const ACCOUNT_COLLECTIONS = [
   'recurringIncomes',
   'budgets',
   'netWorthSnapshots',
-  'billingSessions'
+  'billingSessions',
+  'playPurchases'
 ]
 
 export async function deleteAccountData(db, userId, deleteIdentity) {
