@@ -144,7 +144,7 @@ function Login({ onLogin, onGoogleSignIn, onResetPassword, onSwitchToSignup, err
           <div className="auth-switch">
             <p>Don&apos;t have an account? <button onClick={onSwitchToSignup} className="auth-link">Create one</button></p>
           </div>
-          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
+          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy-policy.html" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
         </div>
       </div>
     </div>

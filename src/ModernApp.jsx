@@ -1886,6 +1886,7 @@ function ModernApp() {
                   <div className="layout-preference-description">You can download a copy of your records from More. Keep these files private: they contain your financial information.</div>
                 </div>
               </div>
+              <p><a href="https://pitaka-sigma.vercel.app/privacy-policy.html" target="_blank" rel="noreferrer">Read the full Privacy Policy</a></p>
             </div>
           </div>
         )

@@ -136,7 +136,7 @@ function Signup({ onSignup, onSwitchToLogin, error }) {
           <div className="auth-switch">
             <p>Already have an account? <button onClick={onSwitchToLogin} className="auth-link">Sign in</button></p>
           </div>
-          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
+          <p className="auth-policy-links"><a href="https://pitaka-sigma.vercel.app/privacy-policy.html" target="_blank" rel="noreferrer">Privacy policy</a><span aria-hidden="true"> · </span><a href="/delete-account">Delete account & data</a></p>
         </div>
       </div>
     </div>
