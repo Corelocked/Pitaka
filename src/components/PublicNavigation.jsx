@@ -1,7 +1,20 @@
 import './PublicPage.css'
 
-export function PublicHeader() {
-  return <header className="public-header"><a href="/" className="public-brand"><img src="/pitaka-logo.png" width="36" height="36" alt="" />Pitaka</a><nav aria-label="Main"><a href="/features">Features</a><a href="/pricing">Pricing</a><a href="/blogs">Guides</a><a href="/login">Sign in</a></nav></header>
+export function PublicHeader({ path }) {
+  return (
+    <header className="public-header">
+      <a href="/" className="public-brand" aria-current={path === '/' ? 'page' : undefined}>
+        <img src="/pitaka-logo.png" width="36" height="36" alt="" />
+        <span>Pitaka</span>
+      </a>
+      <nav aria-label="Main">
+        {[['/features', 'Features'], ['/pricing', 'Pricing'], ['/blogs', 'Guides']].map(([href, label]) => (
+          <a key={href} href={href} aria-current={path === href || path?.startsWith(`${href}/`) ? 'page' : undefined}>{label}</a>
+        ))}
+      </nav>
+      <a href="/login" className="public-sign-in">Sign in</a>
+    </header>
+  )
 }
 
 export function PublicFooter() {

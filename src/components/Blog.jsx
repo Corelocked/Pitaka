@@ -3,7 +3,7 @@ import './Blog.css'
 import { BLOG_POSTS } from '../content/blogPosts.mjs'
 import { blogMetadata, pageSchema } from '../content/site.mjs'
 import { NotFound } from './PublicPage'
-import { PublicFooter } from './PublicNavigation'
+import { PublicHeader, PublicFooter } from './PublicNavigation'
 import {
   applySeo,
   removeStructuredData,
@@ -133,7 +133,7 @@ const renderBlogContent = (content) => {
   return elements
 }
 
-export default function Blog({ onBackToLanding, initialSlug }) {
+export default function Blog({ initialSlug }) {
   const [selectedSlug, setSelectedSlug] = useState(() => initialSlug ?? getInitialBlogSlug())
 
   const featuredPost = BLOG_POSTS.find(p => p.featured)
@@ -212,18 +212,14 @@ export default function Blog({ onBackToLanding, initialSlug }) {
   if (selectedSlug && !selectedPost) return <NotFound />
 
   if (selectedPost) {
-    return <BlogPost post={selectedPost} onBackToLanding={onBackToLanding} />
+    return <BlogPost post={selectedPost} />
   }
 
   return (
     <div className="blog-page">
+      <PublicHeader path="/blogs" />
       <div className="blog-hero">
         <div className="blog-container">
-          {typeof onBackToLanding === 'function' && (
-            <a href="/" className="blog-landing-btn">
-              Back to Landing
-            </a>
-          )}
           <h1>Pitaka Blog</h1>
           <p>Personal finance tips, budgeting strategies, and money management insights</p>
         </div>
@@ -245,7 +241,7 @@ export default function Blog({ onBackToLanding, initialSlug }) {
                 <span>{featuredPost.readTime}</span>
               </div>
               <a href={`/blogs/${featuredPost.slug}`} className="blog-featured-button">
-                Read Full Article
+                Read guide
               </a>
             </div>
           </article>
@@ -264,7 +260,7 @@ export default function Blog({ onBackToLanding, initialSlug }) {
               <div className="blog-card-footer">
                 <time className="blog-date" dateTime={post.date}>{new Date(post.date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' })}</time>
                 <a href={`/blogs/${post.slug}`} className="blog-read-more">
-                  Read More
+                  Read guide
                 </a>
               </div>
             </article>
@@ -276,18 +272,14 @@ export default function Blog({ onBackToLanding, initialSlug }) {
   )
 }
 
-function BlogPost({ post, onBackToLanding }) {
+function BlogPost({ post }) {
   return (
     <div className="blog-post-page">
+      <PublicHeader path={`/blogs/${post.slug}`} />
       <div className="blog-post-header">
         <div className="blog-container">
-          {typeof onBackToLanding === 'function' && (
-            <a href="/" className="blog-landing-btn">
-              Back to Landing
-            </a>
-          )}
           <a href="/blogs" className="blog-back-btn">
-            Back to Blog
+            All guides
           </a>
           <h1>{post.title}</h1>
           <div className="blog-post-meta">
@@ -311,11 +303,6 @@ function BlogPost({ post, onBackToLanding }) {
           <section aria-label="Related guides"><h2>Related guides</h2><ul>{BLOG_POSTS.filter(item => item.slug !== post.slug).slice(0, 3).map(item => <li key={item.slug}><a href={`/blogs/${item.slug}`}>{item.title}</a></li>)}</ul></section>
         </article>
 
-        <div className="blog-post-footer">
-          <a href="/blogs" className="blog-read-more">
-            Back to All Posts
-          </a>
-        </div>
       </div>
       <PublicFooter />
     </div>

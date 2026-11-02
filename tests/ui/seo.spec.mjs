@@ -19,7 +19,7 @@ test('public pages have distinct metadata and fit small screens', async ({ page 
 test('blog links work with browser history and article metadata', async ({ page }) => {
   await mockAccount(page, { authenticated: false })
   await page.goto('/blogs')
-  const article = page.getByRole('link', { name: 'Read Full Article' })
+  const article = page.locator('.blog-featured').getByRole('link', { name: 'Read guide', exact: true })
   await expect(article).toHaveAttribute('href', '/blogs/create-budget-that-works')
   await article.click()
   await expect(page).toHaveURL(/\/blogs\/create-budget-that-works$/)

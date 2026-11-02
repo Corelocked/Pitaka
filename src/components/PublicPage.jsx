@@ -18,7 +18,7 @@ export default function PublicPage({ path }) {
     return () => removeStructuredData('pitaka-page-schema')
   }, [path])
 
-  return <div className="landing-page"><PublicHeader /><main className="public-content"><p><a href="/">Home</a> / {path.slice(1)}</p><h1>{metadata.heading}</h1><p>{metadata.description}</p>
+  return <div className="landing-page"><PublicHeader path={path} /><main className="public-content"><p><a href="/">Home</a> / {path.slice(1)}</p><h1>{metadata.heading}</h1><p>{metadata.description}</p>
     {path === '/features' && <>
       <h2>Record income, expenses, and transfers</h2><p>Enter the amount, date, account, and category of each transaction. Keep cash, bank, card, and e-wallet records together. Account labels do not connect Pitaka to your bank or payment app.</p>
       <h2>Plan spending and savings</h2><p>Set category budgets, review spending against them, and record progress toward savings goals. Your dashboard summarizes the records you enter so you can review cash flow and balances.</p>

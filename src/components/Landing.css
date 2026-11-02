@@ -88,41 +88,15 @@
   padding: 72px 0;
 }
 
-.landing-topbar {
-  display: none;
-}
-
 .landing-hero-divider {
   display: none;
 }
 
-.landing-hero-layout {
+  .landing-hero-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
   gap: 24px;
   align-items: stretch;
-}
-
-.landing-brand-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.landing-brand-mark {
-  display: block;
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-}
-
-.landing-brand-wordmark {
-  font-size: 1.22rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-primary);
 }
 
 .landing-hero-copy,
@@ -146,7 +120,7 @@
   padding: 32px;
 }
 
-.landing-hero-copy h1 {
+  .landing-hero-copy h1 {
   margin: 10px 0 16px;
   max-width: 10.5ch;
   font-size: clamp(3.1rem, 6.8vw, 5rem);
@@ -474,7 +448,14 @@
 .landing-cta-shell p,
 .landing-blog-shell p {
   margin: 0;
+}
+
+.landing-blog-shell p {
   color: var(--text-secondary);
+}
+
+.landing-cta-shell p {
+  color: inherit;
 }
 
 .landing-footer {
@@ -503,65 +484,13 @@
 @media (min-width: 981px) {
   .landing-hero {
     padding: 18px 0 18px;
-    background: radial-gradient(circle at 80% 50%, rgba(26, 73, 44, 0.5), transparent 50%);
   }
 
   .landing-container {
     width: min(1440px, calc(100% - 48px));
   }
 
-  .landing-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 60px;
-  }
-
-  .landing-topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .landing-topbar-nav {
-    display: none;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .landing-topbar-link {
-    color: var(--text-primary);
-    text-decoration: none;
-    background: transparent;
-    border: 0;
-    font-size: 0.95rem;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-
-  .landing-topbar-link:hover {
-    color: var(--primary-color);
-  }
-
-  .landing-topbar-link--button {
-    line-height: 1;
-  }
-
-  .landing-topbar-cta {
-    padding: 10px 24px;
-    border-radius: 999px;
-    background: #4caf50; /* Based on reference */
-    color: #fff;
-    font-weight: 500;
-    border: none;
-    box-shadow: none;
-  }
-  .landing-topbar-cta:hover {
-    background: #43a047;
-  }
-
-  .landing-hero-layout {
+.landing-hero-layout {
     grid-template-columns: minmax(0, 0.9fr) minmax(620px, 1.1fr);
     gap: 18px;
     align-items: center;
@@ -577,15 +506,7 @@
     padding: 0;
   }
 
-  .landing-hero-copy .landing-brand-row {
-    display: none;
-  }
-
-  .landing-hero-copy .landing-eyebrow {
-    display: none; /* Reference image doesn't show an eyebrow in hero */
-  }
-
-  .landing-hero-copy h1 {
+.landing-hero-copy h1 {
     margin: 10px 0 16px;
     max-width: 12ch;
     font-size: clamp(3.3rem, 5vw, 4.5rem);
@@ -604,31 +525,6 @@
   .landing-cta-buttons {
     margin-bottom: 0;
     gap: 16px;
-  }
-
-  .landing-cta-buttons .landing-btn {
-    border-radius: 999px;
-    padding: 14px 28px;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .landing-cta-buttons .landing-btn-primary {
-    background: #4caf50;
-    color: #fff;
-    border: none;
-  }
-  .landing-cta-buttons .landing-btn-primary:hover {
-    background: #43a047;
-  }
-
-  .landing-cta-buttons .landing-btn-secondary {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    color: #fff;
-  }
-  .landing-cta-buttons .landing-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
   }
 
   .landing-hero .landing-proof-strip {
@@ -711,32 +607,6 @@
     background: transparent;
   }
 
-  .landing-features .landing-feature-icon {
-    grid-row: 1 / span 2;
-    width: 42px;
-    height: 42px;
-    margin: 0;
-    border-radius: 999px;
-    border: 1px solid var(--border-color);
-    background: transparent;
-  }
-
-  .landing-features .landing-feature-card h3,
-  .landing-features .landing-feature-card p {
-    grid-column: 2;
-    margin: 0;
-  }
-
-  .landing-features .landing-feature-card h3 {
-    font-size: 2rem;
-    line-height: 1.08;
-  }
-
-  .landing-features .landing-feature-card p {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
-    line-height: 1.55;
-  }
 }
 
 @media (max-width: 980px) {

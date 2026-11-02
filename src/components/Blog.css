@@ -10,7 +10,7 @@
 
 .blog-hero,
 .blog-post-header {
-  padding: 64px 20px 28px;
+  padding: 48px 0 24px;
   background: transparent;
   border-bottom: none;
 }
@@ -18,7 +18,7 @@
 .blog-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px 56px;
+  padding: 0 0 44px;
 }
 
 .blog-hero h1,
@@ -111,8 +111,9 @@
 
 .blog-featured-button,
 .blog-read-more {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background: var(--button-primary-background);
   color: var(--text-strong-on-brand);
+  min-height: 44px;
   border: none;
   border-radius: 12px;
   padding: 11px 18px;
@@ -123,6 +124,7 @@
 
 .blog-featured-button:hover,
 .blog-read-more:hover {
+  background: var(--button-primary-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
@@ -178,8 +180,7 @@
   border-top: 1px solid var(--border-color);
 }
 
-.blog-back-btn,
-.blog-landing-btn {
+.blog-back-btn {
   background: var(--card-background);
   border: 1px solid var(--border-color);
   color: var(--primary-color);
@@ -197,15 +198,6 @@
   border-radius: 24px;
   font-size: 1rem;
   line-height: 1.8;
-}
-
-.blog-post-content h3 {
-  margin: 2rem 0 1rem;
-  font-size: 1.28rem;
-}
-
-.blog-post-content h3:first-child {
-  margin-top: 0;
 }
 
 .blog-post-content p {
@@ -227,20 +219,14 @@
   color: var(--primary-color);
 }
 
-.blog-post-footer {
-  display: flex;
-  justify-content: center;
-  padding-top: 20px;
-}
-
 @media (max-width: 768px) {
   .blog-hero,
   .blog-post-header {
-    padding: 52px 20px 22px;
+    padding: 36px 0 24px;
   }
 
   .blog-container {
-    padding: 0 20px 44px;
+    padding: 0 0 36px;
   }
 
   .blog-grid {

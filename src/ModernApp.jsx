@@ -1081,7 +1081,7 @@ function ModernApp() {
           : publicAuthMode || PRIVATE_PATHS.includes(normalizedPublicPath) || ['/app', '/home'].includes(normalizedPublicPath)
             ? <Auth initialMode={publicAuthMode || 'login'} />
           : showPublicBlog
-            ? <Blog onBackToLanding={() => openPublicRoute('/')} />
+            ? <Blog />
             : normalizedPublicPath !== '/'
               ? PUBLIC_PAGES[normalizedPublicPath] ? <PublicPage path={normalizedPublicPath} /> : <NotFound />
             : (

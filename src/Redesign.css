@@ -817,38 +817,6 @@ body .landing-cta {
   padding: clamp(44px, 8vw, 92px) 0;
 }
 
-body .landing-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: clamp(40px, 7vw, 76px);
-}
-
-body .landing-topbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-body .landing-topbar-link {
-  min-height: 44px;
-  padding: 10px 13px;
-  color: var(--text-secondary);
-  background: transparent;
-  border-radius: 10px;
-  text-decoration: none;
-}
-
-body .landing-topbar-cta {
-  min-height: 44px;
-  padding: 10px 18px;
-  color: var(--text-strong-on-brand);
-  background: var(--primary-700);
-  border-radius: 12px;
-}
-
-body .landing-topbar .landing-topbar-cta,
 body .landing-cta-buttons .landing-btn-primary {
   color: var(--text-strong-on-brand);
   background: var(--primary-700);
@@ -877,7 +845,7 @@ body .landing-hero-showcase {
 }
 
 body .landing-hero-copy h1 {
-  max-width: 11ch;
+  max-width: 15ch;
   margin: 14px 0 20px;
   color: var(--text-primary);
   font-size: clamp(3rem, 6vw, 5rem);
@@ -1039,7 +1007,6 @@ body .auth-link {
 }
 
 /* Blog and contact */
-body .blog-hero,
 body .blog-featured,
 body .blog-card,
 body .blog-post-content {
@@ -1269,10 +1236,6 @@ body .sidebar-user-email {
 }
 
 @media (max-width: 980px) {
-  body .landing-topbar-nav {
-    display: flex;
-  }
-
   body .landing-hero-layout,
 body .landing-editorial-layout,
 body .landing-benefits-columns,
@@ -1354,20 +1317,11 @@ body .modal-actions .btn {
     width: 100%;
   }
 
-  body .landing-topbar {
-    margin-bottom: 38px;
-  }
-
-  body .landing-topbar-nav .landing-topbar-link:not(.landing-topbar-link--button) {
-    display: none;
-  }
-
-  body .landing-topbar-nav {
-    margin-left: auto;
-  }
-
   body .landing-hero-copy h1 {
-    font-size: clamp(2.7rem, 13vw, 4rem);
+    max-width: none;
+    font-size: clamp(2.25rem, 9vw, 3.2rem);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
   }
 
   body .landing-screenshot-frame--mobile {
@@ -1399,7 +1353,7 @@ body .modal-actions .btn {
 
   body .landing-container,
 body .blog-container {
-    width: min(100% - 24px, 1180px);
+    width: min(100% - 32px, 1180px);
   }
 
   body .landing-hero,
@@ -1410,10 +1364,6 @@ body .landing-contact,
 body .landing-blog-teaser,
 body .landing-cta {
     padding: 36px 0;
-  }
-
-  body .landing-topbar-cta {
-    display: none;
   }
 
   body .landing-cta-buttons {

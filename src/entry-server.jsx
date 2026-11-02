@@ -18,7 +18,7 @@ export function renderPage(metadata) {
   const post = BLOG_POSTS.find(item => metadata.path === `/blogs/${item.slug}`)
   const component = metadata.path === '/' ? <Landing />
     : metadata.path === '/delete-account' ? <AccountDeletionPage />
-    : metadata.path === '/blogs' || post ? <Blog initialSlug={post?.slug} onBackToLanding={() => {}} />
+    : metadata.path === '/blogs' || post ? <Blog initialSlug={post?.slug} />
     : metadata.path === '/404' ? <NotFound />
     : <PublicPage path={metadata.path} />
   return {

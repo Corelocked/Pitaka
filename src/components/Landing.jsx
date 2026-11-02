@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import ContactForm from './ContactForm'
 import { applySeo, removeStructuredData, setStructuredData } from '../utils/seo'
 import { FAQS as faqs, pageMetadata, pageSchema } from '../content/site.mjs'
-import { PublicFooter } from './PublicNavigation'
+import { PublicHeader, PublicFooter } from './PublicNavigation'
 import {
   ExpenseIcon,
   IncomeIcon,
@@ -106,32 +106,11 @@ export default function Landing({ onOpenAuthRoute }) {
 
   return (
     <div className="landing-page">
+      <PublicHeader path="/" />
       <section className="landing-hero">
         <div className="landing-container">
-          <header className="landing-topbar" aria-label="Primary">
-            <div className="landing-topbar-brand">
-              <img src="/pitaka-logo.png" alt="Pitaka logo - personal finance and budget tracker app" className="landing-brand-mark" />
-              <span className="landing-brand-wordmark">Pitaka</span>
-            </div>
-
-            <nav className="landing-topbar-nav" aria-label="Main navigation">
-              <a href="/features" className="landing-topbar-link">Features</a>
-              <a href="/pricing" className="landing-topbar-link">Pricing</a>
-              <button type="button" onClick={() => openAuthRoute('login')} className="landing-topbar-link landing-topbar-link--button">
-                Sign In
-              </button>
-              <button type="button" onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary landing-topbar-cta">
-                Get Started Free
-              </button>
-            </nav>
-          </header>
-
           <div className="landing-hero-layout">
             <div className="landing-hero-copy">
-              <div className="landing-brand-row" aria-hidden="true">
-                <img src="/pitaka-logo.png" alt="" className="landing-brand-mark" />
-                <span className="landing-brand-wordmark">Pitaka</span>
-              </div>
               <span className="landing-eyebrow">Private Finance Workspace</span>
               <h1>Budget with more control and less noise.</h1>
               <p className="landing-hero-description">
@@ -140,10 +119,7 @@ export default function Landing({ onOpenAuthRoute }) {
 
               <div className="landing-cta-buttons">
                 <button onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary">
-                  Get Started Free
-                </button>
-                <button onClick={() => openAuthRoute('login')} className="landing-btn landing-btn-secondary">
-                  Sign In
+                  Get started free
                 </button>
               </div>
 
@@ -289,7 +265,7 @@ export default function Landing({ onOpenAuthRoute }) {
             <p>Start managing your finances with a cleaner system and a sharper monthly view.</p>
           </div>
           <button onClick={() => openAuthRoute('signup')} className="landing-btn landing-btn-primary landing-btn-lg">
-            Create Free Account
+            Create free account
           </button>
         </div>
       </section>
@@ -302,7 +278,7 @@ export default function Landing({ onOpenAuthRoute }) {
             <p>Tips, strategies, and grounded thinking to help you manage money with more discipline.</p>
           </div>
           <a href="/blogs" className="landing-btn landing-btn-secondary landing-btn-lg">
-            Read Our Blog
+            Read guides
           </a>
         </div>
       </section>
