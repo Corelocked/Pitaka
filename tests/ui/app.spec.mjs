@@ -497,9 +497,9 @@ test('deletion page is available without an installed app or signed-in session',
   await mockAccount(page, { authenticated: false, pro: false })
   await page.goto('/delete-account')
   await expect(
-    page.getByRole('heading', { name: 'Delete your Pitaka account' })
+    page.getByRole('heading', { name: 'Delete or remove your Pitaka data' })
   ).toBeVisible()
-  await expect(page.getByText(/even if you’ve uninstalled/)).toBeVisible()
+  await expect(page.getByText(/without reinstalling the app/)).toBeVisible()
   await expect(page.locator('input[type="email"]')).toBeVisible()
 })
 
@@ -509,14 +509,15 @@ test('Android Back dismisses sheets and navigates; external Pro checkout is abse
   await mockAccount(page, { native: true, pro: false })
   await page.goto('/pro')
   await expect(
-    page.getByText('Pro features are not available for purchase', {
-      exact: false
-    })
+    page.getByRole('heading', { name: 'Buy Pitaka Pro', exact: true })
   ).toBeVisible()
   await expect(
-    page.getByRole('button', { name: /PayMongo|Unlock Pro|Buy Pro/ })
+    page.getByRole('button', { name: /PayMongo|Unlock Pro/ })
   ).toHaveCount(0)
-  await page.getByRole('button', { name: 'Back to Plan' }).click()
+  await expect(page.getByRole('button', { name: 'Buy Pro', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Restore purchase', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to More' }).click()
+  await nav(page).getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByRole('button', { name: 'New savings goal' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.evaluate(() => window.__nativeListeners.backButton())

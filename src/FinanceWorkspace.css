@@ -928,6 +928,14 @@ body .public-account-page {
   max-width: 680px;
   margin: 0 auto;
   padding: 48px 20px;
+  overflow-wrap: anywhere;
+}
+body .public-account-page a {
+  color: var(--text-accent);
+  text-underline-offset: 3px;
+}
+body .public-account-page > section {
+  margin-top: 24px;
 }
 body .public-account-page h1 {
   margin: 20px 0;
@@ -971,6 +979,12 @@ body .activity-entry-details .btn.danger {
   color: var(--danger-color);
   border: 1px solid var(--danger-color);
 }
+body .public-account-page .auth-container {
+  min-height: 0;
+  margin-top: 24px;
+  padding: 0;
+  background: transparent;
+}
 body .public-account-page .auth-shell {
   display: block;
   min-height: 0;
@@ -982,7 +996,9 @@ body .public-account-page .auth-showcase {
 body .public-account-page .auth-card {
   width: 100%;
   max-width: none;
-  margin: 24px 0 0;
+  margin: 0;
+  padding: 24px;
+  justify-content: flex-start;
 }
 body .auth-reset {
   min-height: 48px;
@@ -2180,6 +2196,10 @@ body .mobile-app .card {
     min-width: 48px;
     min-height: 48px;
     padding-inline: 4px;
+  }
+  #root .mobile-app .header-actions .period-current {
+    flex-basis: auto;
+    padding-inline: 8px;
   }
   #root .mobile-app .period-select {
     flex: 1 1 8em;

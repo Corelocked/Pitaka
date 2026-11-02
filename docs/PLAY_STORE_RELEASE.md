@@ -1,6 +1,15 @@
 # Pitaka Play Store release work
 
-Updated October 28, 2026. ESLint and the production web build pass. Native Android compilation and a Play Billing transaction still require a working Android SDK, signing setup, and Play Console configuration.
+Updated November 2, 2026. ESLint, the production web build, and the signed Android release build pass. A Play Billing transaction still needs validation using an installed Play testing build.
+
+## Visual layout update: 2.0.1 (version code 3)
+
+- The viewport uses `viewport-fit=contain`, allowing Capacitor's Android SystemBars handling to reserve space for status bars, navigation bars, and display cutouts. Scrolling pages no longer opt into drawing underneath them. Keep the default SystemBars inset handling enabled.
+- Account deletion embeds a compact sign-in form instead of a full-screen auth layout. Public-page links use the theme's accessible link color.
+- The reporting-period reset button grows with enlarged text. Confirmation dialogs stay within the visible viewport and scroll when their content is taller; their actions can wrap.
+- The `layout` Playwright project checks public and finance screens at 320×640, 412×915, 600×960, 1280×800, and 740×360, in light and dark appearances and with 200% text. It checks page overflow, clipped controls, embedded auth spacing, and confirmation bounds. Table horizontal scrolling and the intentionally hidden contact honeypot are excluded from clipping failures.
+- Signed bundle: `android/app/build/outputs/bundle/release/app-release.aab`. The signature and packaged viewport setting were checked. Upload it as a new closed-test release to deliver these changes to installed apps.
+- No Android device was connected for this update. Verify the signed Play build on a device with gesture/button navigation, a cutout, keyboard entry, rotation, and enlarged system text. Browser checks cannot validate OEM system bars. The website changes also need deployment.
 
 ## Deploy the security and deletion changes together
 
@@ -36,7 +45,7 @@ For the website, set `VITE_PITAKA_PRO_PRICE_AMOUNT=50000`, `VITE_PITAKA_PRO_PRIC
 
 - Install/configure an Android SDK. `android/local.properties` currently points to `C:\Users\Cedric\AppData\Local\Android\Sdk`; `JAVA_HOME` must point to an installed JDK compatible with the Android Gradle Plugin.
 - Run `npm run lint` and `npm run build`.
-- Run `npm run build:android`, then the project's debug/release build scripts. Native compilation and release signing were not performed here.
+- Run `npm run build:android`, then the project's debug/release build scripts.
 - Verify the configured app ID, release certificate, Google OAuth client, Firebase release SHA fingerprints, privacy URLs, and a version code greater than any uploaded version. Do not change the release key merely to resolve a local build issue.
 - Test the signed build on real Android hardware with gesture and button navigation, a display cutout, the software keyboard, rotation, large system text, dark mode, and TalkBack.
 - Test cold launch, Google/email sign-in, password recovery, offline writes/reconnection, month changes, edit/delete, account transfers, savings funding, recurring posting, import/export and backup downloads, and deletion with a disposable account.
@@ -47,7 +56,7 @@ For the website, set `VITE_PITAKA_PRO_PRICE_AMOUNT=50000`, `VITE_PITAKA_PRO_PRIC
 
 Provide the publisher's actual identity/contact details and a reviewed public privacy policy. Reconcile Data safety answers with Firebase Auth/Firestore/Analytics, Vercel analytics and speed insights, EmailJS contact messages, PayMongo web billing, and any production logging actually enabled. Supply the app-access instructions, screenshots of the final signed build, and the declarations that Play Console requests for this app.
 
-No deployment, live billing transaction, release signing, Play Console upload, or production-data deletion was performed by this change.
+The layout update builds and signs a release bundle. It does not deploy the website, upload to Play Console, make a live billing transaction, or delete production data.
 
 ## Reproduce local tests
 

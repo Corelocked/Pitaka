@@ -13,11 +13,13 @@ export default defineConfig({
     }
   },
   projects: [
-    { name: 'phone', use: { ...devices['Pixel 7'], browserName: 'chromium' } },
+    { name: 'phone', testIgnore: '**/visual.spec.mjs', use: { ...devices['Pixel 7'], browserName: 'chromium' } },
     {
       name: 'desktop',
+      testIgnore: '**/visual.spec.mjs',
       use: { browserName: 'chromium', viewport: { width: 1440, height: 1000 } }
-    }
+    },
+    { name: 'layout', testMatch: '**/visual.spec.mjs', use: { browserName: 'chromium' } }
   ],
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1',
