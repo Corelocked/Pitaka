@@ -17,19 +17,280 @@
       {
         "source": "**",
         "headers": [
-          { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src https://*.firebaseapp.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" },
-          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=()" },
-          { "key": "X-Frame-Options", "value": "DENY" }
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src https://*.firebaseapp.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains; preload"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=(), payment=()"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          }
+        ]
+      },
+      {
+        "source": "/{login,signup,dashboard,plan,transactions,accounts,wealth,savings,investments,categories,subscriptions,recurring-income,settings,pro,android-app,app,home}",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, follow"
+          }
         ]
       }
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/features",
+        "destination": "/features.html"
+      },
+      {
+        "source": "/pricing",
+        "destination": "/pricing.html"
+      },
+      {
+        "source": "/about",
+        "destination": "/about.html"
+      },
+      {
+        "source": "/contact",
+        "destination": "/contact.html"
+      },
+      {
+        "source": "/help",
+        "destination": "/help.html"
+      },
+      {
+        "source": "/privacy",
+        "destination": "/privacy.html"
+      },
+      {
+        "source": "/delete-account",
+        "destination": "/delete-account.html"
+      },
+      {
+        "source": "/blogs",
+        "destination": "/blogs.html"
+      },
+      {
+        "source": "/blogs/create-budget-that-works",
+        "destination": "/blogs/create-budget-that-works.html"
+      },
+      {
+        "source": "/blogs/increase-savings-rate",
+        "destination": "/blogs/increase-savings-rate.html"
+      },
+      {
+        "source": "/blogs/track-spending-guide",
+        "destination": "/blogs/track-spending-guide.html"
+      },
+      {
+        "source": "/blogs/investment-mistakes-avoided",
+        "destination": "/blogs/investment-mistakes-avoided.html"
+      },
+      {
+        "source": "/blogs/emergency-fund-guide",
+        "destination": "/blogs/emergency-fund-guide.html"
+      },
+      {
+        "source": "/blogs/how-to-budget-with-irregular-income",
+        "destination": "/blogs/how-to-budget-with-irregular-income.html"
+      },
+      {
+        "source": "/blogs/sinking-funds-for-beginners",
+        "destination": "/blogs/sinking-funds-for-beginners.html"
+      },
+      {
+        "source": "/blogs/track-shared-expenses-with-partner",
+        "destination": "/blogs/track-shared-expenses-with-partner.html"
+      },
+      {
+        "source": "/blogs/budgeting-with-multiple-bank-accounts",
+        "destination": "/blogs/budgeting-with-multiple-bank-accounts.html"
+      },
+      {
+        "source": "/login",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/signup",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/dashboard",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/plan",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/transactions",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/accounts",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/wealth",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/savings",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/investments",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/categories",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/subscriptions",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/recurring-income",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/settings",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/pro",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/android-app",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/app",
+        "destination": "/app-shell.html"
+      },
+      {
+        "source": "/home",
+        "destination": "/app-shell.html"
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/blog",
+        "destination": "/blogs",
+        "type": 301
+      },
+      {
+        "source": "/blog/:slug",
+        "destination": "/blogs/:slug",
+        "type": 301
+      },
+      {
+        "source": "/index.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/features.html",
+        "destination": "/features",
+        "type": 301
+      },
+      {
+        "source": "/pricing.html",
+        "destination": "/pricing",
+        "type": 301
+      },
+      {
+        "source": "/about.html",
+        "destination": "/about",
+        "type": 301
+      },
+      {
+        "source": "/contact.html",
+        "destination": "/contact",
+        "type": 301
+      },
+      {
+        "source": "/help.html",
+        "destination": "/help",
+        "type": 301
+      },
+      {
+        "source": "/privacy.html",
+        "destination": "/privacy",
+        "type": 301
+      },
+      {
+        "source": "/delete-account.html",
+        "destination": "/delete-account",
+        "type": 301
+      },
+      {
+        "source": "/blogs.html",
+        "destination": "/blogs",
+        "type": 301
+      },
+      {
+        "source": "/blogs/create-budget-that-works.html",
+        "destination": "/blogs/create-budget-that-works",
+        "type": 301
+      },
+      {
+        "source": "/blogs/increase-savings-rate.html",
+        "destination": "/blogs/increase-savings-rate",
+        "type": 301
+      },
+      {
+        "source": "/blogs/track-spending-guide.html",
+        "destination": "/blogs/track-spending-guide",
+        "type": 301
+      },
+      {
+        "source": "/blogs/investment-mistakes-avoided.html",
+        "destination": "/blogs/investment-mistakes-avoided",
+        "type": 301
+      },
+      {
+        "source": "/blogs/emergency-fund-guide.html",
+        "destination": "/blogs/emergency-fund-guide",
+        "type": 301
+      },
+      {
+        "source": "/blogs/how-to-budget-with-irregular-income.html",
+        "destination": "/blogs/how-to-budget-with-irregular-income",
+        "type": 301
+      },
+      {
+        "source": "/blogs/sinking-funds-for-beginners.html",
+        "destination": "/blogs/sinking-funds-for-beginners",
+        "type": 301
+      },
+      {
+        "source": "/blogs/track-shared-expenses-with-partner.html",
+        "destination": "/blogs/track-shared-expenses-with-partner",
+        "type": 301
+      },
+      {
+        "source": "/blogs/budgeting-with-multiple-bank-accounts.html",
+        "destination": "/blogs/budgeting-with-multiple-bank-accounts",
+        "type": 301
       }
     ]
   }

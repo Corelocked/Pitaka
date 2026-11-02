@@ -12,67 +12,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Pitaka" />
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Pitaka is a multi-currency personal finance and budget tracker. Track expenses, income, savings goals, budgets, subscriptions, accounts, and investments across web and mobile." />
-    <meta name="keywords" content="budget app, budget tracker, expense tracker, personal finance app, money management app, finance tracker, monthly budget planner, budget planner app, spending tracker, expense manager, income tracker, recurring income tracker, recurring expense tracker, bill tracker, subscription tracker, savings tracker, savings goal tracker, emergency fund tracker, investment tracker, portfolio tracker, account tracker, wallet tracker, multi wallet budget app, cash flow tracker, net worth tracker, transaction tracker, category budget tracker, budget by category, expense categories app, account transfer tracker, transfer money between wallets tracker, financial dashboard app, spending analytics app, income and expense tracker, weekly spending tracker, monthly spending tracker, budget reports app, csv import budget app, csv export budget app, excel budget import export, free budget app, free expense tracker, web and mobile budget app, android budget app, ios budget app, progressive web app finance, multi currency budget app, multi currency expense tracker, php budget tracker, philippine peso budget app, budget app philippines, expense tracker philippines, money management philippines, gcash payment tracking, maya payment tracking, paypal payment tracking" />
-    <meta name="author" content="Pitaka" />
-    <meta name="application-name" content="Pitaka" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <meta name="language" content="en" />
-    <meta name="geo.region" content="PH" />
-    <meta name="geo.placename" content="Philippines" />
-    <meta name="ICBM" content="14.5995,120.9842" />
-    <!-- Open Graph Meta Tags for Social Sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Pitaka - Personal Finance & Budget Tracker" />
-    <meta property="og:description" content="Track expenses, income, savings goals, subscriptions, accounts, and investments with multi-currency support on web and mobile." />
-    <meta property="og:image" content="https://pitaka-sigma.vercel.app/pitaka-social-share.png" />
-    <meta property="og:image:alt" content="Pitaka social share image for the personal finance tracker and blog" />
-    <meta property="og:url" content="https://pitaka-sigma.vercel.app/" />
-    <meta property="og:locale" content="en_PH" />
-    <meta property="og:locale:alternate" content="fil_PH" />
-    <meta property="og:site_name" content="Pitaka" />
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Pitaka - Personal Finance & Budget Tracker" />
-    <meta name="twitter:description" content="Track expenses, income, savings goals, subscriptions, accounts, and investments with multi-currency support on web and mobile." />
-    <meta name="twitter:image" content="https://pitaka-sigma.vercel.app/pitaka-social-share.png" />
-    <meta name="twitter:image:alt" content="Pitaka social share image for the personal finance tracker and blog" />
-    <meta name="twitter:site" content="@pitaka" />
-    <meta name="twitter:creator" content="@pitaka" />
-    <!-- Additional SEO -->
-    <meta name="format-detection" content="telephone=no" />
-    <link rel="canonical" href="https://pitaka-sigma.vercel.app/" />
-    <script>
-      (function () {
-        var siteOrigin = 'https://pitaka-sigma.vercel.app'
-        var path = '/'
-
-        if (typeof window !== 'undefined' && window.location) {
-          path = window.location.pathname || '/'
-        }
-
-        if (path !== '/') {
-          path = path.replace(/\/+$/, '') || '/'
-        }
-
-        var canonicalUrl = siteOrigin + (path.startsWith('/') ? path : '/' + path)
-        var canonicalTag = document.querySelector('link[rel="canonical"]')
-        var ogUrlTag = document.querySelector('meta[property="og:url"]')
-
-        if (canonicalTag) {
-          canonicalTag.setAttribute('href', canonicalUrl)
-        }
-
-        if (ogUrlTag) {
-          ogUrlTag.setAttribute('content', canonicalUrl)
-        }
-      })()
-    </script>
-    <link rel="alternate" hreflang="en" href="https://pitaka-sigma.vercel.app/" />
-    <link rel="alternate" hreflang="en-PH" href="https://pitaka-sigma.vercel.app/" />
-    <link rel="alternate" hreflang="fil-PH" href="https://pitaka-sigma.vercel.app/" />
-    <link rel="alternate" hreflang="x-default" href="https://pitaka-sigma.vercel.app/" />
+    <!-- seo:start -->
+    <title>Pitaka — Budget & Expense Tracker for the Philippines</title>
+    <meta name="description" content="Track expenses, income, accounts, budgets, and savings goals with Pitaka. Free PHP and USD tracking on the web, with an optional one-time Pro upgrade.">
+    <meta name="robots" content="noindex, follow">
+    <!-- seo:end -->
+    <meta name="author" content="Pitaka">
+    <meta name="application-name" content="Pitaka">
+    <meta name="format-detection" content="telephone=no">
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -88,66 +35,10 @@
     <link rel="alternate" type="application/rss+xml" title="Pitaka Blog RSS" href="/rss.xml" />
     <link rel="alternate" type="text/plain" title="Pitaka AI summary" href="/llms.txt" />
     <link rel="alternate" type="text/plain" title="Pitaka AI reference" href="/llms-full.txt" />
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://pitaka-sigma.vercel.app/#organization",
-          "name": "Pitaka",
-          "url": "https://pitaka-sigma.vercel.app/",
-          "logo": "https://pitaka-sigma.vercel.app/pitaka-logo.png",
-          "areaServed": "Worldwide"
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://pitaka-sigma.vercel.app/#website",
-          "url": "https://pitaka-sigma.vercel.app/",
-          "name": "Pitaka",
-          "description": "Personal finance and budget tracking app with multi-currency support",
-          "keywords": "budget app, expense tracker, personal finance app, savings tracker, investment tracker, subscription tracker, multi currency budget app",
-          "publisher": {
-            "@id": "https://pitaka-sigma.vercel.app/#organization"
-          },
-          "inLanguage": ["en", "en-PH", "fil-PH"]
-        },
-        {
-          "@type": "SoftwareApplication",
-          "@id": "https://pitaka-sigma.vercel.app/#software-app",
-          "name": "Pitaka",
-          "description": "Personal finance and budget tracking app with multi-currency support",
-          "applicationCategory": "FinanceApplication",
-          "operatingSystem": "Web, Android",
-          "url": "https://pitaka-sigma.vercel.app/",
-          "image": "https://pitaka-sigma.vercel.app/pitaka-social-share.png",
-          "inLanguage": ["en", "en-PH", "fil-PH"],
-          "keywords": "budget tracker, expense tracker, income tracker, savings goal tracker, investment tracker, subscription tracker, wallet tracker, cash flow tracker, multi currency finance app",
-          "areaServed": "Worldwide",
-          "featureList": [
-            "Multi-currency budget tracking including Philippine pesos",
-            "Expense and income monitoring",
-            "Recurring income and subscription tracking",
-            "Savings goals and account tracking",
-            "Account and wallet transfer tracking",
-            "Investment portfolio tracking",
-            "CSV import and export for transactions",
-            "Dashboard analytics for spending and cash flow"
-          ],
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "PHP"
-          }
-        }
-      ]
-    }
-    </script>
-    <title>Pitaka</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Public information is available without JavaScript. Enable JavaScript to sign in, manage your finances, or submit forms.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

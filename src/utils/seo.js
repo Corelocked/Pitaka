@@ -1,31 +1,10 @@
-const DEFAULT_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
-const DEFAULT_SITE_NAME = 'Pitaka'
-const DEFAULT_LOCALE = 'en_US'
-const DEFAULT_TWITTER_CARD = 'summary_large_image'
-const DEFAULT_TWITTER_HANDLE = '@pitaka'
-const DEFAULT_SITE_ORIGIN = 'https://pitaka-sigma.vercel.app'
-const DEFAULT_KEYWORDS = [
-  'personal finance app',
-  'budget tracker',
-  'expense tracker',
-  'income tracker',
-  'savings goals',
-  'money management app',
-  'financial planning app',
-  'monthly budget planner',
-  'cash flow tracker',
-  'bill tracker',
-  'subscription tracker',
-  'investment tracker',
-  'net worth tracker',
-  'family budget app',
-  'daily expense tracker',
-  'budgeting app philippines',
-  'wallet and account tracker',
-  'personal finance dashboard',
-  'budget app for web and mobile'
-].join(', ')
+import { absoluteUrl, INDEX_ROBOTS } from '../content/site.mjs'
 
+const DEFAULT_ROBOTS = INDEX_ROBOTS
+const DEFAULT_SITE_NAME = 'Pitaka'
+const DEFAULT_LOCALE = 'en_PH'
+const DEFAULT_TWITTER_CARD = 'summary_large_image'
+const DEFAULT_TWITTER_HANDLE = undefined
 const ensureMetaTag = ({ name, property }) => {
   if (typeof document === 'undefined') return null
 
@@ -67,36 +46,13 @@ const setCanonical = (url) => {
   tag.setAttribute('href', url)
 }
 
-const normalizePath = (path = '/') => {
-  const rawPath = String(path || '/').trim() || '/'
-  const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
-  return normalizedPath === '/' ? '/' : normalizedPath.replace(/\/+$/, '')
-}
-
-const getSiteOrigin = () => {
-  const envOrigin = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SITE_URL : null
-  const rawOrigin = String(envOrigin || DEFAULT_SITE_ORIGIN).trim()
-
-  try {
-    return new URL(rawOrigin).origin
-  } catch {
-    return DEFAULT_SITE_ORIGIN
-  }
-}
-
-const toAbsoluteUrl = (path = '/') => {
-  const siteOrigin = getSiteOrigin()
-  const normalizedPath = normalizePath(path)
-  return new URL(normalizedPath, `${siteOrigin}/`).toString()
-}
-
 export const applySeo = ({
   title,
   description,
   path = '/',
   image = '/pitaka-social-share.png',
   imageAlt = 'Pitaka personal finance app',
-  keywords = DEFAULT_KEYWORDS,
+  keywords,
   robots = DEFAULT_ROBOTS,
   type = 'website',
   locale = DEFAULT_LOCALE,
@@ -108,14 +64,15 @@ export const applySeo = ({
 }) => {
   if (typeof document === 'undefined') return
 
-  const canonicalUrl = toAbsoluteUrl(path)
-  const imageUrl = toAbsoluteUrl(image)
+  const canonicalUrl = absoluteUrl(path)
+  const imageUrl = absoluteUrl(image)
 
   if (title) {
     document.title = title
   }
 
   setCanonical(canonicalUrl)
+  if (type !== 'article') setArticleMetadata({})
 
   setMetaContent({ name: 'description' }, description)
   setMetaContent({ name: 'keywords' }, keywords)
@@ -146,7 +103,7 @@ export const setArticleMetadata = ({ publishedTime, modifiedTime, section, tag, 
   setMetaContent({ property: 'article:modified_time' }, modifiedTime)
   setMetaContent({ property: 'article:section' }, section)
   setMetaContent({ property: 'article:tag' }, tag)
-  setMetaContent({ property: 'article:author' }, author)
+  setMetaContent({ property: 'article:author' }, publishedTime ? author : undefined)
 }
 
 export const setStructuredData = (id, payload) => {

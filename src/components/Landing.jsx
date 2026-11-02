@@ -1,9 +1,9 @@
 import './Landing.css'
-import { useState, useEffect } from 'react'
-import Auth from './Auth'
-import Blog from './Blog'
+import { useEffect } from 'react'
 import ContactForm from './ContactForm'
 import { applySeo, removeStructuredData, setStructuredData } from '../utils/seo'
+import { FAQS as faqs, pageMetadata, pageSchema } from '../content/site.mjs'
+import { PublicFooter } from './PublicNavigation'
 import {
   ExpenseIcon,
   IncomeIcon,
@@ -42,12 +42,12 @@ const featureCards = [
   {
     icon: ActivityIcon,
     title: 'Cross-Platform Access',
-    description: 'Move between web and mobile with the same account, the same data, and the same rhythm.'
+    description: 'Use the website now. The Android app is currently in closed testing for selected testers.'
   }
 ]
 
 const proofPoints = [
-  { value: 'Web + Mobile', label: 'Use Pitaka wherever you review your finances.' },
+  { value: 'Web + Android Test', label: 'Web available now; Android is in closed testing.' },
   { value: 'Realtime Sync', label: 'Updates flow across devices as your data changes.' },
   { value: 'Private By Default', label: 'Your financial records stay scoped to your account.' }
 ]
@@ -71,49 +71,11 @@ const benefitColumns = [
   }
 ]
 
-const faqs = [
-  {
-    question: 'Is Pitaka free?',
-    answer: 'Yes. Core budgeting, tracking, and account management are available without a paid plan.'
-  },
-  {
-    question: 'What is Pitaka Pro?',
-    answer: 'Pitaka Pro is a one-time upgrade that unlocks recurring income automation, subscription tracking, investment tracking, and full currency support.'
-  },
-  {
-    question: 'Is my data secure?',
-    answer: 'Your data is authenticated per user account and stored with the app’s Firebase-backed setup.'
-  },
-  {
-    question: 'Can I use it on mobile?',
-    answer: 'Yes. Pitaka is available on the web and as an Android app.'
-  },
-  {
-    question: 'Can I export my records?',
-    answer: 'Yes. You can export your data and also import from spreadsheet files when you need to migrate or back up.'
-  }
-]
 
-export default function Landing({ initialSection = null, onOpenAuthRoute, onOpenBlogRoute }) {
-  const [showAuth, setShowAuth] = useState(false)
-  const [showBlog, setShowBlog] = useState(false)
-
+export default function Landing({ onOpenAuthRoute }) {
   const openAuthRoute = (mode = 'login') => {
-    if (typeof onOpenAuthRoute === 'function') {
-      onOpenAuthRoute(mode)
-      return
-    }
-
-    setShowAuth(true)
-  }
-
-  const openBlogRoute = () => {
-    if (typeof onOpenBlogRoute === 'function') {
-      onOpenBlogRoute()
-      return
-    }
-
-    setShowBlog(true)
+    if (typeof onOpenAuthRoute === 'function') onOpenAuthRoute(mode)
+    else window.location.assign(mode === 'signup' ? '/signup' : '/login')
   }
 
   useEffect(() => {
@@ -128,119 +90,9 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
     applySystemAppearance()
     appearance.addEventListener('change', applySystemAppearance)
 
-    applySeo({
-      title: 'Pitaka - Budget Tracker, Expense Manager, and Personal Finance App',
-      description: 'Track expenses, manage income, monitor savings goals, and review investments with Pitaka. A personal finance and budget tracking app for web and Android.',
-      path: typeof window === 'undefined' ? '/' : (window.location.pathname || '/'),
-      keywords: 'budget tracker app, expense tracker app, personal finance app, money management app, income and expense tracker, savings goals app, investment tracker app, monthly budget planner, financial dashboard app, web and mobile budget app',
-      type: 'website',
-      imageAlt: 'Pitaka social share card for budgeting, expenses, savings, and investments'
-    })
-
-    setStructuredData('pitaka-website-schema', {
-      '@context': 'https://schema.org',
-      '@graph': [
-        {
-          '@type': 'Organization',
-          '@id': 'https://pitaka-sigma.vercel.app/#organization',
-          name: 'Pitaka',
-          url: 'https://pitaka-sigma.vercel.app/',
-          logo: 'https://pitaka-sigma.vercel.app/pitaka-logo.png',
-        },
-        {
-          '@type': 'WebSite',
-          '@id': 'https://pitaka-sigma.vercel.app/#website',
-          url: 'https://pitaka-sigma.vercel.app/',
-          name: 'Pitaka',
-          description: 'Personal finance tracker for budgeting, expenses, savings, and investments.',
-          publisher: {
-            '@id': 'https://pitaka-sigma.vercel.app/#organization'
-          },
-          inLanguage: 'en'
-        },
-        {
-          '@type': 'SoftwareApplication',
-          name: 'Pitaka',
-          applicationCategory: 'FinanceApplication',
-          operatingSystem: 'Web, Android',
-          url: 'https://pitaka-sigma.vercel.app/',
-          image: 'https://pitaka-sigma.vercel.app/pitaka-social-share.png',
-          description: 'Personal finance tracker for budgeting, expenses, savings, and investments.',
-          offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'PHP',
-            description: 'Core budgeting, expense tracking, account management, and savings tools are free.'
-          },
-          audience: {
-            '@type': 'Audience',
-            audienceType: 'Individuals and households managing personal finances'
-          },
-          areaServed: 'Worldwide',
-          inLanguage: ['en', 'en-PH', 'fil-PH'],
-          publisher: {
-            '@id': 'https://pitaka-sigma.vercel.app/#organization'
-          },
-          featureList: [
-            'Expense tracking',
-            'Income management',
-            'Savings goal tracking',
-            'Investment tracking',
-            'Multi-wallet support',
-            'Data export and import',
-            'Category budgets with carryover',
-            'Cash-flow forecasting',
-            'Debt payoff planning',
-            'Offline access and cross-device sync'
-          ]
-        },
-        {
-          '@type': 'FAQPage',
-          mainEntity: [
-            {
-              '@type': 'Question',
-              name: 'Is Pitaka free?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Yes. Core budgeting, tracking, and account management are available without a paid plan.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'What is Pitaka Pro?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Pitaka Pro is a one-time upgrade that unlocks recurring income automation, subscription tracking, investment tracking, and full currency support.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'Is my data secure?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Your data is authenticated per user account and stored with the app’s Firebase-backed setup.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'Can I use it on mobile?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Yes. Pitaka is available on the web and as an Android app.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'Can I export my records?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Yes. You can export your data and also import from spreadsheet files when you need to migrate or back up.'
-              }
-            }
-          ]
-        }
-      ],
-    })
+    const metadata = pageMetadata('/')
+    applySeo(metadata)
+    setStructuredData('pitaka-page-schema', pageSchema(metadata))
 
     return () => {
       appearance.removeEventListener('change', applySystemAppearance)
@@ -248,26 +100,9 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
         document.body.dataset.theme = previousTheme
         document.documentElement.style.colorScheme = previousTheme
       }
-      removeStructuredData('pitaka-website-schema')
+      removeStructuredData('pitaka-page-schema')
     }
   }, [])
-
-  useEffect(() => {
-    if (!initialSection || showAuth || showBlog || typeof document === 'undefined') return
-
-    const sectionElement = document.getElementById(initialSection)
-    if (!sectionElement) return
-
-    sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [initialSection, showAuth, showBlog])
-
-  if (showAuth) {
-    return <Auth />
-  }
-
-  if (showBlog) {
-    return <Blog onBackToLanding={() => setShowBlog(false)} />
-  }
 
   return (
     <div className="landing-page">
@@ -280,8 +115,8 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
             </div>
 
             <nav className="landing-topbar-nav" aria-label="Main navigation">
-              <a href="#features" className="landing-topbar-link">Features</a>
-              <a href="#pricing" className="landing-topbar-link">Pricing</a>
+              <a href="/features" className="landing-topbar-link">Features</a>
+              <a href="/pricing" className="landing-topbar-link">Pricing</a>
               <button type="button" onClick={() => openAuthRoute('login')} className="landing-topbar-link landing-topbar-link--button">
                 Sign In
               </button>
@@ -300,7 +135,7 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
               <span className="landing-eyebrow">Private Finance Workspace</span>
               <h1>Budget with more control and less noise.</h1>
               <p className="landing-hero-description">
-                Pitaka gives you one place to track spending, manage accounts, monitor savings, and review the month with clarity.
+                Pitaka is a personal finance and budget tracker for individuals and households. Record expenses, income, accounts, and savings goals in Philippine pesos or US dollars, then review your month in one place.
               </p>
 
               <div className="landing-cta-buttons">
@@ -466,21 +301,13 @@ export default function Landing({ initialSection = null, onOpenAuthRoute, onOpen
             <h2>Financial insights from Pitaka</h2>
             <p>Tips, strategies, and grounded thinking to help you manage money with more discipline.</p>
           </div>
-          <button onClick={openBlogRoute} className="landing-btn landing-btn-secondary landing-btn-lg">
+          <a href="/blogs" className="landing-btn landing-btn-secondary landing-btn-lg">
             Read Our Blog
-          </button>
+          </a>
         </div>
       </section>
 
-      <footer className="landing-footer">
-        <div className="landing-container landing-footer-shell">
-          <div>
-            <strong>Pitaka</strong>
-            <p>Personal finance tracking for budgets, accounts, savings, and investments.</p>
-          </div>
-          <p>&copy; 2025 Pitaka. All rights reserved.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

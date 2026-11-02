@@ -13,6 +13,7 @@ export default defineConfig({
     }
   },
   build: {
+    manifest: true,
     chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {

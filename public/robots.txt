@@ -1,12 +1,4 @@
 User-agent: *
 Allow: /
-Allow: /manifest.webmanifest
-Allow: /sw.js
-Allow: /blogs
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /admin
 
-# Sitemaps
 Sitemap: https://pitaka-sigma.vercel.app/sitemap.xml
-Host: https://pitaka-sigma.vercel.app

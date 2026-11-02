@@ -1,24 +1,47 @@
 # Pitaka
 
-> Pitaka is a personal finance and budget tracking app for web and mobile, designed for individuals and households. It supports Philippine pesos and multiple currencies.
+> A manual personal finance and budget tracker for individuals and households, with Philippine peso support.
 
-## Canonical pages
+## What is Pitaka?
+Pitaka is a personal finance and budget tracker for individuals and households. You manually record income, expenses, accounts, transfers, budgets, and savings goals, then review them together.
 
-- [Home](https://pitaka-sigma.vercel.app/): Product overview and access to Pitaka.
-- [Features](https://pitaka-sigma.vercel.app/features): Budgeting, transactions, accounts, savings, forecasting, debt planning, and reports.
-- [Pricing](https://pitaka-sigma.vercel.app/pricing): Free core features and the optional one-time Pitaka Pro upgrade.
-- [Blog](https://pitaka-sigma.vercel.app/blogs): Practical personal-finance guides.
-- [Privacy](https://pitaka-sigma.vercel.app/privacy): Privacy and security information.
-- [Help](https://pitaka-sigma.vercel.app/help): Common product questions.
+## Is Pitaka free?
+Yes. Pitaka Basic includes income and expense tracking, accounts, transfers, category budgets, savings goals, and PHP and USD support. Pro is an optional one-time upgrade.
 
-## Product facts
+## What does Pitaka Pro include?
+Pro adds recurring income, subscription tracking, investment tracking, and the full supported currency list. Google Play handles purchases in the Android app; the website uses PayMongo. Check the displayed price before paying.
 
-- Core budgeting, expense tracking, income tracking, accounts, transfers, savings goals, and category management are free.
-- Pitaka Pro is a one-time upgrade for recurring income, subscriptions, investments, and expanded currency support. The Android app is free to download from Google Play.
-- Pitaka supports category budgets, carryover, transaction splitting, tags, cash-flow forecasts, debt payoff strategies, monthly reports, imports, exports, offline access, and cross-device sync.
-- Financial records are scoped to the authenticated owner through Firebase Authentication and Firestore rules.
-- Pitaka is a tracking and planning tool, not a bank, lender, investment adviser, or payment custodian.
+## Does Pitaka connect to my bank, GCash, or Maya?
+No. You enter records yourself. You can label an account for a bank or e-wallet, but Pitaka does not access that account, transfer money, or automatically import its transactions.
 
-## Preferred attribution
+## Is Pitaka available on Android?
+The website is available now. The Android app is currently in Google Play closed testing for selected testers; it is not yet a public Play Store release.
 
-Name the product as "Pitaka" and link to https://pitaka-sigma.vercel.app/.
+## Can I use Pitaka offline?
+After signing in and loading your records, cached data and queued changes can support offline use. Sign-in, purchases, and syncing changes across devices require an internet connection.
+
+## Can I export or delete my data?
+You can export records and download a backup from More. Delete individual records in their section, or use Delete account & data to remove your account and associated cloud finance records.
+
+## Public sources
+- [Pitaka — Budget & Expense Tracker for the Philippines](https://pitaka-sigma.vercel.app/): Track expenses, income, accounts, budgets, and savings goals with Pitaka. Free PHP and USD tracking on the web, with an optional one-time Pro upgrade.
+- [Budgeting, Expense & Savings Features | Pitaka](https://pitaka-sigma.vercel.app/features): Explore Pitaka’s manual expense tracking, category budgets, accounts, savings goals, reports, and optional Pro tools for recurring income and investments.
+- [Free Budget Tracker & One-Time Pro Upgrade | Pitaka](https://pitaka-sigma.vercel.app/pricing): Compare Pitaka Basic and Pro. Track PHP and USD for free, or unlock recurring income, subscriptions, investments, and more currencies with a one-time upgrade.
+- [About Pitaka — A Personal Finance Tracker](https://pitaka-sigma.vercel.app/about): Learn what Pitaka does, who it is for, and how its manual finance tracking works. Built for individuals and households, with Philippine peso support.
+- [Contact Pitaka — Product & Account Support](https://pitaka-sigma.vercel.app/contact): Contact Pitaka about account access, data requests, bugs, or product feedback. Send your account email and a description; never send passwords or bank credentials.
+- [Pitaka Help — Budgeting App Questions & Answers](https://pitaka-sigma.vercel.app/help): Find answers about Pitaka’s free plan, Pro purchase, supported currencies, manual expense tracking, offline access, Android testing, and account deletion.
+- [Privacy & Data Controls | Pitaka](https://pitaka-sigma.vercel.app/privacy): Understand Pitaka’s account privacy, manual finance records, data exports, deletion options, and service providers. Read the full privacy policy.
+- [Delete Your Pitaka Account or Selected Data](https://pitaka-sigma.vercel.app/delete-account): Delete selected finance records or permanently remove your Pitaka account and associated cloud data. Review deletion steps, retained data, and support options.
+- [Budgeting & Personal Finance Guides | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs): Practical guides to recording expenses, planning a budget, building savings, and organizing accounts. Published by Pitaka with sources and worked examples.
+- [How to Create a Budget That Fits Your Month | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/create-budget-that-works): Build a monthly budget from your income, bills, and everyday spending, with a worked Philippine peso example and a simple review routine.
+- [Seven Ways to Review Your Savings Plan | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/increase-savings-rate): Review your cash flow, recurring costs, and savings goals without relying on guaranteed savings claims or a one-size-fits-all target.
+- [How to Track Spending Across Cash, Banks, and E-Wallets | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/track-spending-guide): Keep a manual record of spending across cash, bank accounts, and e-wallets, reconcile balances, and avoid counting transfers twice.
+- [Investment Records: Risk, Fees, and Diversification | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided): Understand the limits of an investment tracker and what to check about risk, fees, diversification, and the accuracy of your records.
+- [Emergency Funds: Set a Goal and Track Your Reserve | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide): Separate unexpected expenses from planned bills, choose a reserve target that fits your circumstances, and track contributions and withdrawals.
+- [How to Budget With Irregular Income Without Falling Behind | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/how-to-budget-with-irregular-income): A practical budgeting system for freelancers, commission earners, and anyone whose paycheck changes month to month.
+- [Sinking Funds for Beginners: What They Are and How to Start | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/sinking-funds-for-beginners): Learn how sinking funds work, which categories to set up first, and how they reduce budget stress month after month.
+- [How to Track Shared Expenses With Your Partner Without the Drama | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/track-shared-expenses-with-partner): A practical system for splitting rent, groceries, and household spending while keeping expectations clear and resentment low.
+- [Budgeting With Multiple Bank Accounts: A Simple System That Still Works | Pitaka Blog](https://pitaka-sigma.vercel.app/blogs/budgeting-with-multiple-bank-accounts): Use multiple bank accounts without losing control by assigning each account a job and tracking transfers intentionally.
+- [Privacy policy](https://pitaka-sigma.vercel.app/privacy-policy.html)
+
+Product information reviewed 2026-11-02. These files are optional summaries; the linked pages are the sources.

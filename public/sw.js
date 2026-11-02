@@ -1,9 +1,8 @@
-const APP_SHELL_CACHE = 'pitaka-app-shell-v2'
-const RUNTIME_CACHE = 'pitaka-runtime-v2'
+const APP_SHELL_CACHE = 'pitaka-app-shell-v3'
+const RUNTIME_CACHE = 'pitaka-runtime-v3'
 const IS_LOCAL_DEVELOPMENT = ['localhost', '127.0.0.1'].includes(self.location.hostname)
 const APP_SHELL_ASSETS = [
   '/',
-  '/index.html',
   '/manifest.webmanifest',
   '/pitaka-logo.png'
 ]
@@ -39,7 +38,7 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (IS_LOCAL_DEVELOPMENT) {
+  if (IS_LOCAL_DEVELOPMENT || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
     return
   }
 
@@ -47,12 +46,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          caches.open(APP_SHELL_CACHE).then((cache) => cache.put('/index.html', copy))
+          if (response.ok) {
+            const copy = response.clone()
+            caches.open(APP_SHELL_CACHE).then((cache) => cache.put(request, copy))
+          }
           return response
         })
         .catch(async () => {
-          const cached = await caches.match('/index.html')
+          const cached = await caches.match(request) || await caches.match('/')
           return cached || Response.error()
         })
     )
@@ -70,8 +71,10 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        const copy = response.clone()
-        caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy))
+        if (response.ok) {
+          const copy = response.clone()
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy))
+        }
         return response
       })
     })

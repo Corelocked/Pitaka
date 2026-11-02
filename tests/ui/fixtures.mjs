@@ -7,6 +7,7 @@ export async function mockAccount(
     failSaves = false,
     mixed = false,
     authenticated = true,
+    authLoading = false,
     native = false,
     planningData = false,
     manyAccounts = false
@@ -37,7 +38,7 @@ export async function mockAccount(
     import React from '/node_modules/.vite/deps/react.js';
     export const FirebaseContext = React.createContext(null);
     const user = ${authenticated} ? { uid: 'ui-test', email: 'test@example.com', displayName: 'Alex', providerData: [{ providerId: 'password' }], getIdToken: async () => 'test' } : null;
-    export function FirebaseProvider({ children }) { return React.createElement(FirebaseContext.Provider, { value: { user, userProfile: { plan: '${pro ? 'pro' : 'basic'}' }, loading: false, authResolved: true, isAuthenticated: ${authenticated}, isPro: ${pro}, logout: async () => {}, deleteAccount: async () => {} } }, children) }
+    export function FirebaseProvider({ children }) { return React.createElement(FirebaseContext.Provider, { value: { user, userProfile: { plan: '${pro ? 'pro' : 'basic'}' }, loading: ${authLoading}, authResolved: true, isAuthenticated: ${authenticated}, isPro: ${pro}, logout: async () => {}, deleteAccount: async () => {} } }, children) }
   `
     })
   )

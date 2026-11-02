@@ -38,9 +38,14 @@ import { suggestCategory } from './utils/categoryRules'
 import { getLocalDateInputValue } from './utils/date'
 import { reportAppError } from './utils/errorReporting'
 import { getPrimaryDestination } from './utils/navigation'
+import { PUBLIC_PAGES, PRIVATE_PATHS, pageMetadata, pageSchema, NOINDEX_ROBOTS, WEB_PRO_PRICE_AMOUNT, WEB_PRO_PRICE_CURRENCY } from './content/site.mjs'
+import { applySeo, setStructuredData, removeStructuredData } from './utils/seo'
 
 const DeleteAccount = lazy(() => import('./components/DeleteAccount'))
 const Auth = lazy(() => import('./components/Auth'))
+const PublicPage = lazy(() => import('./components/PublicPage'))
+const NotFound = lazy(() => import('./components/PublicPage').then(module => ({ default: module.NotFound })))
+const AccountDeletionPage = lazy(() => import('./components/AccountDeletionPage'))
 const Landing = lazy(() => import('./components/Landing'))
 const Blog = lazy(() => import('./components/Blog'))
 const ContactForm = lazy(() => import('./components/ContactForm'))
@@ -92,15 +97,6 @@ const LEGACY_DASHBOARD_LAYOUTS = {
 const PUBLIC_AUTH_ROUTE_MODES = {
   '/login': 'login',
   '/signup': 'signup'
-}
-const PUBLIC_LANDING_SECTION_SLUGS = {
-  '/about': 'about',
-  '/features': 'features',
-  '/pricing': 'pricing',
-  '/contact': 'contact',
-  '/help': 'help',
-  '/privacy': 'privacy',
-  '/terms': 'contact'
 }
 const AUTHENTICATED_VIEW_PATHS = {
   dashboard: '/dashboard',
@@ -228,8 +224,6 @@ const THEME_OPTIONS = [
   }
 ]
 
-const PRO_PRICE_AMOUNT = Number(import.meta.env.VITE_PITAKA_PRO_PRICE_AMOUNT || 50000)
-const PRO_PRICE_CURRENCY = String(import.meta.env.VITE_PITAKA_PRO_PRICE_CURRENCY || 'PHP').toUpperCase()
 const PRO_PAYMENT_METHOD_LABEL = String(import.meta.env.VITE_PITAKA_PRO_PAYMENT_METHOD_LABEL || 'QRPh')
 const ANDROID_APP_URL = String(
   import.meta.env.VITE_PITAKA_ANDROID_APP_LINK || 'https://play.google.com/store/apps/details?id=com.pitaka.budgetbook'
@@ -257,6 +251,18 @@ function ModernApp() {
     return window.location.pathname || '/'
   })
   const [currentView, setCurrentView] = useState(() => resolveAuthenticatedViewFromPath(window.location.pathname) || 'dashboard')
+  useEffect(() => {
+    const path = normalizePathname(publicPath)
+    if (!isAuthenticated && /^\/blogs?(\/|$)/.test(path)) return
+    const metadata = isAuthenticated
+      ? { ...pageMetadata(AUTHENTICATED_VIEW_PATHS[currentView] || path), title: `${VIEW_META[currentView]?.title || 'Account'} | Pitaka`, robots: NOINDEX_ROBOTS }
+      : PUBLIC_PAGES[path] || PRIVATE_PATHS.includes(path) || ['/app', '/home'].includes(path)
+        ? pageMetadata(path)
+        : { title: 'Page Not Found | Pitaka', description: 'This Pitaka page could not be found.', path, robots: NOINDEX_ROBOTS }
+    applySeo(metadata)
+    if (!isAuthenticated && PUBLIC_PAGES[path]) setStructuredData('pitaka-page-schema', pageSchema(metadata))
+    else removeStructuredData('pitaka-page-schema')
+  }, [publicPath, currentView, isAuthenticated])
   const pageHeadingRef = useRef(null)
   const previousViewRef = useRef(currentView)
   useEffect(() => {
@@ -782,7 +788,7 @@ function ModernApp() {
     summarizeByCurrency(savings, (goal) => goal.currentAmount || 0, (goal) => goal.currency || DEFAULT_CURRENCY)
   )
 
-  const proPriceLabel = formatCurrency(PRO_PRICE_AMOUNT / 100, PRO_PRICE_CURRENCY)
+  const proPriceLabel = formatCurrency(WEB_PRO_PRICE_AMOUNT / 100, WEB_PRO_PRICE_CURRENCY)
 
   const openAndroidApp = () => {
     if (typeof window === 'undefined') return
@@ -1036,7 +1042,8 @@ function ModernApp() {
   )
 
   // Show loading screen
-  if (authLoading || budgetLoading) {
+  const isPublicInfoRoute = !isNativeMobileApp && (PUBLIC_PAGES[normalizePathname(publicPath)] || /^\/blogs?(\/|$)/.test(publicPath))
+  if ((authLoading || budgetLoading) && (isAuthenticated || !isPublicInfoRoute)) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -1057,26 +1064,8 @@ function ModernApp() {
   // Show auth screen only after Firebase has finished resolving the session
   if (!isAuthenticated) {
     const normalizedPublicPath = (publicPath || '/').replace(/\/+$/, '') || '/'
-    if (normalizedPublicPath === '/delete-account') return (
-      <div className="public-account-page">
-        <a href="/">← Pitaka</a>
-        <h1>Delete or remove your Pitaka data</h1>
-        <p>This page explains how to remove selected records or delete your full Pitaka account. You can use it without reinstalling the app.</p>
-        <section aria-labelledby="delete-selected-data">
-          <h2 id="delete-selected-data">Delete selected data and keep your account</h2>
-          <p>Sign in to Pitaka, open the section containing the record, choose its Delete action, and confirm. You can remove individual income, expense, transfer, account, category, budget, savings goal, recurring item, or investment records without deleting your account.</p>
-          <p>To ask for help with deleting specific data, use the <a href="https://pitaka-sigma.vercel.app/#contact">Pitaka contact form</a>. Tell us the account email and the type of data; do not include passwords or financial account numbers.</p>
-        </section>
-        <section aria-labelledby="delete-full-account">
-          <h2 id="delete-full-account">Delete your full account</h2>
-          <p>Sign in below, then confirm your email and password or Google account. A successful request deletes your Pitaka sign-in, profile, and associated cloud finance records, including accounts, transactions, categories, budgets, savings goals, recurring items, investments, lending records, snapshots, and Pitaka billing records.</p>
-          <p>Downloaded exports and copies on other devices are not removed. Payment providers may retain their own transaction records under their policies and legal requirements.</p>
-        </section>
-        <Suspense fallback={<SectionFallback />}><Auth initialMode="login" /></Suspense>
-      </div>
-    )
+    if (normalizedPublicPath === '/delete-account') return <Suspense fallback={<SectionFallback />}><AccountDeletionPage /></Suspense>
     const publicAuthMode = PUBLIC_AUTH_ROUTE_MODES[normalizedPublicPath] || null
-    const landingSection = PUBLIC_LANDING_SECTION_SLUGS[normalizedPublicPath] || null
     const showPublicBlog = !isNativeMobileApp
       && (
         normalizedPublicPath === '/blog'
@@ -1089,17 +1078,17 @@ function ModernApp() {
       <Suspense fallback={<SectionFallback label="Loading..." />}>
         {isNativeMobileApp
           ? <Auth />
-          : publicAuthMode
-            ? <Auth initialMode={publicAuthMode} />
+          : publicAuthMode || PRIVATE_PATHS.includes(normalizedPublicPath) || ['/app', '/home'].includes(normalizedPublicPath)
+            ? <Auth initialMode={publicAuthMode || 'login'} />
           : showPublicBlog
             ? <Blog onBackToLanding={() => openPublicRoute('/')} />
+            : normalizedPublicPath !== '/'
+              ? PUBLIC_PAGES[normalizedPublicPath] ? <PublicPage path={normalizedPublicPath} /> : <NotFound />
             : (
               <Landing
-                initialSection={landingSection}
                 onOpenAuthRoute={(mode = 'login') => {
                   openPublicRoute(mode === 'signup' ? '/signup' : '/login')
                 }}
-                onOpenBlogRoute={() => openPublicRoute('/blogs')}
               />
             )}
       </Suspense>

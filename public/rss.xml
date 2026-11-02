@@ -1,91 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>Pitaka Blog</title>
-    <link>https://pitaka-sigma.vercel.app/blogs</link>
-    <description>Personal finance tips, budgeting strategies, and money management insights from Pitaka.</description>
-    <language>en-us</language>
-    <lastBuildDate>Fri, 03 Apr 2026 00:00:00 GMT</lastBuildDate>
-
-    <item>
-      <title>How to Budget With Irregular Income Without Falling Behind</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/how-to-budget-with-irregular-income</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/how-to-budget-with-irregular-income</guid>
-      <pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate>
-      <description>A practical budgeting system for freelancers, commission earners, and anyone whose paycheck changes month to month.</description>
-      <category>Irregular Income</category>
-    </item>
-
-    <item>
-      <title>Sinking Funds for Beginners: What They Are and How to Start</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/sinking-funds-for-beginners</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/sinking-funds-for-beginners</guid>
-      <pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate>
-      <description>Learn how sinking funds work, which categories to set up first, and how they reduce budget stress month after month.</description>
-      <category>Sinking Funds</category>
-    </item>
-
-    <item>
-      <title>How to Track Shared Expenses With Your Partner Without the Drama</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/track-shared-expenses-with-partner</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/track-shared-expenses-with-partner</guid>
-      <pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate>
-      <description>A practical system for splitting rent, groceries, and household spending while keeping expectations clear and resentment low.</description>
-      <category>Shared Finances</category>
-    </item>
-
-    <item>
-      <title>Budgeting With Multiple Bank Accounts: A Simple System That Still Works</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/budgeting-with-multiple-bank-accounts</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/budgeting-with-multiple-bank-accounts</guid>
-      <pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate>
-      <description>Use multiple bank accounts without losing control by assigning each account a job and tracking transfers intentionally.</description>
-      <category>Cash Management</category>
-    </item>
-
-    <item>
-      <title>How to Create a Budget That Actually Works</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</guid>
-      <pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Learn proven budgeting techniques and strategies to take control of your finances, build wealth, and achieve your financial goals.</description>
-      <category>Budgeting</category>
-    </item>
-
-    <item>
-      <title>7 Proven Ways to Increase Your Savings Rate This Year</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</guid>
-      <pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Actionable strategies to save more money without sacrificing your lifestyle or financial freedom.</description>
-      <category>Saving Tips</category>
-    </item>
-
-    <item>
-      <title>Track Your Spending Like a Pro: The Complete Guide</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/track-spending-guide</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/track-spending-guide</guid>
-      <pubDate>Sat, 21 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Master personal finance tracking with proven techniques, tools, and strategies used by successful savers.</description>
-      <category>Finance Tracking</category>
-    </item>
-
-    <item>
-      <title>10 Mistakes Everyone Makes with Investments (and How to Fix Them)</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</guid>
-      <pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Learn the most common investment mistakes and practical strategies to avoid them on your path to wealth.</description>
-      <category>Investing</category>
-    </item>
-
-    <item>
-      <title>Emergency Fund 101: How Much, Where, and Why It Matters</title>
-      <link>https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</link>
-      <guid>https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</guid>
-      <pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate>
-      <description>Build financial security with a proper emergency fund strategy that protects you from life's unexpected costs.</description>
-      <category>Financial Security</category>
-    </item>
-  </channel>
-</rss>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pitaka Blog</title><link>https://pitaka-sigma.vercel.app/blogs</link><description>Practical budgeting and personal finance guides from Pitaka.</description><language>en</language><atom:link href="https://pitaka-sigma.vercel.app/rss.xml" rel="self" type="application/rss+xml"/><item><title>How to Create a Budget That Fits Your Month</title><link>https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/create-budget-that-works</guid><pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate><description>Build a monthly budget from your income, bills, and everyday spending, with a worked Philippine peso example and a simple review routine.</description></item>
+<item><title>Seven Ways to Review Your Savings Plan</title><link>https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/increase-savings-rate</guid><pubDate>Sat, 28 Mar 2026 00:00:00 GMT</pubDate><description>Review your cash flow, recurring costs, and savings goals without relying on guaranteed savings claims or a one-size-fits-all target.</description></item>
+<item><title>How to Track Spending Across Cash, Banks, and E-Wallets</title><link>https://pitaka-sigma.vercel.app/blogs/track-spending-guide</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/track-spending-guide</guid><pubDate>Sat, 21 Mar 2026 00:00:00 GMT</pubDate><description>Keep a manual record of spending across cash, bank accounts, and e-wallets, reconcile balances, and avoid counting transfers twice.</description></item>
+<item><title>Investment Records: Risk, Fees, and Diversification</title><link>https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/investment-mistakes-avoided</guid><pubDate>Sat, 14 Mar 2026 00:00:00 GMT</pubDate><description>Understand the limits of an investment tracker and what to check about risk, fees, diversification, and the accuracy of your records.</description></item>
+<item><title>Emergency Funds: Set a Goal and Track Your Reserve</title><link>https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/emergency-fund-guide</guid><pubDate>Sat, 07 Mar 2026 00:00:00 GMT</pubDate><description>Separate unexpected expenses from planned bills, choose a reserve target that fits your circumstances, and track contributions and withdrawals.</description></item>
+<item><title>How to Budget With Irregular Income Without Falling Behind</title><link>https://pitaka-sigma.vercel.app/blogs/how-to-budget-with-irregular-income</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/how-to-budget-with-irregular-income</guid><pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate><description>A practical budgeting system for freelancers, commission earners, and anyone whose paycheck changes month to month.</description></item>
+<item><title>Sinking Funds for Beginners: What They Are and How to Start</title><link>https://pitaka-sigma.vercel.app/blogs/sinking-funds-for-beginners</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/sinking-funds-for-beginners</guid><pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate><description>Learn how sinking funds work, which categories to set up first, and how they reduce budget stress month after month.</description></item>
+<item><title>How to Track Shared Expenses With Your Partner Without the Drama</title><link>https://pitaka-sigma.vercel.app/blogs/track-shared-expenses-with-partner</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/track-shared-expenses-with-partner</guid><pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate><description>A practical system for splitting rent, groceries, and household spending while keeping expectations clear and resentment low.</description></item>
+<item><title>Budgeting With Multiple Bank Accounts: A Simple System That Still Works</title><link>https://pitaka-sigma.vercel.app/blogs/budgeting-with-multiple-bank-accounts</link><guid isPermaLink="true">https://pitaka-sigma.vercel.app/blogs/budgeting-with-multiple-bank-accounts</guid><pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate><description>Use multiple bank accounts without losing control by assigning each account a job and tracking transfers intentionally.</description></item></channel></rss>
